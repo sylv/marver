@@ -1,0 +1,29 @@
+query GetMedia($fileId: String!, $filter: SimilarityType) {
+  media(id: $fileId) {
+    ...MinimalMedia
+    subtitles {
+      id
+      displayName
+      forced
+      hearingImpaired
+      generated
+    }
+    file {
+      type
+    }
+    similar(type: $filter) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      edges {
+        node {
+          ...MinimalMedia
+        }
+      }
+    }
+  }
+}

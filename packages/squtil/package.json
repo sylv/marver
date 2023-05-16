@@ -1,0 +1,6 @@
+{
+  "name": "@marver/squtil",
+  "scripts": {
+    "build": "cargo build --release"
+  }
+}

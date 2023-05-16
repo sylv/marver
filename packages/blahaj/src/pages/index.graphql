@@ -1,0 +1,36 @@
+query GetMediaList($search: String, $after: String) {
+  mediaList(search: $search, after: $after, first: 50) {
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    edges {
+      node {
+        ...MinimalMedia
+      }
+    }
+  }
+}
+
+fragment MinimalMedia on Media {
+  previewBase64
+  thumbnailUrl
+  height
+  width
+  durationFormatted
+  framerate
+  videoCodec
+  audioCodec
+  file {
+    id
+    path
+    name
+    metadata {
+      size
+      sizeFormatted
+    }
+  }
+}

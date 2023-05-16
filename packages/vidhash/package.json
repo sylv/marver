@@ -1,0 +1,49 @@
+{
+  "name": "@marver/vidhash",
+  "version": "0.1.0",
+  "main": "index.js",
+  "module": "index.mjs",
+  "files": [
+    "index.d.ts",
+    "index.js"
+  ],
+  "napi": {
+    "name": "vidhash",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu",
+        "i686-pc-windows-msvc",
+        "armv7-unknown-linux-gnueabihf",
+        "aarch64-apple-darwin",
+        "aarch64-linux-android",
+        "x86_64-unknown-freebsd",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "armv7-linux-androideabi"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release --pipe \"prettier -w\" && pnpm esmify",
+    "build:debug": "napi build --platform --pipe \"prettier -w\"",
+    "prepublishOnly": "napi prepublish -t npm",
+    "version": "napi version",
+    "esmify": "esbuild index.js --outfile=index.mjs --format=esm"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.15.2",
+    "@types/node": "^18.16.10",
+    "esbuild": "^0.17.19",
+    "prettier": "^2.8.8"
+  }
+}

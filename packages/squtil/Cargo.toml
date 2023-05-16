@@ -1,0 +1,15 @@
+[package]
+name = "squtil"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bytes = "1.4.0"
+prost = "0.11.9"
+sqlite-loadable = "0.0.5"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+prost-build = { version = "0.11.9" }

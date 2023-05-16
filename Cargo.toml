@@ -1,0 +1,5 @@
+[workspace]
+members = ["packages/rosetta", "packages/squtil", "packages/vidhash"]
+
+[profile.release]
+lto = true

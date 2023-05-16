@@ -1,0 +1,2 @@
+schema: './packages/sotast/schema.gql'
+documents: './packages/blahaj/src/**/*.graphql'

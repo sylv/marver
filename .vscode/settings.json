@@ -1,0 +1,19 @@
+{
+  "npm.scriptExplorerExclude": ["^((?!watch|generate:watch).)*$"],
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "graphql-config.load.legacy": true,
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "'([^']*)'", "\"([^']*)\""],
+    [":\\s*?[\"'`]([^\"'`]*).*?,"],
+    ["baseStyle.=.[\"'`]([^\"'`]*)"],
+    // Enum = 'value'
+    ["[A-Z][a-z]+ = ['\"]([^\"'`]*)"],
+    // const style = 'value'
+    // const someStyle = 'value'
+    ["const [a-zA-Z]+tyle = ['\"`]([^\"`'`]*)"],
+    // const classes = 'value'
+    // const class = 'value'
+    // const selectedClass = 'value'
+    ["const [a-zA-Z]+s = ['\"`]([^\"`'`]*)"]
+  ]
+}

@@ -1,0 +1,173 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""Provides info abou the current page"""
+type PageInfo {
+  """Cursor referencing the beginning of the page"""
+  startCursor: String!
+
+  """Cursor referencing the end of the page"""
+  endCursor: String!
+  hasPreviousPage: Boolean!
+  hasNextPage: Boolean!
+}
+
+type FileMetadata {
+  size: Float!
+  corrupted: Boolean!
+  unavailable: Boolean!
+  favourite: Boolean!
+  serverCheckedAt: DateTime!
+  serverCreatedAt: DateTime!
+  diskModifiedAt: DateTime!
+  diskCreatedAt: DateTime!
+  sizeFormatted: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Tag {
+  name: ID!
+}
+
+type FileTag {
+  tag: Tag!
+  system: Boolean!
+}
+
+type File {
+  id: ID!
+  name: String!
+  directory: String!
+  path: String!
+  metadata: FileMetadata!
+  media: Media
+  mimeType: String
+  extension: String
+  tags: [FileTag!]!
+  type: FileType
+}
+
+enum FileType {
+  Image
+  Video
+}
+
+"""Provides File item and a cursor to its position"""
+type FileEdge {
+  """The position of this File item"""
+  cursor: String!
+  node: File!
+}
+
+type FileConnection {
+  """Total number of File items"""
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [FileEdge!]!
+}
+
+type MediaPoster {
+  mimeType: String!
+  width: Float!
+  height: Float!
+}
+
+type MediaSubtitle {
+  id: ID!
+  languageIso639_1: String!
+  hearingImpaired: Boolean!
+  forced: Boolean!
+  path: String!
+  generated: Boolean!
+  languageNameNative: String!
+  languageNameEnglish: String!
+  displayName: String!
+}
+
+type MediaThumbnail {
+  mimeType: String!
+  width: Float!
+  height: Float!
+}
+
+type MediaTimeline {
+  mimeType: String!
+  width: Float!
+  height: Float!
+}
+
+type Media {
+  file: File!
+  height: Float
+  width: Float
+  videoCodec: String
+  bitrate: Float
+  framerate: Float
+  durationSeconds: Float
+  audioChannels: Float
+
+  """Whether no subtitles could be generated from the audio on this video"""
+  nonVerbal: Boolean
+  audioCodec: String
+  hasEmbeddedSubtitles: Boolean
+  isAnimated: Boolean
+  thumbnail: MediaThumbnail!
+  timeline: MediaTimeline!
+  poster: MediaPoster!
+  exifMetadata: MediaExifData
+  subtitles: [MediaSubtitle!]!
+  durationFormatted: String
+  previewBase64: String
+  similar(after: String, first: Float, before: String, last: Float, offset: Float, type: SimilarityType): MediaConnection!
+  thumbnailUrl: String
+}
+
+enum SimilarityType {
+  Related
+  Similar
+  SameFolder
+  SameType
+  Images
+  Videos
+}
+
+"""Provides Media item and a cursor to its position"""
+type MediaEdge {
+  """The position of this Media item"""
+  cursor: String!
+  node: Media!
+}
+
+type MediaConnection {
+  """Total number of Media items"""
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [MediaEdge!]!
+}
+
+type MediaExifData {
+  lensMake: String
+  lensModel: String
+  cameraMake: String
+  cameraModel: String
+  focalLength: String
+  exposureTime: String
+  fNumber: String
+  iso: Float
+  flash: String
+  dateTime: DateTime
+  longitude: Float
+  latitude: Float
+}
+
+type Query {
+  file(id: String!): File
+  files(after: String, first: Float, before: String, last: Float, offset: Float, search: String): FileConnection!
+  media(id: String!): Media
+  mediaList(after: String, first: Float, before: String, last: Float, offset: Float, search: String): MediaConnection!
+}

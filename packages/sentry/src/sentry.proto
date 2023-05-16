@@ -1,0 +1,21 @@
+syntax = "proto3";
+package me.sylver.marver.sentry;
+
+service SentryService {
+    rpc GetVector (GetVectorRequest) returns (GetVectorResponse) {}
+}
+
+message GetVectorRequest {
+    oneof input {
+        string file_path = 4;
+        string text_input = 5;
+    }
+}
+
+message GetVectorResponse {
+    Vector vector = 1;
+}
+
+message Vector {
+    repeated float value = 1;
+}
