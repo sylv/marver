@@ -1,4 +1,5 @@
-import { EntityRepository, MikroORM, UseRequestContext } from '@mikro-orm/core';
+import { MikroORM, UseRequestContext } from '@mikro-orm/core';
+import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -37,19 +38,19 @@ export class FileScanService {
     await this.persist();
 
     // mark any files in the directory that weren't scanned as unavailable
-    await this.fileRepo.nativeUpdate(
-      {
-        directory: config.source_dirs,
-        metadata: {
-          serverCheckedAt: { $lt: lastCheckedAt },
-        },
-      },
-      {
+    await this.fileRepo
+      .createQueryBuilder()
+      .update({
         metadata: {
           unavailable: true,
         },
-      }
-    );
+      })
+      .where({
+        ['path_dirname(path)']: config.source_dirs,
+        metadata: {
+          serverCheckedAt: { $lt: lastCheckedAt },
+        },
+      });
 
     const duration = performance.now() - start;
     this.logger.log(`Scanned source in ${duration}ms`);
@@ -66,7 +67,7 @@ export class FileScanService {
     const existingFiles = await this.fileRepo.find(
       { directory },
       {
-        fields: ['id', 'path'],
+        fields: ['id', 'path', 'metadata'],
         filters: false,
       }
     );
@@ -83,7 +84,7 @@ export class FileScanService {
     }
 
     const duration = performance.now() - start;
-    this.logger.debug(`Scanned "${directory}" in ${duration}ms`);
+    this.logger.debug(`Read files in "${directory}" in ${duration}ms`);
   }
 
   private async scanFile(path: string, existingFiles: File[]) {
@@ -100,14 +101,17 @@ export class FileScanService {
     }
 
     const info = await stat(path);
+    // on WSL birthtime is always 0, so we use mtime instead
+    const birthtime = info.birthtimeMs === 0 ? info.mtime : info.birthtime;
     const file = this.fileRepo.create({
       path: path,
       metadata: {
         size: info.size,
-        diskCreatedAt: info.birthtime,
-        diskModifiedAt: info.mtime,
         serverCheckedAt: new Date(),
         serverCreatedAt: new Date(),
+        diskModifiedAt: info.mtime,
+        diskCreatedAt: birthtime,
+        createdAt: birthtime,
       },
     });
 
@@ -122,15 +126,17 @@ export class FileScanService {
   }
 
   get shouldPersist() {
-    if (this.staged > 5000) return true;
+    if (this.staged >= 1000) return true;
     const lastPersistedAgo = Date.now() - this.lastPersist;
     if (lastPersistedAgo > 10000) return true;
     return false;
   }
 
   async persist() {
+    const count = this.staged;
     this.staged = 0;
     this.lastPersist = Date.now();
     await this.fileRepo.flush();
+    this.logger.debug(`Persisted ${count} files`);
   }
 }

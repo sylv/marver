@@ -50,6 +50,7 @@ export type FileEdge = {
 export type FileMetadata = {
   __typename?: 'FileMetadata';
   corrupted: Scalars['Boolean'];
+  createdAt: Scalars['DateTime'];
   diskCreatedAt: Scalars['DateTime'];
   diskModifiedAt: Scalars['DateTime'];
   favourite: Scalars['Boolean'];
@@ -215,7 +216,9 @@ export type QueryMediaArgs = {
 
 export type QueryMediaListArgs = {
   after?: InputMaybe<Scalars['String']>;
+  afterDate?: InputMaybe<Scalars['DateTime']>;
   before?: InputMaybe<Scalars['String']>;
+  beforeDate?: InputMaybe<Scalars['DateTime']>;
   first?: InputMaybe<Scalars['Float']>;
   last?: InputMaybe<Scalars['Float']>;
   offset?: InputMaybe<Scalars['Float']>;
@@ -236,6 +239,16 @@ export type Tag = {
   name: Scalars['ID'];
 };
 
+export type GetMediaListQueryVariables = Exact<{
+  search?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type GetMediaListQuery = { __typename?: 'Query', mediaList: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', createdAt: any, size: number, sizeFormatted: string } } } }> } };
+
+export type MinimalMediaFragment = { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } };
+
 export type GetMediaQueryVariables = Exact<{
   fileId: Scalars['String'];
   filter?: InputMaybe<SimilarityType>;
@@ -243,16 +256,6 @@ export type GetMediaQueryVariables = Exact<{
 
 
 export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } }, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } } }> } } | null };
-
-export type GetMediaListQueryVariables = Exact<{
-  search?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
-}>;
-
-
-export type GetMediaListQuery = { __typename?: 'Query', mediaList: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } } }> } };
-
-export type MinimalMediaFragment = { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } };
 
 export const MinimalMediaFragmentDoc = gql`
     fragment MinimalMedia on Media {
@@ -275,6 +278,33 @@ export const MinimalMediaFragmentDoc = gql`
   }
 }
     `;
+export const GetMediaListDocument = gql`
+    query GetMediaList($search: String, $after: String) {
+  mediaList(search: $search, after: $after, first: 50) {
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    edges {
+      node {
+        ...MinimalMedia
+        file {
+          metadata {
+            createdAt
+          }
+        }
+      }
+    }
+  }
+}
+    ${MinimalMediaFragmentDoc}`;
+
+export function useGetMediaListQuery(options?: Omit<Urql.UseQueryArgs<GetMediaListQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetMediaListQuery, GetMediaListQueryVariables>({ query: GetMediaListDocument, ...options });
+};
 export const GetMediaDocument = gql`
     query GetMedia($fileId: String!, $filter: SimilarityType) {
   media(id: $fileId) {
@@ -309,26 +339,4 @@ export const GetMediaDocument = gql`
 
 export function useGetMediaQuery(options: Omit<Urql.UseQueryArgs<GetMediaQueryVariables>, 'query'>) {
   return Urql.useQuery<GetMediaQuery, GetMediaQueryVariables>({ query: GetMediaDocument, ...options });
-};
-export const GetMediaListDocument = gql`
-    query GetMediaList($search: String, $after: String) {
-  mediaList(search: $search, after: $after, first: 50) {
-    totalCount
-    pageInfo {
-      hasNextPage
-      hasPreviousPage
-      startCursor
-      endCursor
-    }
-    edges {
-      node {
-        ...MinimalMedia
-      }
-    }
-  }
-}
-    ${MinimalMediaFragmentDoc}`;
-
-export function useGetMediaListQuery(options?: Omit<Urql.UseQueryArgs<GetMediaListQueryVariables>, 'query'>) {
-  return Urql.useQuery<GetMediaListQuery, GetMediaListQueryVariables>({ query: GetMediaListDocument, ...options });
 };

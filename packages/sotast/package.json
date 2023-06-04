@@ -10,6 +10,7 @@
     "generate": "protoc --ts_out ./src/generated --ts_opt optimize_speed,use_proto_field_name --proto_path=../sentry/src ../sentry/src/sentry.proto --experimental_allow_proto3_optional && node ./scripts/fix-imports.mjs ./src/generated"
   },
   "dependencies": {
+    "@discordjs/collection": "^1.5.1",
     "@golevelup/nestjs-discovery": "^3.0.0",
     "@grpc/grpc-js": "^1.8.14",
     "@hapi/accept": "^6.0.0",

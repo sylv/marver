@@ -20,6 +20,7 @@ const schema = z.object({
   source_dirs: z.array(z.string()).transform((dirs) => dirs.map((dir) => resolve(dir))),
   max_hashable_size: z.string().default('100MB').transform(bytes),
   secret: z.string().transform((secret) => new TextEncoder().encode(secret)),
+  disable_tasks: z.boolean().default(false),
   virtual_tags: z
     .array(
       z.object({

@@ -1,27 +1,40 @@
 import { useEffect } from 'react';
 
 export interface UseInfiniteScrollOptions {
-  ref: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement>;
   hasNextPage: boolean;
   loadMore: () => void;
 }
 
 export const useInfiniteScroll = (options: UseInfiniteScrollOptions) => {
   useEffect(() => {
-    if (!options.ref.current || !options.hasNextPage) return;
+    console.log({ containerRef: !!options.containerRef.current, hasNextPage: options.hasNextPage });
+    if (!options.containerRef.current || !options.hasNextPage) return;
+    const container = options.containerRef.current;
+    console.log(container.lastElementChild);
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          options.loadMore();
+          const lastChild = container.lastElementChild;
+          if (lastChild) {
+            console.log('INTERSECTING');
+            const lastChildBottom = lastChild.getBoundingClientRect().bottom;
+            const containerBottom = container.getBoundingClientRect().bottom;
+            if (lastChildBottom <= containerBottom) {
+              console.log('LOAD MORE');
+              options.loadMore();
+            }
+          }
         }
       },
       {
+        root: container,
         rootMargin: '0px',
         threshold: 1.0,
       }
     );
 
-    observer.observe(options.ref.current);
+    observer.observe(container.lastElementChild!);
 
     return () => {
       observer.disconnect();

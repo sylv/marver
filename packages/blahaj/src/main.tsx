@@ -19,7 +19,6 @@ const client = createClient({
         FileMetadata: () => null,
         Media: (data) => {
           const file = data.file;
-          console.log({ file });
           if (!file) throw new Error('No file');
           return (file as any).id;
         },
@@ -27,6 +26,7 @@ const client = createClient({
       resolvers: {
         Query: {
           files: relayPagination(),
+          mediaList: relayPagination(),
         },
       },
     }),

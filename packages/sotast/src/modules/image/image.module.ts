@@ -8,6 +8,7 @@ import { SentryModule } from '../sentry/sentry.module.js';
 import { ImageController } from './image.controller.js';
 import { ImageService } from './image.service.js';
 import { Media } from '../media/entities/media.entity.js';
+import { ImageTasks } from './image.tasks.js';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { Media } from '../media/entities/media.entity.js';
     forwardRef(() => FileModule),
   ],
   controllers: [ImageController],
-  providers: [ImageService],
+  providers: [ImageService, ImageTasks],
   exports: [ImageService],
 })
 export class ImageModule {}

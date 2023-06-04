@@ -50,12 +50,12 @@ export default function File() {
   return (
     <div className="container mx-auto flex gap-3 mt-3">
       <div className="w-full h-full flex flex-col gap-3">
-        <div className="relative max-h-[70vh] w-full flex items-center justify-center bg-gray-600/30 rounded-lg">
+        <div className="relative h-[70vh] w-full flex items-center justify-center bg-gray-600/30 rounded-lg">
           {data.media.file.type === FileType.Video && (
             <Player
               src={`/api/files/${fileId}/raw`}
               hlsSrc={`/api/files/${fileId}/vidproxy/index.m3u8`}
-              className="w-auto rounded-lg max-h-[70vh]"
+              className="w-auto rounded-lg h-full"
               height={data.media?.height || undefined}
               width={data.media?.width || undefined}
               hasAudio={!!data.media?.audioCodec}
@@ -77,7 +77,7 @@ export default function File() {
               height={data.media?.height || undefined}
               width={data.media?.width || undefined}
               previewBase64={data.media.previewBase64}
-              className="h-[70vh] object-contain"
+              className="h-full w-full object-contain"
             />
           )}
         </div>

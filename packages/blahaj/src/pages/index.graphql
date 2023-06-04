@@ -10,6 +10,11 @@ query GetMediaList($search: String, $after: String) {
     edges {
       node {
         ...MinimalMedia
+        file {
+          metadata {
+            createdAt
+          }
+        }
       }
     }
   }

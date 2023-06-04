@@ -8,7 +8,7 @@ import { fastify } from 'fastify';
 import { AppModule } from './app.module.js';
 import { MikroOrmSerializerInterceptor } from './serializer.interceptor.js';
 
-Error.stackTraceLimit = 150;
+// Error.stackTraceLimit = 100;
 
 const logger = new Logger('bootstrap');
 const server = fastify({

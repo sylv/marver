@@ -96,6 +96,7 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
   - It would definitely be overkill, but it could simplify a lot of useful features.
   - [GPT-JSON](https://github.com/piercefreeman/gpt-json) would be a good way to generate JSON without wasting time generating the JSON structure.
   - It would have to be optional and ideally a few different model sizes so you can pick the one that fits best with your system. A fine-tuned 3B model might be enough but a 13B model would likely do significantly better, even if it uses 4x the memory. That's a tradeoff the user should be able to make.
+  - It could be used to reorganise files on disk. If you have a load of files dumped into a folder, based on all the available metadata and a given file structure, it could determine where each file should go. This could be done "virtually", only shown in the interface, or by moving the actual files on disk which would be considerably riskier.
 - Sort options (tag count, date scanned, date created, size, bitrate, title, type, duration, resolution, views, favourites, path, randomly, etc)
 - Use `<img srcset />` and let the browser decide on the best image type, instead of guessing based on the `Accept` header.
 - Storage breakdown somewhere. Show % of images, videos, other. Could be cool to also show a bar at the bottom of images/photos to show duplicates or very similar images. [MacOS storage breakdown](https://i.imgur.com/hoBR9zF.png) would be a good example.

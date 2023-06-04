@@ -96,7 +96,7 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
             previewBase64={media.previewBase64}
             height={height}
             width={width}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover bg-gray-200"
           />
         </div>
       </Link>

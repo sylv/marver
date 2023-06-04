@@ -18,6 +18,7 @@ import { ulid } from 'ulid';
 import { config } from '../../../config.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';
 import { Media } from '../../media/entities/media.entity.js';
+import { Task } from '../../tasks/task.entity.js';
 import { FileMetadata } from './file-metadata.embeddable.js';
 import { FileTag } from './file-tag.entity.js';
 
@@ -48,13 +49,17 @@ export class File {
   @Field(() => FileMetadata)
   metadata: FileMetadata;
 
-  @OneToOne(() => Media, { nullable: true, eager: true, onDelete: 'set null' })
+  @OneToOne(() => Media, (media) => media.file, { nullable: true, eager: true, onDelete: 'set null' })
   @Field(() => Media, { nullable: true })
   media?: Media;
+
+  @OneToMany(() => Task, (task) => task.file)
+  tasks = new Collection<Task>(this);
 
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
   get mimeType() {
+    if (!this.path) return;
     if (this.path.endsWith('jfif')) return 'image/jpeg';
     return mime.lookup(this.path) || null;
   }
@@ -62,6 +67,7 @@ export class File {
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
   get extension() {
+    if (!this.path) return;
     return extname(this.path).slice(1) || null;
   }
 

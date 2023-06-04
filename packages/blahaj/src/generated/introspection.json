@@ -214,6 +214,17 @@
             "args": []
           },
           {
+            "name": "createdAt",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
             "name": "diskCreatedAt",
             "type": {
               "kind": "NON_NULL",
@@ -1159,7 +1170,21 @@
                 }
               },
               {
+                "name": "afterDate",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Any"
+                }
+              },
+              {
                 "name": "before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Any"
+                }
+              },
+              {
+                "name": "beforeDate",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Any"

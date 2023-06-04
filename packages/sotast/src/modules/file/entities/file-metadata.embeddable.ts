@@ -35,4 +35,13 @@ export class FileMetadata {
   @Property()
   @Field()
   diskCreatedAt: Date;
+
+  /**
+   * This is the best guess at the time the file was really created.
+   * It will default to the diskCreatedAt, but can be modified to be more accurate.
+   * For example, exif metadata may reveal a better date, or OCR may find a date in the image.
+   */
+  @Property()
+  @Field()
+  createdAt: Date;
 }

@@ -1,6 +1,6 @@
 import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 import ExifReader from 'exifreader';
 import { pack, unpack } from 'msgpackr';
@@ -41,6 +41,7 @@ export class ImageService {
   private static readonly EXIF_DATE_FORMAT = /(?<year>[0-9]{4}):(?<month>[0-9]{2}):(?<day>[0-9]{2})/;
   @InjectRepository(MediaExifData) private exifRepo: EntityRepository<MediaExifData>;
   @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
+  private logger = new Logger(ImageService.name);
 
   parseImageProxyPayload(payload: string): ProxyableImage {
     return unpack(Buffer.from(payload, 'base64url'));
@@ -123,18 +124,23 @@ export class ImageService {
 
   createMediaFromSharpMetadata(data: sharp.Metadata, file: File) {
     const isAnimated = data.pages ? data.pages > 0 : !!data.delay;
-    const meta = this.mediaRepo.create(
-      {
-        height: data.height,
-        width: data.width,
-        file: file,
-        isAnimated: isAnimated,
-      },
-      { persist: false }
-    );
+    const meta = this.mediaRepo.create({
+      height: data.height,
+      width: data.width,
+      file: file,
+      isAnimated: isAnimated,
+    });
 
     if (Array.isArray(data.delay)) {
-      const durationSeconds = data.delay.reduce((a, b) => a + b, 0) / 1000;
+      const durationSeconds = data.delay.reduce((acc, delay) => {
+        // most browsers have a minimum delay of 0.05s-ish
+        // we have to account for that to have accurate times
+        // source: https://stackoverflow.com/questions/21791012
+        const delaySeconds = delay / 1000;
+        if (delaySeconds < 0.05) return acc + 0.1;
+        return acc + delaySeconds;
+      }, 0);
+
       meta.durationSeconds = durationSeconds;
       meta.framerate = data.delay.length / durationSeconds;
     } else if (data.delay && data.pages) {
@@ -167,6 +173,11 @@ export class ImageService {
         exif.latitude = location[0];
         exif.longitude = location[1];
       }
+
+      if (exif.dateTime) {
+        media.file.metadata.createdAt = exif.dateTime;
+        this.exifRepo.persist(media.file);
+      }
     } catch (error: any) {
       if (error.name !== 'MetadataMissingError') {
         throw error;
@@ -194,6 +205,12 @@ export class ImageService {
     // exif dates are in the format "YYYY:MM:DD HH:MM:SS", javascript cannot parse
     // that as a date without some trickery.
     const clean = date.replace(ImageService.EXIF_DATE_FORMAT, '$<year>-$<month>-$<day>');
-    return new Date(clean);
+    const parsed = new Date(clean);
+    if (isNaN(parsed.getTime()) || parsed.getTime() === 0) {
+      this.logger.warn(`Failed to parse date "${date}" into a valid date object`);
+      return undefined;
+    }
+
+    return parsed;
   }
 }

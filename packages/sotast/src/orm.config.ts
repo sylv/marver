@@ -13,6 +13,7 @@ export default defineConfig({
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
   persistOnCreate: false,
+  debug: true,
   migrations: {
     path: join(dirname(fileURLToPath(import.meta.url)), 'migrations'),
     tableName: MIGRATIONS_TABLE_NAME,

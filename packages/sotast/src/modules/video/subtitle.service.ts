@@ -9,8 +9,8 @@ import { stripHtml } from 'string-strip-html';
 import { Node, parseSync } from 'subtitle';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
+import { File } from '../file/entities/file.entity.js';
 import { MediaSubtitle } from '../media/entities/media-subtitle.entity.js';
-import { Media } from '../media/entities/media.entity.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
 
@@ -22,41 +22,42 @@ export class SubtitleService {
   @InjectRepository(MediaSubtitle) private subtitleRepo: EntityRepository<MediaSubtitle>;
   constructor(private ffmpegService: FfmpegService) {}
 
-  @Task(Media, TaskType.VideoGenerateSubtitles, {
+  @Task(TaskType.VideoGenerateSubtitles, {
     concurrency: 1,
     filter: {
-      file: {
-        extension: { $in: [...VIDEO_EXTENSIONS] },
+      extension: { $in: [...VIDEO_EXTENSIONS] },
+      media: {
+        $and: [
+          {
+            subtitles: { id: null },
+          },
+          {
+            $or: [
+              // videos that have embedded subtitles, that we'll extract
+              // we don't check duration here because if they have subtitles we want to extract them.
+              {
+                hasEmbeddedSubtitles: true,
+              },
+              // // videos with audio that we haven't already checked for subtitles
+              // // only longer videos because generating subtitles for short videos
+              // // is unlikely to be that useful.
+              // {
+              //   metadata: {
+              //     hasAudio: true,
+              //     nonVerbal: null,
+              //     durationSeconds: {
+              //       $gt: ms('10m'),
+              //     },
+              //   },
+              // },
+            ],
+          },
+        ],
       },
-      $and: [
-        {
-          subtitles: { id: null },
-        },
-        {
-          $or: [
-            // videos that have embedded subtitles, that we'll extract
-            // we don't check duration here because if they have subtitles we want to extract them.
-            {
-              hasEmbeddedSubtitles: true,
-            },
-            // // videos with audio that we haven't already checked for subtitles
-            // // only longer videos because generating subtitles for short videos
-            // // is unlikely to be that useful.
-            // {
-            //   metadata: {
-            //     hasAudio: true,
-            //     nonVerbal: null,
-            //     durationSeconds: {
-            //       $gt: ms('10m'),
-            //     },
-            //   },
-            // },
-          ],
-        },
-      ],
     },
   })
-  async generateSubtitles(media: Media) {
+  async generateSubtitles(file: File) {
+    const media = file.media!;
     if (media.hasEmbeddedSubtitles) {
       // we extract the subtitles to a separate file so they're easier to work with
       const ffprobeResult = await this.ffmpegService.ffprobe(media.file.path);

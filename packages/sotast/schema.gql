@@ -22,6 +22,7 @@ type FileMetadata {
   serverCreatedAt: DateTime!
   diskModifiedAt: DateTime!
   diskCreatedAt: DateTime!
+  createdAt: DateTime!
   sizeFormatted: String!
 }
 
@@ -169,5 +170,5 @@ type Query {
   file(id: String!): File
   files(after: String, first: Float, before: String, last: Float, offset: Float, search: String): FileConnection!
   media(id: String!): Media
-  mediaList(after: String, first: Float, before: String, last: Float, offset: Float, search: String): MediaConnection!
+  mediaList(after: String, first: Float, before: String, last: Float, offset: Float, search: String, beforeDate: DateTime, afterDate: DateTime): MediaConnection!
 }

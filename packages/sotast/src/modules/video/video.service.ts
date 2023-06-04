@@ -1,9 +1,8 @@
 import { MergedFrame, phashVideo } from '@marver/vidhash';
 import { EntityRepository } from '@mikro-orm/better-sqlite';
-import { type Loaded } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
-import { rm, writeFile } from 'fs/promises';
+import { mkdir, rm, writeFile } from 'fs/promises';
 import ms from 'ms';
 import { join } from 'path';
 import sharp, { OutputInfo } from 'sharp';
@@ -12,21 +11,20 @@ import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { CorruptedFileError } from '../../errors/CorruptedFileError.js';
 import { Vector } from '../../generated/sentry.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
-import { FileMetadata } from '../file/entities/file-metadata.embeddable.js';
 import { File } from '../file/entities/file.entity.js';
+import { ImageService } from '../image/image.service.js';
 import { MediaPoster } from '../media/entities/media-poster.entity.js';
 import { MediaThumbnail } from '../media/entities/media-thumbnail.entity.js';
 import { MediaTimeline } from '../media/entities/media-timeline.entity.js';
 import { Media } from '../media/entities/media.entity.js';
-import { ImageService } from '../image/image.service.js';
 import { SentryService } from '../sentry/sentry.service.js';
-import { Task, TaskChild, TaskParent } from '../tasks/task.decorator.js';
+import { TaskChild } from '../tasks/task-child.decorator.js';
+import { Task, TaskParent } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
 
 @Injectable()
 export class VideoService {
-  @InjectRepository(FileMetadata) private fileMetaRepo: EntityRepository<FileMetadata>;
-  @InjectRepository(Media) private mediaMetaRepo: EntityRepository<Media>;
+  @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
   @InjectRepository(MediaThumbnail) private fileThumbnailRepo: EntityRepository<MediaThumbnail>;
   @InjectRepository(MediaTimeline) private fileTimelineRepo: EntityRepository<MediaTimeline>;
   @InjectRepository(MediaPoster) private filePosterRepo: EntityRepository<MediaPoster>;
@@ -38,7 +36,7 @@ export class VideoService {
     private imageService: ImageService
   ) {}
 
-  @Task(File, TaskType.VideoExtractMetadata, {
+  @Task(TaskType.VideoExtractMetadata, {
     concurrency: 4,
     filter: {
       media: null,
@@ -52,7 +50,7 @@ export class VideoService {
     const videoStream = result.streams.find((stream) => stream.codec_type === 'video');
     const audioStream = result.streams.find((stream) => stream.codec_type === 'audio');
     const subtitleStream = result.streams.find((stream) => stream.codec_type === 'subtitle');
-    const metadata = this.mediaMetaRepo.create({
+    const metadata = this.mediaRepo.create({
       file: file,
     });
 
@@ -66,7 +64,9 @@ export class VideoService {
       if (videoStream.bit_rate) metadata.bitrate = +videoStream.bit_rate;
       if (videoStream.r_frame_rate) {
         const [num, den] = videoStream.r_frame_rate.split('/');
-        metadata.framerate = +num / +den;
+        if (num && den) {
+          metadata.framerate = +num / +den;
+        }
       }
     }
 
@@ -82,31 +82,33 @@ export class VideoService {
     }
 
     if (!hasStream) {
-      throw new CorruptedFileError('No video, audio or subtitle stream found');
+      throw new CorruptedFileError(file.path);
     }
 
-    await this.fileMetaRepo.persistAndFlush(metadata);
+    await this.mediaRepo.persistAndFlush(metadata);
   }
 
-  @TaskParent(Media, TaskType.VideoExtractScreenshots, {
+  @TaskParent(TaskType.VideoExtractScreenshots, {
     concurrency: 3,
     filter: {
-      videoCodec: { $ne: null },
-      durationSeconds: {
-        $lte: ms('1h') / 1000,
-      },
-      file: {
-        extension: {
-          $in: [...VIDEO_EXTENSIONS],
+      media: {
+        videoCodec: { $ne: null },
+        durationSeconds: {
+          $lte: ms('1h') / 1000,
         },
+      },
+      extension: {
+        $in: [...VIDEO_EXTENSIONS],
       },
     },
     cleanupMethod: async (result: Awaited<ReturnType<VideoService['extractScreenshots']>>) => {
       await rm(result.screenshotPath, { recursive: true, force: true });
     },
   })
-  async extractScreenshots(media: Media) {
+  async extractScreenshots(file: File) {
+    const media = file.media!;
     const screenshotPath = join(media.file.metadataFolder, 'screenshots');
+    await mkdir(screenshotPath, { recursive: true });
     const frames = await phashVideo(media.file.path, {
       mergeFrames: true,
       hashSize: 16,
@@ -131,19 +133,20 @@ export class VideoService {
     };
   }
 
-  @TaskChild(Media, TaskType.VideoGenerateClipVector, {
+  @TaskChild(TaskType.VideoGenerateClipVector, {
     parentType: TaskType.VideoExtractScreenshots,
     concurrency: 1,
     filter: {
-      vector: null,
-      file: {
-        extension: {
-          $in: [...VIDEO_EXTENSIONS],
-        },
+      media: {
+        vector: null,
+      },
+      extension: {
+        $in: [...VIDEO_EXTENSIONS],
       },
     },
   })
-  async generateClipVector(media: Media, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async generateClipVector(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+    const media = file.media!;
     const vectors: number[][] = [];
     for (const frame of frames) {
       if (!frame.path) continue;
@@ -153,21 +156,23 @@ export class VideoService {
 
     const merged = this.sentryService.combineVectors(vectors);
     media.vector = Buffer.from(Vector.toBinary({ value: merged }));
+    await this.mediaRepo.persistAndFlush(media);
   }
 
-  @TaskChild(Media, TaskType.VideoGenerateTimeline, {
-    concurrency: 1,
+  @TaskChild(TaskType.VideoGenerateTimeline, {
     parentType: TaskType.VideoExtractScreenshots,
+    concurrency: 1,
     filter: {
-      timeline: null,
-      file: {
-        extension: {
-          $in: [...VIDEO_EXTENSIONS],
-        },
+      media: {
+        timeline: null,
+      },
+      extension: {
+        $in: [...VIDEO_EXTENSIONS],
       },
     },
   })
-  async generateTimeline(media: Media, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async generateTimeline(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+    const media = file.media!;
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
     let layerIndex = 0;
@@ -225,19 +230,20 @@ export class VideoService {
     await this.fileTimelineRepo.persistAndFlush(timeline);
   }
 
-  @TaskChild(Media, TaskType.VideoPickThumbnail, {
-    concurrency: 1,
+  @TaskChild(TaskType.VideoPickThumbnail, {
     parentType: TaskType.VideoExtractScreenshots,
+    concurrency: 1,
     filter: {
-      thumbnail: null,
-      file: {
-        extension: {
-          $in: [...VIDEO_EXTENSIONS],
-        },
+      media: {
+        thumbnail: null,
+      },
+      extension: {
+        $in: [...VIDEO_EXTENSIONS],
       },
     },
   })
-  async pickThumbnail(media: Media, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async pickThumbnail(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+    const media = file.media!;
     const firstFrameWithPath = frames.find((frame) => frame.path);
     if (!firstFrameWithPath) {
       throw new Error('Expected at least one frame to been written to disk');
@@ -261,19 +267,20 @@ export class VideoService {
     await this.fileThumbnailRepo.persistAndFlush(thumbnail);
   }
 
-  @TaskChild(Media, TaskType.VideoPickPoster, {
-    concurrency: 1,
+  @TaskChild(TaskType.VideoPickPoster, {
     parentType: TaskType.VideoExtractScreenshots,
+    concurrency: 1,
     filter: {
-      poster: null,
-      file: {
-        extension: {
-          $in: [...VIDEO_EXTENSIONS],
-        },
+      media: {
+        poster: null,
+      },
+      extension: {
+        $in: [...VIDEO_EXTENSIONS],
       },
     },
   })
-  async pickPoster(media: Media, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async pickPoster(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+    const media = file.media!;
     // generate a poster by finding the largest (aka, hopefully most detailed) frame.
     // this approach should ignore things like intros/outros that are mostly black.
     let largestFrame: { frame: MergedFrame; data: Buffer; info: OutputInfo } | null = null;
@@ -283,7 +290,7 @@ export class VideoService {
       // can vary a lot. for example the first frame is always almost double the size
       // of the others, which i think might be to do with keyframes. so whatever,
       // for now this works.
-      if (!frame.path) return;
+      if (!frame.path) continue;
       const result = await sharp(frame.path)
         .resize(1280, 720, { fit: 'inside' })
         .webp({ quality: 80 })
@@ -310,23 +317,30 @@ export class VideoService {
       });
 
       await writeFile(poster.path, largestFrame.data);
+      media.preview = undefined;
       this.filePosterRepo.persist(poster);
+      this.filePosterRepo.persist(media);
+      await this.filePosterRepo.flush();
     }
   }
 
-  @Task(Media, TaskType.VideoGenerateThumbhash, {
+  @Task(TaskType.VideoGenerateThumbhash, {
     concurrency: 2,
-    populate: ['poster'],
+    populate: ['media', 'media.poster'],
     filter: {
-      preview: null,
-      poster: { $ne: null },
-      height: { $ne: null },
-      width: { $ne: null },
+      media: {
+        preview: null,
+        poster: { $ne: null },
+        height: { $ne: null },
+        width: { $ne: null },
+      },
     },
   })
-  async generateThumbhash(media: Loaded<Media, 'poster'>) {
+  async generateThumbhash(file: File) {
+    const media = file.media!;
     if (!media.poster) throw new Error('Missing poster');
-    const { resizedSize, rgba } = await this.imageService.loadImageAndConvertToRgba(media.poster.$.path);
+    const poster = media.poster.getEntity();
+    const { resizedSize, rgba } = await this.imageService.loadImageAndConvertToRgba(poster.path);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
     await this.fileRepo.persistAndFlush(media);
