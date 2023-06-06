@@ -1,5 +1,5 @@
 import { MikroORM, UseRequestContext } from '@mikro-orm/core';
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -21,7 +21,7 @@ export class FileScanService {
   private logger = new Logger(FileScanService.name);
   private lastPersist = Date.now();
 
-  constructor(protected orm: MikroORM) {}
+  constructor(protected orm: MikroORM, private em: EntityManager) {}
 
   @Cron(CronExpression.EVERY_12_HOURS)
   @UseRequestContext()
@@ -118,7 +118,7 @@ export class FileScanService {
     // there is no point in tracking files that we don't know how to handle
     if (!file.isKnownType) return;
 
-    this.fileRepo.persist(file);
+    this.em.persist(file);
     this.staged++;
     if (this.shouldPersist) {
       await this.persist();
@@ -136,7 +136,7 @@ export class FileScanService {
     const count = this.staged;
     this.staged = 0;
     this.lastPersist = Date.now();
-    await this.fileRepo.flush();
+    await this.em.flush();
     this.logger.debug(`Persisted ${count} files`);
   }
 }

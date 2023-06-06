@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { ImgHTMLAttributes, memo, useEffect, useMemo, useRef } from 'react';
+import React, { ImgHTMLAttributes, forwardRef, memo, useEffect, useMemo } from 'react';
 import { thumbhashBase64ToDataUri } from '../helpers/thumbhashBase64ToDataUri';
 import useCurrentState from '../hooks/useCurrentState';
 
@@ -21,9 +21,8 @@ const DEFAULT_PLACEHOLDER_IMAGE =
  * This should be a drop-in replacement for <img />.
  * If it is not, that is considered a bug.
  */
-export const ImageLoader = memo<ImageLoaderProps>(({ previewBase64, src, height, width, ...rest }) => {
+export const ImageLoader = memo(forwardRef<HTMLImageElement, ImageLoaderProps>(({ previewBase64, src, height, width, ...rest }, imageRef) => {
   const [loaded, setLoaded, loadedRef] = useCurrentState(false);
-  const imageRef = useRef<HTMLImageElement>(null);
   const previewUri = useMemo(() => {
     if (previewBase64) {
       return thumbhashBase64ToDataUri(previewBase64);
@@ -56,4 +55,4 @@ export const ImageLoader = memo<ImageLoaderProps>(({ previewBase64, src, height,
       width={width}
     />
   );
-});
+}));

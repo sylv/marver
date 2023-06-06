@@ -17,6 +17,21 @@ export type Scalars = {
   DateTime: any;
 };
 
+export type BoundingBox = {
+  __typename?: 'BoundingBox';
+  x1: Scalars['Float'];
+  x2: Scalars['Float'];
+  y1: Scalars['Float'];
+  y2: Scalars['Float'];
+};
+
+export type Face = {
+  __typename?: 'Face';
+  boundingBox: BoundingBox;
+  id: Scalars['ID'];
+  person?: Maybe<Person>;
+};
+
 export type File = {
   __typename?: 'File';
   directory: Scalars['String'];
@@ -80,9 +95,11 @@ export type Media = {
   durationFormatted?: Maybe<Scalars['String']>;
   durationSeconds?: Maybe<Scalars['Float']>;
   exifMetadata?: Maybe<MediaExifData>;
+  faces: Array<Face>;
   file: File;
   framerate?: Maybe<Scalars['Float']>;
   hasEmbeddedSubtitles?: Maybe<Scalars['Boolean']>;
+  hasFaces?: Maybe<Scalars['Boolean']>;
   height?: Maybe<Scalars['Float']>;
   isAnimated?: Maybe<Scalars['Boolean']>;
   /** Whether no subtitles could be generated from the audio on this video */
@@ -185,6 +202,12 @@ export type PageInfo = {
   startCursor: Scalars['String'];
 };
 
+export type Person = {
+  __typename?: 'Person';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   file?: Maybe<File>;
@@ -255,7 +278,7 @@ export type GetMediaQueryVariables = Exact<{
 }>;
 
 
-export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } }, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } } }> } } | null };
+export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number }, person?: { __typename?: 'Person', id: string, name: string } | null }>, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } } }> } } | null };
 
 export const MinimalMediaFragmentDoc = gql`
     fragment MinimalMedia on Media {
@@ -318,6 +341,19 @@ export const GetMediaDocument = gql`
     }
     file {
       type
+    }
+    faces {
+      id
+      boundingBox {
+        x1
+        y1
+        x2
+        y2
+      }
+      person {
+        id
+        name
+      }
     }
     similar(type: $filter) {
       totalCount

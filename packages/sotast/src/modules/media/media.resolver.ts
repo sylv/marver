@@ -1,7 +1,16 @@
 import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { wrap } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Args, ArgsType, Field, Parent, Query, ResolveField, Resolver, registerEnumType } from '@nestjs/graphql';
+import {
+  Args,
+  ArgsType,
+  Field,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { createConnection } from 'nest-graphql-utils';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
@@ -62,7 +71,7 @@ export class MediaResolver {
   @Query(() => Media, { nullable: true })
   async media(@Args('id') fileId: string) {
     return this.mediaRepo.findOne(fileId, {
-      populate: ['poster', 'thumbnail', 'timeline', 'subtitles'],
+      populate: ['poster', 'thumbnail', 'timeline', 'subtitles', 'faces'],
     });
   }
 
@@ -73,12 +82,13 @@ export class MediaResolver {
       defaultPageSize: 25,
       paginate: async (args) => {
         const queryBuilder = this.mediaRepo
-          .createQueryBuilder()
+          .createQueryBuilder('media')
           .select('*')
           .leftJoinAndSelect('file', 'file')
           .leftJoinAndSelect('poster', 'poster')
           .leftJoinAndSelect('thumbnail', 'thumbnail')
           .leftJoinAndSelect('subtitles', 'subtitles')
+          .leftJoinAndSelect('faces', 'faces')
           .where({
             file: {
               metadata: {
@@ -89,7 +99,8 @@ export class MediaResolver {
           .limit(args.limit)
           .offset(args.offset);
 
-        if (filter.afterDate) queryBuilder.andWhere({ file: { metadata: { createdAt: { $gte: filter.afterDate } } } });
+        if (filter.afterDate)
+          queryBuilder.andWhere({ file: { metadata: { createdAt: { $gte: filter.afterDate } } } });
         if (filter.beforeDate)
           queryBuilder.andWhere({ file: { metadata: { createdAt: { $lte: filter.beforeDate } } } });
 
@@ -99,7 +110,11 @@ export class MediaResolver {
             const vector = await this.sentryService.getTextVector(filter.search);
             const serialized = Buffer.from(Vector.toBinary(vector));
             queryBuilder
-              .addSelect(queryBuilder.raw(`cosine_similarity(vector, :vector) as similarity`, { vector: serialized }))
+              .addSelect(
+                queryBuilder.raw(`cosine_similarity(media.vector, :vector) as similarity`, {
+                  vector: serialized,
+                })
+              )
               .orderBy({
                 similarity: 'DESC',
               });
@@ -114,7 +129,12 @@ export class MediaResolver {
           });
         }
 
-        return queryBuilder.getResultAndCount();
+        // return queryBuilder.getResultAndCount();
+        queryBuilder.addSelect(`COUNT(*) OVER() as total`);
+        const results = await queryBuilder.execute();
+        const total = (results[0] as any)?.total ?? 0;
+        const mapped = results.map((raw) => this.mediaRepo.map(raw));
+        return [mapped, total];
       },
     });
   }
@@ -141,7 +161,10 @@ export class MediaResolver {
           .leftJoinAndSelect('poster', 'poster')
           .leftJoinAndSelect('thumbnail', 'thumbnail')
           .leftJoinAndSelect('subtitles', 'subtitles')
-          .addSelect(queryBuilder.raw(`cosine_similarity(vector, :vector) as similarity`, { vector }))
+          .leftJoinAndSelect('faces', 'faces')
+          .addSelect(
+            queryBuilder.raw(`cosine_similarity(media.vector, :vector) as similarity`, { vector })
+          )
           .where({
             file: {
               id: { $ne: media.file.id },

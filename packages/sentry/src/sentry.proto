@@ -3,6 +3,7 @@ package me.sylver.marver.sentry;
 
 service SentryService {
     rpc GetVector (GetVectorRequest) returns (GetVectorResponse) {}
+    rpc DetectFaces (DetectFacesRequest) returns (DetectFacesResponse) {}
 }
 
 message GetVectorRequest {
@@ -14,6 +15,27 @@ message GetVectorRequest {
 
 message GetVectorResponse {
     Vector vector = 1;
+}
+
+message DetectFacesRequest {
+    string file_path = 1;
+}
+
+message DetectFacesResponse {
+    repeated Face faces = 1;
+}
+
+message Face {
+    BoundingBox bounding_box = 1;
+    Vector vector = 2;
+    float confidence = 3;
+}
+
+message BoundingBox {
+    float x1 = 1;
+    float y1 = 2;
+    float x2 = 3;
+    float y2 = 4;
 }
 
 message Vector {

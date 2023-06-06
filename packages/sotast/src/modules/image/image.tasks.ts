@@ -1,11 +1,9 @@
-import { EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityManager } from '@mikro-orm/better-sqlite';
 import { Injectable } from '@nestjs/common';
 import bytes from 'bytes';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { File } from '../file/entities/file.entity.js';
-import { MediaExifData } from '../media/entities/media-exif.entity.js';
 import { SentryService } from '../sentry/sentry.service.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
@@ -13,9 +11,11 @@ import { ImageService } from './image.service.js';
 
 @Injectable()
 export class ImageTasks {
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
-  @InjectRepository(MediaExifData) private exifRepo: EntityRepository<MediaExifData>;
-  constructor(private imageService: ImageService, private sentryService: SentryService) {}
+  constructor(
+    private imageService: ImageService,
+    private sentryService: SentryService,
+    private em: EntityManager
+  ) {}
 
   @Task(TaskType.ImageExtractExif, {
     concurrency: 4,
@@ -38,7 +38,7 @@ export class ImageTasks {
   async extractExif(file: File) {
     const media = file.media!;
     const exif = await this.imageService.createExifFromFile(media);
-    await this.exifRepo.persistAndFlush(exif);
+    await this.em.persistAndFlush(exif);
   }
 
   @Task(TaskType.ImageExtractMetadata, {
@@ -56,7 +56,7 @@ export class ImageTasks {
     const media = this.imageService.createMediaFromSharpMetadata(originalMeta, file);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
-    await this.fileRepo.persistAndFlush(media);
+    await this.em.persistAndFlush(media);
   }
 
   @Task(TaskType.ImageGenerateClipVectors, {
@@ -81,10 +81,10 @@ export class ImageTasks {
     // a delay when the service is probably just restarting or updating.
     const vector = await this.sentryService.getFileVector(media.file);
     media.vector = this.sentryService.vectorToBuffer(vector);
-    await this.fileRepo.persistAndFlush(media);
+    await this.em.persistAndFlush(media);
   }
 
-  // @Task(Media, TaskType.ImageGeneratePerceptualHash, {
+  // @Task(TaskType.ImageGeneratePerceptualHash, {
   //   concurrency: 2,
   //   filter: {
   //     file: {
@@ -101,7 +101,7 @@ export class ImageTasks {
   //   try {
   //     const perceptualHash = await phashImage(file.path, { hashSize: 16 });
   //     file.hash!.perceptual = perceptualHash;
-  //     await this.fileRepo.persistAndFlush(file);
+  //     await this.em.persistAndFlush(file);
   //   } catch (error: any) {
   //     // todo: this triggers on things that are definitely valid images.
   //     if (error.message.includes('error decoding')) throw new CorruptedFileError(file.path);

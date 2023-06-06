@@ -1,5 +1,5 @@
 import { MergedFrame, phashVideo } from '@marver/vidhash';
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { mkdir, rm, writeFile } from 'fs/promises';
@@ -28,12 +28,12 @@ export class VideoService {
   @InjectRepository(MediaThumbnail) private fileThumbnailRepo: EntityRepository<MediaThumbnail>;
   @InjectRepository(MediaTimeline) private fileTimelineRepo: EntityRepository<MediaTimeline>;
   @InjectRepository(MediaPoster) private filePosterRepo: EntityRepository<MediaPoster>;
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
 
   constructor(
     private ffmpegService: FfmpegService,
     private sentryService: SentryService,
-    private imageService: ImageService
+    private imageService: ImageService,
+    private em: EntityManager
   ) {}
 
   @Task(TaskType.VideoExtractMetadata, {
@@ -85,7 +85,7 @@ export class VideoService {
       throw new CorruptedFileError(file.path);
     }
 
-    await this.mediaRepo.persistAndFlush(metadata);
+    await this.em.persistAndFlush(metadata);
   }
 
   @TaskParent(TaskType.VideoExtractScreenshots, {
@@ -145,7 +145,10 @@ export class VideoService {
       },
     },
   })
-  async generateClipVector(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async generateClipVector(
+    file: File,
+    { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>
+  ) {
     const media = file.media!;
     const vectors: number[][] = [];
     for (const frame of frames) {
@@ -156,7 +159,7 @@ export class VideoService {
 
     const merged = this.sentryService.combineVectors(vectors);
     media.vector = Buffer.from(Vector.toBinary({ value: merged }));
-    await this.mediaRepo.persistAndFlush(media);
+    await this.em.persistAndFlush(media);
   }
 
   @TaskChild(TaskType.VideoGenerateTimeline, {
@@ -171,7 +174,10 @@ export class VideoService {
       },
     },
   })
-  async generateTimeline(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async generateTimeline(
+    file: File,
+    { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>
+  ) {
     const media = file.media!;
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
@@ -227,7 +233,7 @@ export class VideoService {
       mimeType: mimeType,
     });
 
-    await this.fileTimelineRepo.persistAndFlush(timeline);
+    await this.em.persistAndFlush(timeline);
   }
 
   @TaskChild(TaskType.VideoPickThumbnail, {
@@ -264,7 +270,7 @@ export class VideoService {
 
     thumbnail.width = meta.width;
     thumbnail.height = meta.height;
-    await this.fileThumbnailRepo.persistAndFlush(thumbnail);
+    await this.em.persistAndFlush(thumbnail);
   }
 
   @TaskChild(TaskType.VideoPickPoster, {
@@ -318,9 +324,9 @@ export class VideoService {
 
       await writeFile(poster.path, largestFrame.data);
       media.preview = undefined;
-      this.filePosterRepo.persist(poster);
-      this.filePosterRepo.persist(media);
-      await this.filePosterRepo.flush();
+      this.em.persist(poster);
+      this.em.persist(media);
+      await this.em.flush();
     }
   }
 
@@ -343,6 +349,6 @@ export class VideoService {
     const { resizedSize, rgba } = await this.imageService.loadImageAndConvertToRgba(poster.path);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
-    await this.fileRepo.persistAndFlush(media);
+    await this.em.persistAndFlush(media);
   }
 }

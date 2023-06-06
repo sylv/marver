@@ -1,4 +1,4 @@
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { mkdir, readFile } from 'fs/promises';
@@ -20,7 +20,7 @@ const SUBTITLE_STRIP_PATTERN =
 @Injectable()
 export class SubtitleService {
   @InjectRepository(MediaSubtitle) private subtitleRepo: EntityRepository<MediaSubtitle>;
-  constructor(private ffmpegService: FfmpegService) {}
+  constructor(private ffmpegService: FfmpegService, private em: EntityManager) {}
 
   @Task(TaskType.VideoGenerateSubtitles, {
     concurrency: 1,
@@ -77,10 +77,10 @@ export class SubtitleService {
           languageIso639_1: languageName,
         });
 
-        this.subtitleRepo.persist(fileSupport);
+        this.em.persist(fileSupport);
       }
 
-      await this.subtitleRepo.flush();
+      await this.em.flush();
       return;
     }
   }

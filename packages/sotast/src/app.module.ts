@@ -11,6 +11,7 @@ import { SentryModule } from './modules/sentry/sentry.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
 import { MediaModule } from './modules/media/media.module.js';
+import { PersonModule } from './modules/people/person.module.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
@@ -41,6 +42,7 @@ const GQL_LOGGER = new Logger('GraphQL');
     }),
     ScheduleModule.forRoot(),
     FileModule,
+    PersonModule,
     ImageModule,
     TaskModule,
     SentryModule,

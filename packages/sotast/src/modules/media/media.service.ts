@@ -1,10 +1,12 @@
-import { QueryBuilder } from '@mikro-orm/better-sqlite';
+import { EntityManager, QueryBuilder } from '@mikro-orm/better-sqlite';
 import { Injectable } from '@nestjs/common';
 import { SEARCH_MODIFIERS } from '../../config/search-modifiers.js';
 import { Media } from './entities/media.entity.js';
 
 @Injectable()
 export class MediaService {
+  constructor(private em: EntityManager) {}
+
   parseSearchQuery(query: string, queryBuilder: QueryBuilder<Media>) {
     const clipSearchParts = [];
     for (const part of query.split(/(?<=")[^"]+(?=")|(?<=')[^']+(?=')|\s+/)) {
@@ -18,9 +20,11 @@ export class MediaService {
         });
       } else if (part.includes(':')) {
         const [name, ...value] = part.split(':');
-        const modifier = SEARCH_MODIFIERS.find((mod) => mod.name === name || mod.aliases?.includes(name));
+        const modifier = SEARCH_MODIFIERS.find(
+          (mod) => mod.name === name || mod.aliases?.includes(name)
+        );
         if (modifier) {
-          modifier.add(value.join(':'), queryBuilder);
+          modifier.add(value.join(':'), queryBuilder, this.em);
         } else {
           clipSearchParts.push(part);
         }

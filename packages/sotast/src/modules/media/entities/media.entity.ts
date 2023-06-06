@@ -12,6 +12,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import ms from 'ms';
 import { Connection } from 'nest-graphql-utils';
 import { File } from '../../file/entities/file.entity.js';
+import { Face } from '../../people/entities/face.entity.js';
 import { MediaExifData } from './media-exif.entity.js';
 import { MediaPerceptualHash } from './media-perceptual-hash.entity.js';
 import { MediaPoster } from './media-poster.entity.js';
@@ -68,7 +69,10 @@ export class Media extends MediaSortingProps {
   audioChannels?: number;
 
   @Property({ nullable: true })
-  @Field({ nullable: true, description: 'Whether no subtitles could be generated from the audio on this video' })
+  @Field({
+    nullable: true,
+    description: 'Whether no subtitles could be generated from the audio on this video',
+  })
   nonVerbal?: boolean;
 
   @Property({ nullable: true })
@@ -78,6 +82,10 @@ export class Media extends MediaSortingProps {
   @Property({ nullable: true })
   @Field({ nullable: true })
   hasEmbeddedSubtitles?: boolean;
+
+  @Property({ nullable: true })
+  @Field({ nullable: true })
+  hasFaces?: boolean;
 
   @Property({ nullable: true })
   @Field({ nullable: true })
@@ -113,6 +121,10 @@ export class Media extends MediaSortingProps {
 
   @OneToMany(() => MediaPerceptualHash, (phash) => phash.media)
   perceptualHashes = new Collection<MediaPerceptualHash>(this);
+
+  @OneToMany(() => Face, (face) => face.media)
+  @Field(() => [Face])
+  faces = new Collection<Face>(this);
 
   @Property({ nullable: true, persist: false, type: 'string' })
   @Field(() => String, { nullable: true })

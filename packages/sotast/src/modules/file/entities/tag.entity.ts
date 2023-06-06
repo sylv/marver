@@ -1,6 +1,7 @@
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
 import { FileTag } from './file-tag.entity.js';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Person } from '../../people/entities/person.entity.js';
 
 @Entity()
 @ObjectType()
@@ -8,12 +9,6 @@ export class Tag {
   @PrimaryKey()
   @Field(() => ID)
   name: string;
-
-  @ManyToOne(() => Tag, { nullable: true, ref: true })
-  parent?: Ref<Tag>;
-
-  @OneToMany(() => Tag, (tag) => tag.parent)
-  children = new Collection<Tag>(this);
 
   @Property()
   aliases: string[] = [];
@@ -23,6 +18,15 @@ export class Tag {
 
   @Property({ nullable: true })
   color?: number;
+
+  @ManyToOne(() => Tag, { nullable: true, ref: true })
+  parent?: Ref<Tag>;
+
+  @OneToMany(() => Tag, (tag) => tag.parent)
+  children = new Collection<Tag>(this);
+
+  @OneToOne(() => Person, (person) => person.tag, { nullable: true, ref: true })
+  person?: Ref<Person>;
 
   @OneToMany(() => FileTag, (file) => file.tag)
   files = new Collection<FileTag>(this);

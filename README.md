@@ -43,10 +43,13 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 - EXIF extraction
 - Subtitle extraction and cleanup, removing advertisements and other junk
 - Skip intro and credits detection using perceptual hashes of frames<sup>2</sup>
+- Face recognition<sup>2</sup>
 
 <sup>1. with some video files, there are audio glitches that occur between segments. chrome supports h265 now and if the browser supports the video it'll play the original so this is less of an issue.</sup>
 
 <sup>2. perceptual hashes for videos are generated, but detecting overlaps and the skip intro button is not in yet.</sup>
+
+<sup>3. Faces are extracted and stored, but you cannot tie a name to a face yet. You can search for similar faces using `face:face_id` which will order by similarity. I'm not sure how to go about assigning a name to a face and matching other face matches to a name just yet.</sup>
 
 ### ideas
 
@@ -118,3 +121,6 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
   - If the tag is added to an image manually, automatically add it to the "does contain" list (if enabled)
 - A page that displays all the photos exif coordinates on a map and you can click on each pin to see the individual photos.
   - [Pigeon maps](https://pigeon-maps.js.org/) will be good for this
+- Run CLIP on generated file names and use that for search as well
+  - I have no clue how you would search text and image vectors at the same time
+  - This would let search take the metadata from the file name into account, for example a file named `Ryan at the Park.jpg` would take priority over `Tim at the Park.jpg` if you searched for just `ryan`. In theory anyway, in practice I'm not sure that's how it would work but it can't hurt. Probably.

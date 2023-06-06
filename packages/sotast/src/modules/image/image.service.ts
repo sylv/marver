@@ -1,4 +1,4 @@
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
@@ -42,6 +42,7 @@ export class ImageService {
   @InjectRepository(MediaExifData) private exifRepo: EntityRepository<MediaExifData>;
   @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
   private logger = new Logger(ImageService.name);
+  constructor(private em: EntityManager) {}
 
   parseImageProxyPayload(payload: string): ProxyableImage {
     return unpack(Buffer.from(payload, 'base64url'));
@@ -176,7 +177,7 @@ export class ImageService {
 
       if (exif.dateTime) {
         media.file.metadata.createdAt = exif.dateTime;
-        this.exifRepo.persist(media.file);
+        this.em.persist(media.file);
       }
     } catch (error: any) {
       if (error.name !== 'MetadataMissingError') {

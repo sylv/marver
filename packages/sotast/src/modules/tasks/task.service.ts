@@ -1,6 +1,6 @@
 import { Collection } from '@discordjs/collection';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { FilterQuery, MikroORM, RequestContext, UseRequestContext } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
@@ -40,7 +40,11 @@ export class TaskService implements OnApplicationBootstrap {
 
   private readonly taskHandlers = new Collection<TaskType, LoadedTask>();
   private readonly log = new Logger(TaskService.name);
-  constructor(private discoveryService: DiscoveryService, private orm: MikroORM) {}
+  constructor(
+    private discoveryService: DiscoveryService,
+    private orm: MikroORM,
+    private em: EntityManager
+  ) {}
 
   async onApplicationBootstrap() {
     if (config.disable_tasks) return;
@@ -60,7 +64,9 @@ export class TaskService implements OnApplicationBootstrap {
       });
     }
 
-    const children = await this.discoveryService.providerMethodsWithMetaAtKey<TaskChildKey>(TASK_CHILD_KEY);
+    const children = await this.discoveryService.providerMethodsWithMetaAtKey<TaskChildKey>(
+      TASK_CHILD_KEY
+    );
     for (const child of children) {
       if (child.meta.parentType === undefined) {
         throw new Error(`Task ${TaskType[child.meta.type]} is a child task but has no parentType`);
@@ -69,7 +75,9 @@ export class TaskService implements OnApplicationBootstrap {
       const parent = this.taskHandlers.get(child.meta.parentType);
       if (!parent) {
         throw new Error(
-          `Task ${TaskType[child.meta.type]} has parentType ${TaskType[child.meta.parentType]} but no parent task`
+          `Task ${TaskType[child.meta.type]} has parentType ${
+            TaskType[child.meta.parentType]
+          } but no parent task`
         );
       }
 
@@ -139,7 +147,9 @@ export class TaskService implements OnApplicationBootstrap {
     if (!hasMore) {
       const sleepFor = randomInt(15000, 30000);
       this.log.debug(
-        `No more files to process for task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(sleepFor)}...`
+        `No more files to process for task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
+          sleepFor
+        )}...`
       );
       await sleep(sleepFor);
     }
@@ -171,7 +181,10 @@ export class TaskService implements OnApplicationBootstrap {
         },
         {
           limit: fetchCount,
-          populate: ['file', ...((taskHandler.meta.populate?.map((field) => `file.${String(field)}`) as any[]) || [])],
+          populate: [
+            'file',
+            ...((taskHandler.meta.populate?.map((field) => `file.${String(field)}`) as any[]) || []),
+          ],
         }
       );
 
@@ -186,7 +199,9 @@ export class TaskService implements OnApplicationBootstrap {
     if (!hasMore) {
       const sleepFor = randomInt(15000, 30000);
       this.log.debug(
-        `No more files to process for child task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(sleepFor)}...`
+        `No more files to process for child task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
+          sleepFor
+        )}...`
       );
       await sleep(sleepFor);
     }
@@ -214,7 +229,7 @@ export class TaskService implements OnApplicationBootstrap {
 
           // todo: if there are >100 task results for a task type, pause and wait for the
           // children to catch up before doing more.
-          await this.taskRepo.persistAndFlush(task);
+          await this.em.persistAndFlush(task);
         }
       } else {
         // handle running child tasks
@@ -224,7 +239,9 @@ export class TaskService implements OnApplicationBootstrap {
 
       const duration = performance.now() - start;
       if (duration > 5000) {
-        this.log.warn(`Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(duration)} to complete.`);
+        this.log.warn(
+          `Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(duration)} to complete.`
+        );
       }
     } catch (error: any) {
       const isCorrupted = error instanceof CorruptedFileError;
@@ -235,18 +252,22 @@ export class TaskService implements OnApplicationBootstrap {
         error.message === 'Invalid image format' ||
         // todo: this one should be handled per task type because its based on
         // support by external libraries, the file isnt actually corrupt.
-        error.message === 'Unsupported image type';
+        error.message === 'Unsupported image type' ||
+        error.message === 'Exception calling application: Image not found';
 
       if (isMissing || isCorrupted) {
         // todo: this assumes entityId is the file id, which may not be true in the future.
         // todo: having a file.createReadStream() method that automatically handles this
         // might make a lot of sense, or else handling this everywhere is going to be a nightmare.
         if (isCorrupted) this.log.warn(`File ${file.id} (${file.path}) is corrupted, marking as such.`);
-        else this.log.warn(`File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`);
+        else
+          this.log.warn(
+            `File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`
+          );
 
         file.metadata.unavailable = true;
         if (isCorrupted) file.metadata.corrupted = true;
-        await this.fileRepo.persistAndFlush(file);
+        await this.em.persistAndFlush(file);
 
         return;
       }

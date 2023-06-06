@@ -11,6 +11,19 @@ query GetMedia($fileId: String!, $filter: SimilarityType) {
     file {
       type
     }
+    faces {
+      id
+      boundingBox {
+        x1
+        y1
+        x2
+        y2
+      }
+      person {
+        id
+        name
+      }
+    }
     similar(type: $filter) {
       totalCount
       pageInfo {

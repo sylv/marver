@@ -17,15 +17,15 @@ const MARGIN = 4;
 export default function HomePage() {
   const search = useSearchStore((store) => store.query);
   const client = useClient();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const debouncedSearch = useDebounced(search, 500);
   const [{ data, fetching, error }] = useGetMediaListQuery({
     variables: { search: debouncedSearch },
   });
 
   useInfiniteScroll({
+    ref: loadMoreRef,
     hasNextPage: data?.mediaList.pageInfo.hasNextPage || false,
-    containerRef: containerRef,
     loadMore: () => {
       if (!data) return;
       client
@@ -54,10 +54,11 @@ export default function HomePage() {
 
   return (
     <Fragment>
-      <main className="container mx-auto mt-6" ref={containerRef}>
+      <main className="container mx-auto mt-6">
         {groupedMedia.map(({ year, edges }) => (
           <MediaList key={year} title={year} edges={edges} />
         ))}
+        <div ref={loadMoreRef} />
       </main>
     </Fragment>
   );

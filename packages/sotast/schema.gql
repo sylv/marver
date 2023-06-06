@@ -31,15 +31,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type Tag {
-  name: ID!
-}
-
-type FileTag {
-  tag: Tag!
-  system: Boolean!
-}
-
 type File {
   id: ID!
   name: String!
@@ -70,6 +61,21 @@ type FileConnection {
   totalCount: Int!
   pageInfo: PageInfo!
   edges: [FileEdge!]!
+}
+
+type MediaExifData {
+  lensMake: String
+  lensModel: String
+  cameraMake: String
+  cameraModel: String
+  focalLength: String
+  exposureTime: String
+  fNumber: String
+  iso: Float
+  flash: String
+  dateTime: DateTime
+  longitude: Float
+  latitude: Float
 }
 
 type MediaPoster {
@@ -116,12 +122,14 @@ type Media {
   nonVerbal: Boolean
   audioCodec: String
   hasEmbeddedSubtitles: Boolean
+  hasFaces: Boolean
   isAnimated: Boolean
   thumbnail: MediaThumbnail!
   timeline: MediaTimeline!
   poster: MediaPoster!
   exifMetadata: MediaExifData
   subtitles: [MediaSubtitle!]!
+  faces: [Face!]!
   durationFormatted: String
   previewBase64: String
   similar(after: String, first: Float, before: String, last: Float, offset: Float, type: SimilarityType): MediaConnection!
@@ -151,19 +159,31 @@ type MediaConnection {
   edges: [MediaEdge!]!
 }
 
-type MediaExifData {
-  lensMake: String
-  lensModel: String
-  cameraMake: String
-  cameraModel: String
-  focalLength: String
-  exposureTime: String
-  fNumber: String
-  iso: Float
-  flash: String
-  dateTime: DateTime
-  longitude: Float
-  latitude: Float
+type BoundingBox {
+  x1: Float!
+  y1: Float!
+  x2: Float!
+  y2: Float!
+}
+
+type Face {
+  id: ID!
+  boundingBox: BoundingBox!
+  person: Person
+}
+
+type Person {
+  id: ID!
+  name: String!
+}
+
+type Tag {
+  name: ID!
+}
+
+type FileTag {
+  tag: Tag!
+  system: Boolean!
 }
 
 type Query {

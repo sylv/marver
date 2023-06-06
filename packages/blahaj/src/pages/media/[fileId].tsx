@@ -12,6 +12,7 @@ import { SimilarMedia } from '../../components/similar-media';
 import { FileType, SimilarityType, useGetMediaQuery } from '../../generated/graphql';
 import { thumbhashBase64ToDataUri } from '../../helpers/thumbhashBase64ToDataUri';
 import { setFilter, useMediaStore } from './media.store';
+import { ImageOverlay } from '../../components/image-overlay';
 
 const splitTitleCase = (input: string) => {
   return input.replace(/([A-Z]+)/g, ' $1').trim();
@@ -71,13 +72,27 @@ export default function File() {
               ))}
             </Player>
           )}
-          {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
+          {/* {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
             <ImageLoader
               src={data.media.thumbnailUrl}
               height={data.media?.height || undefined}
               width={data.media?.width || undefined}
               previewBase64={data.media.previewBase64}
               className="h-full w-full object-contain"
+            />
+          )} */}
+          {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
+            <ImageOverlay
+              src={data.media.thumbnailUrl}
+              height={data.media?.height || undefined}
+              width={data.media?.width || undefined}
+              previewBase64={data.media.previewBase64}
+              className="h-[70vh] w-full object-contain"
+              overlays={data.media.faces.map((face) => ({
+                boundingBox: face.boundingBox,
+                content: face.id,
+                className: 'border border-red-600 text-red-600 truncate font-mono bg-red-400/40',
+              }))}
             />
           )}
         </div>

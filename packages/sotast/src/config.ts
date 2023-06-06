@@ -21,6 +21,18 @@ const schema = z.object({
   max_hashable_size: z.string().default('100MB').transform(bytes),
   secret: z.string().transform((secret) => new TextEncoder().encode(secret)),
   disable_tasks: z.boolean().default(false),
+  face_detection: z
+    .object({
+      // the score required to match a face to a person
+      // score is lower because most instances will only have a dozen or so people,
+      // so false positives are unlikely
+      min_person_score: z.number().default(0.5),
+      // the score required to match a face. this is based on the confidence score
+      // returned by insightface. the score is higher to discard low quality matches,
+      // which could dilute the results.
+      min_face_score: z.number().default(0.7),
+    })
+    .default({}),
   virtual_tags: z
     .array(
       z.object({

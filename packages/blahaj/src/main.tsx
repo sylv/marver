@@ -17,6 +17,7 @@ const client = createClient({
       schema: schema as any,
       keys: {
         FileMetadata: () => null,
+        BoundingBox: () => null,
         Media: (data) => {
           const file = data.file;
           if (!file) throw new Error('No file');

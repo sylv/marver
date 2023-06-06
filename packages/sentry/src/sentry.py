@@ -1,5 +1,8 @@
 from concurrent import futures
 from functools import cached_property
+from insightface.app import FaceAnalysis
+import os
+import cv2
 
 import clip
 import grpc
@@ -8,8 +11,11 @@ import sentry_pb2_grpc
 import torch
 from PIL import Image
 
-clip_model_name = "ViT-L/14"
-device = "cuda" if torch.cuda.is_available() else "cpu"
+fr_model_name = os.getenv(
+    'MARVER_MACHINE_LEARNING_FACIAL_RECOGNITION_MODEL', 'buffalo_l')
+clip_model_name = os.getenv("MARVER_MACHINE_LEARNING_CLIP_MODEL", "ViT-L/14")
+device = os.getenv("MARVER_MACHINE_LEARNING_DEVICE",
+                   "cuda" if torch.cuda.is_available() else "cpu")
 
 
 class SentryService(sentry_pb2_grpc.SentryServiceServicer):
@@ -19,6 +25,17 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
         model, preprocess = clip.load(clip_model_name, device=device)
         print("Clip model loaded")
         return model, preprocess, device
+
+    @cached_property
+    def face_model(self):
+        model = FaceAnalysis(
+            name=fr_model_name,
+            allowed_modules=["detection", "recognition"],
+            providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+        )
+
+        model.prepare(ctx_id=0, det_size=(640, 640))
+        return model
 
     def GetVector(self, request, context):
         # Load the image and generate the vector
@@ -49,6 +66,30 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
             return sentry_pb2.GetVectorResponse(vector={
                 "value": vector,
             })
+
+    def DetectFaces(self, request, context):
+        image_path = request.file_path
+        image = cv2.imread(image_path)
+        if image is None:
+            raise Exception("Image not found")
+
+        faces = self.face_model.get(image)
+        filtered = []
+        for face in faces:
+            filtered.append({
+                "confidence": face.det_score,
+                "bounding_box": {
+                    "x1": round(face.bbox[0]),
+                    "y1": round(face.bbox[1]),
+                    "x2": round(face.bbox[2]),
+                    "y2": round(face.bbox[3]),
+                },
+                "vector": {
+                    "value": face.normed_embedding.tolist(),
+                },
+            })
+
+        return sentry_pb2.DetectFacesResponse(faces=filtered)
 
 
 def serve():

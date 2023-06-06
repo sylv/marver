@@ -1,7 +1,9 @@
-import { QueryBuilder } from '@mikro-orm/better-sqlite';
+import { EntityManager, QueryBuilder } from '@mikro-orm/better-sqlite';
 import bytes from 'bytes';
 import ms from 'ms';
 import { Media } from '../modules/media/entities/media.entity.js';
+import { Face } from '../modules/people/entities/face.entity.js';
+import { config } from '../config.js';
 
 function operatorToQuery(operator: string, value: unknown): unknown | undefined {
   switch (operator) {
@@ -120,6 +122,38 @@ export const SEARCH_MODIFIERS = [
       const [operator, height] = value.split(':');
       const parsed = operatorToQuery(operator, parseInt(height));
       if (parsed) queryBuilder.andWhere({ height: parsed });
+    },
+  },
+  {
+    name: 'face',
+    add: (value: string, queryBuilder: QueryBuilder<Media>, em: EntityManager) => {
+      // value is a faceId
+      // we use cosine similarity on the face vector to find media
+      // with similar faces to the given faceId
+      const faceQuery = em
+        .createQueryBuilder(Face)
+        .where({ id: value })
+        .orWhere({
+          person: {
+            tag: value,
+          },
+        })
+        .select('vector');
+
+      queryBuilder
+        .addSelect(
+          queryBuilder.raw('cosine_similarity(faces.vector, :vector) as similarity', {
+            vector: faceQuery.getKnexQuery(),
+          })
+        )
+        .andWhere({
+          similarity: {
+            $gt: 0.4,
+          },
+        })
+        .orderBy({
+          similarity: 'DESC',
+        });
     },
   },
 ];
