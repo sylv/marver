@@ -7,6 +7,7 @@ import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
 import { Face } from './entities/face.entity.js';
 import { Person } from './entities/person.entity.js';
+import { IMAGE_EXTENSIONS } from '../../constants.js';
 
 @Injectable()
 export class PersonTasks {
@@ -18,6 +19,9 @@ export class PersonTasks {
   @Task(TaskType.ImageDetectFaces, {
     concurrency: 4,
     filter: {
+      extension: {
+        $in: [...IMAGE_EXTENSIONS],
+      },
       media: {
         height: { $ne: null },
         hasFaces: null,
