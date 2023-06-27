@@ -21,6 +21,8 @@ const schema = z.object({
   max_hashable_size: z.string().default('100MB').transform(bytes),
   secret: z.string().transform((secret) => new TextEncoder().encode(secret)),
   disable_tasks: z.boolean().default(false),
+  is_development: z.boolean().default(process.env.NODE_ENV !== 'production'),
+  is_production: z.boolean().default(process.env.NODE_ENV === 'production'),
   face_detection: z
     .object({
       // the score required to match a face to a person
@@ -48,8 +50,8 @@ const schema = z.object({
       z.object({
         name: z.string(),
         description: z.string().optional(),
-        height: z.number().optional(),
-        width: z.number().optional(),
+        max_height: z.number().optional(),
+        max_width: z.number().optional(),
         bitrate: z.string().transform(parseBits).optional(),
         segment_duration: z.number().default(4),
       })

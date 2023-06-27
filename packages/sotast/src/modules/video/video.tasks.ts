@@ -23,7 +23,7 @@ import { Task, TaskParent } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
 
 @Injectable()
-export class VideoService {
+export class VideoTasks {
   @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
   @InjectRepository(MediaThumbnail) private fileThumbnailRepo: EntityRepository<MediaThumbnail>;
   @InjectRepository(MediaTimeline) private fileTimelineRepo: EntityRepository<MediaTimeline>;
@@ -101,7 +101,7 @@ export class VideoService {
         $in: [...VIDEO_EXTENSIONS],
       },
     },
-    cleanupMethod: async (result: Awaited<ReturnType<VideoService['extractScreenshots']>>) => {
+    cleanupMethod: async (result: Awaited<ReturnType<VideoTasks['extractScreenshots']>>) => {
       await rm(result.screenshotPath, { recursive: true, force: true });
     },
   })
@@ -147,7 +147,7 @@ export class VideoService {
   })
   async generateClipVector(
     file: File,
-    { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>
+    { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>
   ) {
     const media = file.media!;
     const vectors: number[][] = [];
@@ -174,10 +174,7 @@ export class VideoService {
       },
     },
   })
-  async generateTimeline(
-    file: File,
-    { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>
-  ) {
+  async generateTimeline(file: File, { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>) {
     const media = file.media!;
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
@@ -248,7 +245,7 @@ export class VideoService {
       },
     },
   })
-  async pickThumbnail(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async pickThumbnail(file: File, { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>) {
     const media = file.media!;
     const firstFrameWithPath = frames.find((frame) => frame.path);
     if (!firstFrameWithPath) {
@@ -285,7 +282,7 @@ export class VideoService {
       },
     },
   })
-  async pickPoster(file: File, { frames }: Awaited<ReturnType<VideoService['extractScreenshots']>>) {
+  async pickPoster(file: File, { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>) {
     const media = file.media!;
     // generate a poster by finding the largest (aka, hopefully most detailed) frame.
     // this approach should ignore things like intros/outros that are mostly black.

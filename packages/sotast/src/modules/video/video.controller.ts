@@ -23,6 +23,7 @@ import { performance } from 'perf_hooks';
 import { config } from '../../config.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
 import { File } from '../file/entities/file.entity.js';
+import { Dimensions, scaleDimensions } from '../../helpers/scale-dimensions.js';
 
 @Controller()
 export class VideoController {
@@ -42,19 +43,32 @@ export class VideoController {
     const lines = ['#EXTM3U\n'];
 
     for (const profile of config.transcode.video_profiles) {
-      if (profile.height && videoStream.height && profile.height > videoStream.height) continue;
-      if (profile.width && videoStream.width && profile.width > videoStream.width) continue;
-      const height = profile.height || videoStream.height!;
-      const width = profile.width || videoStream.width!;
+      if (profile.max_height && videoStream.height && profile.max_height > videoStream.height) continue;
+      if (profile.max_width && videoStream.width && profile.max_width > videoStream.width) continue;
+      const scaledSize = scaleDimensions(videoStream as Dimensions, {
+        maxHeight: profile.max_height,
+        maxWidth: profile.max_width,
+      });
+
       const bitrate = profile.bitrate || videoStream.bit_rate!;
-      lines.push(`#EXT-X-STREAM-INF:BANDWIDTH=${bitrate},RESOLUTION=${width}x${height}`);
-      lines.push(`/api/files/${file.id}/vidproxy/${encodeURIComponent(profile.name)}.m3u8\n`);
+      lines.push(
+        `#EXT-X-STREAM-INF:BANDWIDTH=${bitrate},RESOLUTION=${scaledSize.width}x${scaledSize.height}`
+      );
+      lines.push(`${encodeURIComponent(profile.name)}.m3u8\n`);
     }
 
-    reply
-      .header('Content-Type', 'application/vnd.apple.mpegurl')
-      .header('Cache-Control', 'public, max-age=31536000')
-      .send(lines.join('\n'));
+    if (config.is_development) {
+      // makes debugging easier, you can view the m3u8 file in the browser
+      // without it trying to download it as a file.
+      reply.header('Content-Type', 'text/plain; charset=utf-8').header('Content-Disposition', 'inline');
+    } else {
+      // more "correct" + caching
+      reply
+        .header('Content-Type', 'application/vnd.apple.mpegurl')
+        .header('Cache-Control', 'public, max-age=60');
+    }
+
+    reply.send(lines.join('\n'));
   }
 
   @Get('/files/:fileId/vidproxy/:profileName.m3u8')
@@ -91,7 +105,7 @@ export class VideoController {
 
       const query = new URLSearchParams(queryParams);
       lines.push(`#EXTINF:${segment_duration},`);
-      lines.push(`/api/files/${file.id}/vidproxy/${encodeURIComponent(profile.name)}/${segmentIndex}.ts?${query}\n`);
+      lines.push(`${encodeURIComponent(profile.name)}/${segmentIndex}.ts?${query}\n`);
       remainingDuration -= segment_duration;
     }
 
@@ -172,7 +186,7 @@ export class VideoController {
       args.push('-c:a', 'aac', '-b:a', '192k', '-ac', channels.toString(), '-async', '1');
     }
 
-    args.push('-vf', `scale=${profile.width || '-2'}:${profile.height || '-2'}`);
+    args.push('-vf', `scale=${profile.max_width || '-2'}:${profile.max_height || '-2'}`);
 
     const hasher = createHash('sha256');
     hasher.update(JSON.stringify(profile));
@@ -192,7 +206,7 @@ export class VideoController {
 
     if (existingFile) {
       reply
-        .header('Content-Type', 'video/mp2t')
+        // .header('Content-Type', 'video/mp2t')
         .header('Content-Length', existingFile.size)
         .send(createReadStream(outFile));
 
