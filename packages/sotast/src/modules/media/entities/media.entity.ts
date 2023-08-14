@@ -19,6 +19,7 @@ import { MediaPoster } from './media-poster.entity.js';
 import { MediaSubtitle } from './media-subtitle.entity.js';
 import { MediaThumbnail } from './media-thumbnail.entity.js';
 import { MediaTimeline } from './media-timeline.entity.js';
+import { MediaVector } from './media-vector.entity.js';
 
 /** This is necessary for MikroORM property validation to pass when ordering by similarity, a computed property. */
 @ObjectType({ isAbstract: true })
@@ -91,8 +92,8 @@ export class Media extends MediaSortingProps {
   @Field({ nullable: true })
   isAnimated?: boolean;
 
-  @Property({ type: 'blob', nullable: true })
-  vector?: Buffer;
+  @OneToMany(() => MediaVector, (vector) => vector.media, { eager: true })
+  vectors = new Collection<MediaVector>(this);
 
   /** Thumbhash-computed preview */
   // todo: this should be lazy-loaded, only if graphql requests it.

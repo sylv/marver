@@ -15,6 +15,7 @@ import { SubtitleController } from './subtitle.controller.js';
 import { SubtitleService } from './subtitle.service.js';
 import { VideoController } from './video.controller.js';
 import { VideoTasks } from './video.tasks.js';
+import { MediaVector } from '../media/entities/media-vector.entity.js';
 
 @Module({
   providers: [VideoTasks, SubtitleService],
@@ -29,6 +30,7 @@ import { VideoTasks } from './video.tasks.js';
       FileMetadata,
       MediaSubtitle,
       MediaPerceptualHash,
+      MediaVector,
       MediaThumbnail,
       MediaPoster,
       MediaTimeline,

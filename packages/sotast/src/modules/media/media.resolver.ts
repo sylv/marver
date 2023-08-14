@@ -151,10 +151,14 @@ export class MediaResolver {
       defaultPageSize: 20,
       paginationArgs: filter,
       paginate: async (args) => {
-        if (!media.vector) return [[], 0];
+        // todo: this is hacky but for videos we're only using the first
+        // vector. photos only ever have one vector so thats fine
+        const vectors = await media.vectors.loadItems();
+        const vector = vectors[Math.floor(Math.random() * vectors.length)];
+        if (!vector) return [[], 0];
+
         // essentially we just want to find medias that are similar but not too similar.
         const queryBuilder = this.mediaRepo.createQueryBuilder('media');
-        const vector = media.vector;
         queryBuilder
           .select('*')
           .leftJoinAndSelect('file', 'file')

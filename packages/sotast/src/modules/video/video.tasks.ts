@@ -9,13 +9,13 @@ import sharp, { OutputInfo } from 'sharp';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { CorruptedFileError } from '../../errors/CorruptedFileError.js';
-import { Vector } from '../../generated/sentry.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
 import { File } from '../file/entities/file.entity.js';
 import { ImageService } from '../image/image.service.js';
 import { MediaPoster } from '../media/entities/media-poster.entity.js';
 import { MediaThumbnail } from '../media/entities/media-thumbnail.entity.js';
 import { MediaTimeline } from '../media/entities/media-timeline.entity.js';
+import { MediaVector } from '../media/entities/media-vector.entity.js';
 import { Media } from '../media/entities/media.entity.js';
 import { SentryService } from '../sentry/sentry.service.js';
 import { TaskChild } from '../tasks/task-child.decorator.js';
@@ -25,6 +25,7 @@ import { TaskType } from '../tasks/task.enum.js';
 @Injectable()
 export class VideoTasks {
   @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
+  @InjectRepository(MediaVector) private mediaVectorRepo: EntityRepository<MediaVector>;
   @InjectRepository(MediaThumbnail) private fileThumbnailRepo: EntityRepository<MediaThumbnail>;
   @InjectRepository(MediaTimeline) private fileTimelineRepo: EntityRepository<MediaTimeline>;
   @InjectRepository(MediaPoster) private filePosterRepo: EntityRepository<MediaPoster>;
@@ -138,7 +139,9 @@ export class VideoTasks {
     concurrency: 1,
     filter: {
       media: {
-        vector: null,
+        vectors: {
+          $exists: false,
+        },
       },
       extension: {
         $in: [...VIDEO_EXTENSIONS],
@@ -150,16 +153,18 @@ export class VideoTasks {
     { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>
   ) {
     const media = file.media!;
-    const vectors: number[][] = [];
     for (const frame of frames) {
       if (!frame.path) continue;
       const vector = await this.sentryService.getFileVector({ path: frame.path });
-      vectors.push(vector.value);
+      const mediaVector = this.mediaVectorRepo.create({
+        media: media,
+        data: this.sentryService.vectorToBuffer(vector),
+      });
+
+      this.em.persist(mediaVector);
     }
 
-    const merged = this.sentryService.combineVectors(vectors);
-    media.vector = Buffer.from(Vector.toBinary({ value: merged }));
-    await this.em.persistAndFlush(media);
+    await this.em.flush();
   }
 
   @TaskChild(TaskType.VideoGenerateTimeline, {

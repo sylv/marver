@@ -9,10 +9,11 @@ import { ImageController } from './image.controller.js';
 import { ImageService } from './image.service.js';
 import { Media } from '../media/entities/media.entity.js';
 import { ImageTasks } from './image.tasks.js';
+import { MediaVector } from '../media/entities/media-vector.entity.js';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([File, FileMetadata, MediaExifData, Media]),
+    MikroOrmModule.forFeature([File, FileMetadata, MediaExifData, MediaVector, Media]),
     SentryModule,
     forwardRef(() => FileModule),
   ],

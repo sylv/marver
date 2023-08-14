@@ -1,9 +1,11 @@
-import { EntityManager } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import bytes from 'bytes';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { File } from '../file/entities/file.entity.js';
+import { MediaVector } from '../media/entities/media-vector.entity.js';
 import { SentryService } from '../sentry/sentry.service.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
@@ -11,6 +13,8 @@ import { ImageService } from './image.service.js';
 
 @Injectable()
 export class ImageTasks {
+  @InjectRepository(MediaVector) private mediaVectorRepo: EntityRepository<MediaVector>;
+
   constructor(
     private imageService: ImageService,
     private sentryService: SentryService,
@@ -52,7 +56,9 @@ export class ImageTasks {
     },
   })
   async extractMetadata(file: File) {
-    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(file.path);
+    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(
+      file.path
+    );
     const media = this.imageService.createMediaFromSharpMetadata(originalMeta, file);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
@@ -64,7 +70,9 @@ export class ImageTasks {
     filter: {
       media: {
         height: { $ne: null },
-        vector: null,
+        vectors: {
+          $exists: false,
+        },
       },
       extension: {
         $in: [...IMAGE_EXTENSIONS],
@@ -80,8 +88,12 @@ export class ImageTasks {
     // here the task will be retried at a later point which means
     // a delay when the service is probably just restarting or updating.
     const vector = await this.sentryService.getFileVector(media.file);
-    media.vector = this.sentryService.vectorToBuffer(vector);
-    await this.em.persistAndFlush(media);
+    const mediaVec = this.mediaVectorRepo.create({
+      media: file.media!,
+      data: this.sentryService.vectorToBuffer(vector),
+    });
+
+    await this.em.persistAndFlush(mediaVec);
   }
 
   // @Task(TaskType.ImageGeneratePerceptualHash, {

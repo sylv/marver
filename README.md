@@ -17,11 +17,11 @@ marver will index your media and make it as user-friendly as possible. Point mar
 ## goals
 
 - Privacy is important. Looking up metadata online is fine, as long as it is not revealing any information about you or your files.
-- Uploading photos is not something marver should ever do. Setup samba or nfs and upload through that. In the future this may change, but it's not a priority right now.
-- No authentication/users, that just slows everything down. Setup a reverse proxy with basic auth instead. In the future user support would be nice so grandma can look at the family photos without seeing the 69TB of anime you have.
-- Metadata extraction must be excellent.
-  - Plex is terrible at this, you more or less need a specific file structure and naming scheme for it to work.
-  - File metadata can contain a significant amount of information, marver should try its best to extract it no matter the format.
+- No uploads, use something else to handle that for now.
+- No authentication/users for now. Setup a reverse proxy with basic auth instead. In the future user support will come.
+- Metadata extraction must be great.
+  - Other alternatives are generally bad at this, requiring a specific file structure and naming scheme for it to work.
+  - File metadata can contain a significant amount of information.
 
 ## pieces
 
@@ -124,3 +124,5 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 - Run CLIP on generated file names and use that for search as well
   - I have no clue how you would search text and image vectors at the same time
   - This would let search take the metadata from the file name into account, for example a file named `Ryan at the Park.jpg` would take priority over `Tim at the Park.jpg` if you searched for just `ryan`. In theory anyway, in practice I'm not sure that's how it would work but it can't hurt. Probably.
+- Include JSON, SQLite, CSV and XML files in scans and pull metadata from them.
+  - Lots of tools can write metadata to these files about downloads, but there is no standard format. So using an LLM to extract the metadata would be perfect.
