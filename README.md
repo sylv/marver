@@ -53,6 +53,7 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 
 ### ideas
 
+- TV show intros/credits can be detected more efficiently by detecting them on one episode, then checking the rest of the episodes for the same timestamps. If the frames match +- 5 seconds, the timestamps can be reused.
 - Moving or changing files slightly should copy over metadata if the files are mostly the same
   - Support either the file path changing but the contents being the same (same size+perceptual hash+maybe sha256 hash) _and_ the file extension changing but the contents remaining the same (same dimensions+perceptual hash) to allow for people organising their library _and_ transcoding files to a new format without losing metadata.
   - For images, the width+height should match, or the perceptual hash should match.
