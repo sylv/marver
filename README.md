@@ -53,6 +53,16 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 
 ### ideas
 
+- Document support
+  - Detect scanned receipts
+  - Preview support for PDFs/other documents
+  - Auto-detecting images of documents and treat them as documents
+    - OCR should allow to convert images of documents to a PDF which is much more useful
+- Query builder
+  - Let users query their data using raw SQL.
+  - An LLM can be used to generate queries based on the user's input, "show me all photos taken between 2010 and 2015, with Ryan in them" could query by exif metadata, and filter by photos with faces that match Ryan. Can just open a read-only sqlite connection so nothing can break.
+  - Would be a nightmare to do permissions for, but admin-only would still be useful.
+  - Would also be a nightmare to do UI for, displaying the results in the expected format. Maybe just let the LLM pick the appropriate view format - give it options like `generic`, `image_gallery`, `tv_shows`, `movies`, `documents` and each one displays the results in a different way.
 - TV show intros/credits can be detected more efficiently by detecting them on one episode, then checking the rest of the episodes for the same timestamps. If the frames match +- 5 seconds, the timestamps can be reused.
 - Moving or changing files slightly should copy over metadata if the files are mostly the same
   - Support either the file path changing but the contents being the same (same size+perceptual hash+maybe sha256 hash) _and_ the file extension changing but the contents remaining the same (same dimensions+perceptual hash) to allow for people organising their library _and_ transcoding files to a new format without losing metadata.
@@ -67,6 +77,7 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
   - Index the text and use that for search
   - [MMOCR](https://github.com/open-mmlab/mmocr) seems like the best option for this
   - Run translatelocally, libretranslate or even Vicuna-13b if we already have it to translate the text, and with Vicuna we can even use it to clean it up or provide context (especially if it can "see" the image with CLIP, but I doubt we're gonna get that advanced)
+  - Overlay the text invisibly with the same bounding box on the image so you can copy/paste it.
 - Batch ffmpeg segments into a single command. This should be faster and let ffmpeg go wild with the CPU/GPU.
   - It would make sense to only do this for segments later on, and keep the first few individual because getting them out the door as fast as possible is more important initially.
 - Sync the video position to the server so it remembers where you stopped watching
