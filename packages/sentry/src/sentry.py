@@ -1,9 +1,9 @@
 from concurrent import futures
 from functools import cached_property
-from insightface.app import FaceAnalysis
 import os
 import cv2
 
+import json
 import clip
 import grpc
 import sentry_pb2
@@ -28,6 +28,8 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
 
     @cached_property
     def face_model(self):
+        from insightface.app import FaceAnalysis
+
         model = FaceAnalysis(
             name=fr_model_name,
             allowed_modules=["detection", "recognition"],
@@ -36,6 +38,18 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
 
         model.prepare(ctx_id=0, det_size=(640, 640))
         return model
+
+    @cached_property
+    def ocr_model(self):
+        from doctr.models import ocr_predictor
+        from doctr.io import DocumentFile
+
+        print("Loading OCR model")
+        model = ocr_predictor(det_arch='db_resnet50',
+                              reco_arch='crnn_vgg16_bn', pretrained=True)
+        print("OCR model loaded")
+
+        return model, DocumentFile
 
     def GetVector(self, request, context):
         # Load the image and generate the vector
@@ -91,6 +105,41 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
 
         return sentry_pb2.DetectFacesResponse(faces=filtered)
 
+    def GetOCR(self, request, context):
+        model, DocumentFile = self.ocr_model
+
+        image_path = request.file_path
+        doc = DocumentFile.from_images(image_path)
+
+        ocr_result = model(doc)
+        output = ocr_result.export()
+
+        clean_results = []
+        page = output['pages'][0]
+        page_width = page["dimensions"][0]
+        page_height = page["dimensions"][1]
+        for block in page["blocks"]:
+            for line in block["lines"]:
+                for word in line["words"]:
+                    if word['confidence'] < 0.2:
+                        continue
+
+                    # geometry is in percentages, 0-1
+                    # we need to convert to pixels
+                    geometry = word["geometry"]
+                    clean_results.append({
+                        "text": word["value"],
+                        "confidence": word["confidence"],
+                        "bounding_box": {
+                            "x1": round(geometry[0][0] * page_width),
+                            "y1": round(geometry[0][1] * page_height),
+                            "x2": round(geometry[1][0] * page_width),
+                            "y2": round(geometry[1][1] * page_height),
+                        }
+                    })
+
+        return sentry_pb2.GetOCRResponse(results=clean_results)
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -99,6 +148,7 @@ def serve():
     server.add_insecure_port("[::]:50051")
     server.add_insecure_port("0.0.0.0:50051")
     server.start()
+    print("Sentry server started")
     server.wait_for_termination()
 
 

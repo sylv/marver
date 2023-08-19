@@ -4,6 +4,7 @@ package me.sylver.marver.sentry;
 service SentryService {
     rpc GetVector (GetVectorRequest) returns (GetVectorResponse) {}
     rpc DetectFaces (DetectFacesRequest) returns (DetectFacesResponse) {}
+    rpc GetOCR (GetOCRRequest) returns (GetOCRResponse) {}
 }
 
 message GetVectorRequest {
@@ -40,4 +41,18 @@ message BoundingBox {
 
 message Vector {
     repeated float value = 1;
+}
+
+message GetOCRRequest {
+    string file_path = 1;
+}
+
+message GetOCRResponse {
+    repeated OCR results = 1;
+}
+
+message OCR {
+    string text = 1;
+    BoundingBox bounding_box = 2;
+    float confidence = 3;
 }

@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csentry.proto\x12\x17me.sylver.marver.sentry\"F\n\x10GetVectorRequest\x12\x13\n\tfile_path\x18\x04 \x01(\tH\x00\x12\x14\n\ntext_input\x18\x05 \x01(\tH\x00\x42\x07\n\x05input\"D\n\x11GetVectorResponse\x12/\n\x06vector\x18\x01 \x01(\x0b\x32\x1f.me.sylver.marver.sentry.Vector\"\'\n\x12\x44\x65tectFacesRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\"C\n\x13\x44\x65tectFacesResponse\x12,\n\x05\x66\x61\x63\x65s\x18\x01 \x03(\x0b\x32\x1d.me.sylver.marver.sentry.Face\"\x87\x01\n\x04\x46\x61\x63\x65\x12:\n\x0c\x62ounding_box\x18\x01 \x01(\x0b\x32$.me.sylver.marver.sentry.BoundingBox\x12/\n\x06vector\x18\x02 \x01(\x0b\x32\x1f.me.sylver.marver.sentry.Vector\x12\x12\n\nconfidence\x18\x03 \x01(\x02\"=\n\x0b\x42oundingBox\x12\n\n\x02x1\x18\x01 \x01(\x02\x12\n\n\x02y1\x18\x02 \x01(\x02\x12\n\n\x02x2\x18\x03 \x01(\x02\x12\n\n\x02y2\x18\x04 \x01(\x02\"\x17\n\x06Vector\x12\r\n\x05value\x18\x01 \x03(\x02\x32\xe1\x01\n\rSentryService\x12\x64\n\tGetVector\x12).me.sylver.marver.sentry.GetVectorRequest\x1a*.me.sylver.marver.sentry.GetVectorResponse\"\x00\x12j\n\x0b\x44\x65tectFaces\x12+.me.sylver.marver.sentry.DetectFacesRequest\x1a,.me.sylver.marver.sentry.DetectFacesResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csentry.proto\x12\x17me.sylver.marver.sentry\"F\n\x10GetVectorRequest\x12\x13\n\tfile_path\x18\x04 \x01(\tH\x00\x12\x14\n\ntext_input\x18\x05 \x01(\tH\x00\x42\x07\n\x05input\"D\n\x11GetVectorResponse\x12/\n\x06vector\x18\x01 \x01(\x0b\x32\x1f.me.sylver.marver.sentry.Vector\"\'\n\x12\x44\x65tectFacesRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\"C\n\x13\x44\x65tectFacesResponse\x12,\n\x05\x66\x61\x63\x65s\x18\x01 \x03(\x0b\x32\x1d.me.sylver.marver.sentry.Face\"\x87\x01\n\x04\x46\x61\x63\x65\x12:\n\x0c\x62ounding_box\x18\x01 \x01(\x0b\x32$.me.sylver.marver.sentry.BoundingBox\x12/\n\x06vector\x18\x02 \x01(\x0b\x32\x1f.me.sylver.marver.sentry.Vector\x12\x12\n\nconfidence\x18\x03 \x01(\x02\"=\n\x0b\x42oundingBox\x12\n\n\x02x1\x18\x01 \x01(\x02\x12\n\n\x02y1\x18\x02 \x01(\x02\x12\n\n\x02x2\x18\x03 \x01(\x02\x12\n\n\x02y2\x18\x04 \x01(\x02\"\x17\n\x06Vector\x12\r\n\x05value\x18\x01 \x03(\x02\"\"\n\rGetOCRRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\"?\n\x0eGetOCRResponse\x12-\n\x07results\x18\x01 \x03(\x0b\x32\x1c.me.sylver.marver.sentry.OCR\"c\n\x03OCR\x12\x0c\n\x04text\x18\x01 \x01(\t\x12:\n\x0c\x62ounding_box\x18\x02 \x01(\x0b\x32$.me.sylver.marver.sentry.BoundingBox\x12\x12\n\nconfidence\x18\x03 \x01(\x02\x32\xbe\x02\n\rSentryService\x12\x64\n\tGetVector\x12).me.sylver.marver.sentry.GetVectorRequest\x1a*.me.sylver.marver.sentry.GetVectorResponse\"\x00\x12j\n\x0b\x44\x65tectFaces\x12+.me.sylver.marver.sentry.DetectFacesRequest\x1a,.me.sylver.marver.sentry.DetectFacesResponse\"\x00\x12[\n\x06GetOCR\x12&.me.sylver.marver.sentry.GetOCRRequest\x1a\'.me.sylver.marver.sentry.GetOCRResponse\"\x00\x62\x06proto3')
 
 
 
@@ -25,6 +25,9 @@ _DETECTFACESRESPONSE = DESCRIPTOR.message_types_by_name['DetectFacesResponse']
 _FACE = DESCRIPTOR.message_types_by_name['Face']
 _BOUNDINGBOX = DESCRIPTOR.message_types_by_name['BoundingBox']
 _VECTOR = DESCRIPTOR.message_types_by_name['Vector']
+_GETOCRREQUEST = DESCRIPTOR.message_types_by_name['GetOCRRequest']
+_GETOCRRESPONSE = DESCRIPTOR.message_types_by_name['GetOCRResponse']
+_OCR = DESCRIPTOR.message_types_by_name['OCR']
 GetVectorRequest = _reflection.GeneratedProtocolMessageType('GetVectorRequest', (_message.Message,), {
   'DESCRIPTOR' : _GETVECTORREQUEST,
   '__module__' : 'sentry_pb2'
@@ -74,6 +77,27 @@ Vector = _reflection.GeneratedProtocolMessageType('Vector', (_message.Message,),
   })
 _sym_db.RegisterMessage(Vector)
 
+GetOCRRequest = _reflection.GeneratedProtocolMessageType('GetOCRRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETOCRREQUEST,
+  '__module__' : 'sentry_pb2'
+  # @@protoc_insertion_point(class_scope:me.sylver.marver.sentry.GetOCRRequest)
+  })
+_sym_db.RegisterMessage(GetOCRRequest)
+
+GetOCRResponse = _reflection.GeneratedProtocolMessageType('GetOCRResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETOCRRESPONSE,
+  '__module__' : 'sentry_pb2'
+  # @@protoc_insertion_point(class_scope:me.sylver.marver.sentry.GetOCRResponse)
+  })
+_sym_db.RegisterMessage(GetOCRResponse)
+
+OCR = _reflection.GeneratedProtocolMessageType('OCR', (_message.Message,), {
+  'DESCRIPTOR' : _OCR,
+  '__module__' : 'sentry_pb2'
+  # @@protoc_insertion_point(class_scope:me.sylver.marver.sentry.OCR)
+  })
+_sym_db.RegisterMessage(OCR)
+
 _SENTRYSERVICE = DESCRIPTOR.services_by_name['SentryService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
@@ -92,6 +116,12 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _BOUNDINGBOX._serialized_end=492
   _VECTOR._serialized_start=494
   _VECTOR._serialized_end=517
-  _SENTRYSERVICE._serialized_start=520
-  _SENTRYSERVICE._serialized_end=745
+  _GETOCRREQUEST._serialized_start=519
+  _GETOCRREQUEST._serialized_end=553
+  _GETOCRRESPONSE._serialized_start=555
+  _GETOCRRESPONSE._serialized_end=618
+  _OCR._serialized_start=620
+  _OCR._serialized_end=719
+  _SENTRYSERVICE._serialized_start=722
+  _SENTRYSERVICE._serialized_end=1040
 # @@protoc_insertion_point(module_scope)

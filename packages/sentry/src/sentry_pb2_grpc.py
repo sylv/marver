@@ -24,6 +24,11 @@ class SentryServiceStub(object):
                 request_serializer=sentry__pb2.DetectFacesRequest.SerializeToString,
                 response_deserializer=sentry__pb2.DetectFacesResponse.FromString,
                 )
+        self.GetOCR = channel.unary_unary(
+                '/me.sylver.marver.sentry.SentryService/GetOCR',
+                request_serializer=sentry__pb2.GetOCRRequest.SerializeToString,
+                response_deserializer=sentry__pb2.GetOCRResponse.FromString,
+                )
 
 
 class SentryServiceServicer(object):
@@ -41,6 +46,12 @@ class SentryServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetOCR(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SentryServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -53,6 +64,11 @@ def add_SentryServiceServicer_to_server(servicer, server):
                     servicer.DetectFaces,
                     request_deserializer=sentry__pb2.DetectFacesRequest.FromString,
                     response_serializer=sentry__pb2.DetectFacesResponse.SerializeToString,
+            ),
+            'GetOCR': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetOCR,
+                    request_deserializer=sentry__pb2.GetOCRRequest.FromString,
+                    response_serializer=sentry__pb2.GetOCRResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -95,5 +111,22 @@ class SentryService(object):
         return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.sentry.SentryService/DetectFaces',
             sentry__pb2.DetectFacesRequest.SerializeToString,
             sentry__pb2.DetectFacesResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetOCR(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.sentry.SentryService/GetOCR',
+            sentry__pb2.GetOCRRequest.SerializeToString,
+            sentry__pb2.GetOCRResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
