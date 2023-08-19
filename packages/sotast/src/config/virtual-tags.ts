@@ -34,8 +34,8 @@ export const VIRTUAL_TAGS: VirtualTag[] = [
     },
   },
   {
-  name: 'has_faces',
-  description: 'Whether this file has faces.',
+    name: 'has_faces',
+    description: 'Whether this file has faces.',
     check: (file) => !!file.media?.hasFaces,
     filter: {
       media: { hasFaces: true },

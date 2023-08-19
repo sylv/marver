@@ -5,43 +5,45 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
   /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
-  DateTime: any;
+  DateTime: { input: any; output: any; }
 };
 
 export type BoundingBox = {
   __typename?: 'BoundingBox';
-  x1: Scalars['Float'];
-  x2: Scalars['Float'];
-  y1: Scalars['Float'];
-  y2: Scalars['Float'];
+  x1: Scalars['Float']['output'];
+  x2: Scalars['Float']['output'];
+  y1: Scalars['Float']['output'];
+  y2: Scalars['Float']['output'];
 };
 
 export type Face = {
   __typename?: 'Face';
   boundingBox: BoundingBox;
-  id: Scalars['ID'];
+  id: Scalars['ID']['output'];
   person?: Maybe<Person>;
 };
 
 export type File = {
   __typename?: 'File';
-  directory: Scalars['String'];
-  extension?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
+  directory: Scalars['String']['output'];
+  extension?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
   media?: Maybe<Media>;
   metadata: FileMetadata;
-  mimeType?: Maybe<Scalars['String']>;
-  name: Scalars['String'];
-  path: Scalars['String'];
+  mimeType?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  path: Scalars['String']['output'];
   tags: Array<FileTag>;
   type?: Maybe<FileType>;
 };
@@ -51,34 +53,34 @@ export type FileConnection = {
   edges: Array<FileEdge>;
   pageInfo: PageInfo;
   /** Total number of File items */
-  totalCount: Scalars['Int'];
+  totalCount: Scalars['Int']['output'];
 };
 
 /** Provides File item and a cursor to its position */
 export type FileEdge = {
   __typename?: 'FileEdge';
   /** The position of this File item */
-  cursor: Scalars['String'];
+  cursor: Scalars['String']['output'];
   node: File;
 };
 
 export type FileMetadata = {
   __typename?: 'FileMetadata';
-  corrupted: Scalars['Boolean'];
-  createdAt: Scalars['DateTime'];
-  diskCreatedAt: Scalars['DateTime'];
-  diskModifiedAt: Scalars['DateTime'];
-  favourite: Scalars['Boolean'];
-  serverCheckedAt: Scalars['DateTime'];
-  serverCreatedAt: Scalars['DateTime'];
-  size: Scalars['Float'];
-  sizeFormatted: Scalars['String'];
-  unavailable: Scalars['Boolean'];
+  corrupted: Scalars['Boolean']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  diskCreatedAt: Scalars['DateTime']['output'];
+  diskModifiedAt: Scalars['DateTime']['output'];
+  favourite: Scalars['Boolean']['output'];
+  serverCheckedAt: Scalars['DateTime']['output'];
+  serverCreatedAt: Scalars['DateTime']['output'];
+  size: Scalars['Float']['output'];
+  sizeFormatted: Scalars['String']['output'];
+  unavailable: Scalars['Boolean']['output'];
 };
 
 export type FileTag = {
   __typename?: 'FileTag';
-  system: Scalars['Boolean'];
+  system: Scalars['Boolean']['output'];
   tag: Tag;
 };
 
@@ -89,39 +91,39 @@ export enum FileType {
 
 export type Media = {
   __typename?: 'Media';
-  audioChannels?: Maybe<Scalars['Float']>;
-  audioCodec?: Maybe<Scalars['String']>;
-  bitrate?: Maybe<Scalars['Float']>;
-  durationFormatted?: Maybe<Scalars['String']>;
-  durationSeconds?: Maybe<Scalars['Float']>;
+  audioChannels?: Maybe<Scalars['Float']['output']>;
+  audioCodec?: Maybe<Scalars['String']['output']>;
+  bitrate?: Maybe<Scalars['Float']['output']>;
+  durationFormatted?: Maybe<Scalars['String']['output']>;
+  durationSeconds?: Maybe<Scalars['Float']['output']>;
   exifMetadata?: Maybe<MediaExifData>;
   faces: Array<Face>;
   file: File;
-  framerate?: Maybe<Scalars['Float']>;
-  hasEmbeddedSubtitles?: Maybe<Scalars['Boolean']>;
-  hasFaces?: Maybe<Scalars['Boolean']>;
-  height?: Maybe<Scalars['Float']>;
-  isAnimated?: Maybe<Scalars['Boolean']>;
+  framerate?: Maybe<Scalars['Float']['output']>;
+  hasEmbeddedSubtitles?: Maybe<Scalars['Boolean']['output']>;
+  hasFaces?: Maybe<Scalars['Boolean']['output']>;
+  height?: Maybe<Scalars['Float']['output']>;
+  isAnimated?: Maybe<Scalars['Boolean']['output']>;
   /** Whether no subtitles could be generated from the audio on this video */
-  nonVerbal?: Maybe<Scalars['Boolean']>;
+  nonVerbal?: Maybe<Scalars['Boolean']['output']>;
   poster: MediaPoster;
-  previewBase64?: Maybe<Scalars['String']>;
+  previewBase64?: Maybe<Scalars['String']['output']>;
   similar: MediaConnection;
   subtitles: Array<MediaSubtitle>;
   thumbnail: MediaThumbnail;
-  thumbnailUrl?: Maybe<Scalars['String']>;
+  thumbnailUrl?: Maybe<Scalars['String']['output']>;
   timeline: MediaTimeline;
-  videoCodec?: Maybe<Scalars['String']>;
-  width?: Maybe<Scalars['Float']>;
+  videoCodec?: Maybe<Scalars['String']['output']>;
+  width?: Maybe<Scalars['Float']['output']>;
 };
 
 
 export type MediaSimilarArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Float']>;
-  last?: InputMaybe<Scalars['Float']>;
-  offset?: InputMaybe<Scalars['Float']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Float']['input']>;
+  last?: InputMaybe<Scalars['Float']['input']>;
+  offset?: InputMaybe<Scalars['Float']['input']>;
   type?: InputMaybe<SimilarityType>;
 };
 
@@ -130,82 +132,82 @@ export type MediaConnection = {
   edges: Array<MediaEdge>;
   pageInfo: PageInfo;
   /** Total number of Media items */
-  totalCount: Scalars['Int'];
+  totalCount: Scalars['Int']['output'];
 };
 
 /** Provides Media item and a cursor to its position */
 export type MediaEdge = {
   __typename?: 'MediaEdge';
   /** The position of this Media item */
-  cursor: Scalars['String'];
+  cursor: Scalars['String']['output'];
   node: Media;
 };
 
 export type MediaExifData = {
   __typename?: 'MediaExifData';
-  cameraMake?: Maybe<Scalars['String']>;
-  cameraModel?: Maybe<Scalars['String']>;
-  dateTime?: Maybe<Scalars['DateTime']>;
-  exposureTime?: Maybe<Scalars['String']>;
-  fNumber?: Maybe<Scalars['String']>;
-  flash?: Maybe<Scalars['String']>;
-  focalLength?: Maybe<Scalars['String']>;
-  iso?: Maybe<Scalars['Float']>;
-  latitude?: Maybe<Scalars['Float']>;
-  lensMake?: Maybe<Scalars['String']>;
-  lensModel?: Maybe<Scalars['String']>;
-  longitude?: Maybe<Scalars['Float']>;
+  cameraMake?: Maybe<Scalars['String']['output']>;
+  cameraModel?: Maybe<Scalars['String']['output']>;
+  dateTime?: Maybe<Scalars['DateTime']['output']>;
+  exposureTime?: Maybe<Scalars['String']['output']>;
+  fNumber?: Maybe<Scalars['String']['output']>;
+  flash?: Maybe<Scalars['String']['output']>;
+  focalLength?: Maybe<Scalars['String']['output']>;
+  iso?: Maybe<Scalars['Float']['output']>;
+  latitude?: Maybe<Scalars['Float']['output']>;
+  lensMake?: Maybe<Scalars['String']['output']>;
+  lensModel?: Maybe<Scalars['String']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
 };
 
 export type MediaPoster = {
   __typename?: 'MediaPoster';
-  height: Scalars['Float'];
-  mimeType: Scalars['String'];
-  width: Scalars['Float'];
+  height: Scalars['Float']['output'];
+  mimeType: Scalars['String']['output'];
+  width: Scalars['Float']['output'];
 };
 
 export type MediaSubtitle = {
   __typename?: 'MediaSubtitle';
-  displayName: Scalars['String'];
-  forced: Scalars['Boolean'];
-  generated: Scalars['Boolean'];
-  hearingImpaired: Scalars['Boolean'];
-  id: Scalars['ID'];
-  languageIso639_1: Scalars['String'];
-  languageNameEnglish: Scalars['String'];
-  languageNameNative: Scalars['String'];
-  path: Scalars['String'];
+  displayName: Scalars['String']['output'];
+  forced: Scalars['Boolean']['output'];
+  generated: Scalars['Boolean']['output'];
+  hearingImpaired: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  languageIso639_1: Scalars['String']['output'];
+  languageNameEnglish: Scalars['String']['output'];
+  languageNameNative: Scalars['String']['output'];
+  path: Scalars['String']['output'];
 };
 
 export type MediaThumbnail = {
   __typename?: 'MediaThumbnail';
-  height: Scalars['Float'];
-  mimeType: Scalars['String'];
-  width: Scalars['Float'];
+  height: Scalars['Float']['output'];
+  mimeType: Scalars['String']['output'];
+  width: Scalars['Float']['output'];
 };
 
 export type MediaTimeline = {
   __typename?: 'MediaTimeline';
-  height: Scalars['Float'];
-  mimeType: Scalars['String'];
-  width: Scalars['Float'];
+  height: Scalars['Float']['output'];
+  mimeType: Scalars['String']['output'];
+  width: Scalars['Float']['output'];
 };
 
 /** Provides info abou the current page */
 export type PageInfo = {
   __typename?: 'PageInfo';
   /** Cursor referencing the end of the page */
-  endCursor: Scalars['String'];
-  hasNextPage: Scalars['Boolean'];
-  hasPreviousPage: Scalars['Boolean'];
+  endCursor: Scalars['String']['output'];
+  hasNextPage: Scalars['Boolean']['output'];
+  hasPreviousPage: Scalars['Boolean']['output'];
   /** Cursor referencing the beginning of the page */
-  startCursor: Scalars['String'];
+  startCursor: Scalars['String']['output'];
 };
 
 export type Person = {
   __typename?: 'Person';
-  id: Scalars['ID'];
-  name: Scalars['String'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type Query = {
@@ -218,34 +220,34 @@ export type Query = {
 
 
 export type QueryFileArgs = {
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 };
 
 
 export type QueryFilesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Float']>;
-  last?: InputMaybe<Scalars['Float']>;
-  offset?: InputMaybe<Scalars['Float']>;
-  search?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Float']['input']>;
+  last?: InputMaybe<Scalars['Float']['input']>;
+  offset?: InputMaybe<Scalars['Float']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
 export type QueryMediaArgs = {
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 };
 
 
 export type QueryMediaListArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  afterDate?: InputMaybe<Scalars['DateTime']>;
-  before?: InputMaybe<Scalars['String']>;
-  beforeDate?: InputMaybe<Scalars['DateTime']>;
-  first?: InputMaybe<Scalars['Float']>;
-  last?: InputMaybe<Scalars['Float']>;
-  offset?: InputMaybe<Scalars['Float']>;
-  search?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  afterDate?: InputMaybe<Scalars['DateTime']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  beforeDate?: InputMaybe<Scalars['DateTime']['input']>;
+  first?: InputMaybe<Scalars['Float']['input']>;
+  last?: InputMaybe<Scalars['Float']['input']>;
+  offset?: InputMaybe<Scalars['Float']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 export enum SimilarityType {
@@ -259,12 +261,12 @@ export enum SimilarityType {
 
 export type Tag = {
   __typename?: 'Tag';
-  name: Scalars['ID'];
+  name: Scalars['ID']['output'];
 };
 
 export type GetMediaListQueryVariables = Exact<{
-  search?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -273,7 +275,7 @@ export type GetMediaListQuery = { __typename?: 'Query', mediaList: { __typename?
 export type MinimalMediaFragment = { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, metadata: { __typename?: 'FileMetadata', size: number, sizeFormatted: string } } };
 
 export type GetMediaQueryVariables = Exact<{
-  fileId: Scalars['String'];
+  fileId: Scalars['String']['input'];
   filter?: InputMaybe<SimilarityType>;
 }>;
 

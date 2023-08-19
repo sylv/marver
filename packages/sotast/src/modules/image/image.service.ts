@@ -166,7 +166,8 @@ export class ImageService {
       if (exifData.FNumber) exif.fNumber = exifData.FNumber.description;
       if (exifData.ISOSpeedRatings) exif.iso = +exifData.ISOSpeedRatings.description;
       if (exifData.Flash) exif.flash = exifData.Flash.description;
-      if (exifData.DateTimeOriginal) exif.dateTime = this.parseExifDate(exifData.DateTimeOriginal.description);
+      if (exifData.DateTimeOriginal)
+        exif.dateTime = this.parseExifDate(exifData.DateTimeOriginal.description);
       else if (exifData.DateTime) exif.dateTime = this.parseExifDate(exifData.DateTime.description);
 
       const location = this.getLatLongFromExif(exifData);

@@ -153,7 +153,13 @@ export class MediaResolver {
       paginate: async (args) => {
         // todo: this is hacky but for videos we're only using the first
         // vector. photos only ever have one vector so thats fine
-        const vectors = await media.vectors.loadItems();
+        const realMedia = this.mediaRepo.getReference(media.file.id);
+        if (!wrap(realMedia).isInitialized()) {
+          console.log(realMedia);
+          throw new Error('media must be a reference');
+        }
+
+        const vectors = await realMedia.vectors.loadItems();
         const vector = vectors[Math.floor(Math.random() * vectors.length)];
         if (!vector) return [[], 0];
 

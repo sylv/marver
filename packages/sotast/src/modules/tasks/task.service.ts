@@ -89,9 +89,10 @@ export class TaskService implements OnApplicationBootstrap {
       };
 
       parent.children.push(withMethod);
-      process.nextTick(() => {
-        this.scanForChildTasks(withMethod);
-      });
+      // todo: re-enable
+      // process.nextTick(() => {
+      //   this.scanForChildTasks(withMethod);
+      // });
     }
 
     await this.cleanupTasks();
@@ -157,57 +158,57 @@ export class TaskService implements OnApplicationBootstrap {
     this.scanForParentTasks(taskHandler);
   }
 
-  private async scanForChildTasks(taskHandler: LoadedChildTask) {
-    const fetchCount = taskHandler.meta.concurrency * 4;
-    await taskHandler.queue.onSizeLessThan(fetchCount / 2);
+  // private async scanForChildTasks(taskHandler: LoadedChildTask) {
+  //   const fetchCount = taskHandler.meta.concurrency * 4;
+  //   await taskHandler.queue.onSizeLessThan(fetchCount / 2);
 
-    let hasMore = null;
-    const em = this.orm.em.fork();
-    await RequestContext.createAsync(em, async () => {
-      const [tasks, tasksTotal] = await this.taskRepo.findAndCount(
-        {
-          state: TaskState.Completed,
-          type: taskHandler.meta.parentType,
-          file: {
-            $and: [
-              taskHandler.meta.filter,
-              {
-                id: {
-                  $nin: [...taskHandler.queued],
-                },
-              },
-            ],
-          },
-        },
-        {
-          limit: fetchCount,
-          populate: [
-            'file',
-            ...((taskHandler.meta.populate?.map((field) => `file.${String(field)}`) as any[]) || []),
-          ],
-        }
-      );
+  //   let hasMore = null;
+  //   const em = this.orm.em.fork();
+  //   await RequestContext.createAsync(em, async () => {
+  //     const [tasks, tasksTotal] = await this.taskRepo.findAndCount(
+  //       {
+  //         state: TaskState.Completed,
+  //         type: taskHandler.meta.parentType,
+  //         file: {
+  //           $and: [
+  //             taskHandler.meta.filter,
+  //             {
+  //               id: {
+  //                 $nin: [...taskHandler.queued],
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       },
+  //       {
+  //         limit: fetchCount,
+  //         populate: [
+  //           'file',
+  //           ...((taskHandler.meta.populate?.map((field) => `file.${String(field)}`) as any[]) || []),
+  //         ],
+  //       }
+  //     );
 
-      for (const task of tasks) {
-        const file = task.file.getEntity();
-        taskHandler.queued.add(task.file.id);
-        taskHandler.queue.add(() => this.runTask(taskHandler, file, task.result));
-      }
-      hasMore = tasksTotal > tasks.length;
-    });
+  //     for (const task of tasks) {
+  //       const file = task.file.getEntity();
+  //       taskHandler.queued.add(task.file.id);
+  //       taskHandler.queue.add(() => this.runTask(taskHandler, file, task.result));
+  //     }
+  //     hasMore = tasksTotal > tasks.length;
+  //   });
 
-    if (!hasMore) {
-      const sleepFor = randomInt(15000, 30000);
-      this.log.debug(
-        `No more files to process for child task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
-          sleepFor
-        )}...`
-      );
-      await sleep(sleepFor);
-    }
+  //   if (!hasMore) {
+  //     const sleepFor = randomInt(15000, 30000);
+  //     this.log.debug(
+  //       `No more files to process for child task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
+  //         sleepFor
+  //       )}...`
+  //     );
+  //     await sleep(sleepFor);
+  //   }
 
-    this.scanForChildTasks(taskHandler);
-  }
+  //   this.scanForChildTasks(taskHandler);
+  // }
 
   private async runTask(taskHandler: LoadedTask | LoadedChildTask, file: File, parentOutput?: unknown) {
     const start = performance.now();

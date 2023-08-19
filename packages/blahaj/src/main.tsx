@@ -8,6 +8,7 @@ import { Provider, createClient, fetchExchange } from 'urql';
 import { App } from './app';
 import schema from './generated/introspection.json';
 import './index.css';
+import { ThemeProvider } from './components/theme-provider';
 
 const client = createClient({
   url: '/api/graphql',
@@ -37,10 +38,12 @@ const client = createClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Provider value={client}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </Provider>
+    <ThemeProvider>
+      <Provider value={client}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </Provider>
+    </ThemeProvider>
   </React.StrictMode>
 );
