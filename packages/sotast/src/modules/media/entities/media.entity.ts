@@ -20,6 +20,7 @@ import { MediaSubtitle } from './media-subtitle.entity.js';
 import { MediaThumbnail } from './media-thumbnail.entity.js';
 import { MediaTimeline } from './media-timeline.entity.js';
 import { MediaVector } from './media-vector.entity.js';
+import { MediaText } from './media-text.entity.js';
 
 /** This is necessary for MikroORM property validation to pass when ordering by similarity, a computed property. */
 @ObjectType({ isAbstract: true })
@@ -77,6 +78,13 @@ export class Media extends MediaSortingProps {
   nonVerbal?: boolean;
 
   @Property({ nullable: true })
+  @Field({
+    nullable: true,
+    description: 'Whether text coudl be found in the image or video',
+  })
+  hasText?: boolean;
+
+  @Property({ nullable: true })
   @Field({ nullable: true })
   audioCodec?: string;
 
@@ -126,6 +134,10 @@ export class Media extends MediaSortingProps {
   @OneToMany(() => Face, (face) => face.media)
   @Field(() => [Face])
   faces = new Collection<Face>(this);
+
+  @OneToMany(() => MediaText, (text) => text.media)
+  @Field(() => [MediaText])
+  texts = new Collection<MediaText>(this);
 
   @Property({ nullable: true, persist: false, type: 'string' })
   @Field(() => String, { nullable: true })

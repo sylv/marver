@@ -1,7 +1,7 @@
-import { EntityManager, QueryBuilder } from '@mikro-orm/better-sqlite';
+import { EntityManager, type QueryBuilder } from '@mikro-orm/better-sqlite';
 import { Injectable } from '@nestjs/common';
 import { SEARCH_MODIFIERS } from '../../config/search-modifiers.js';
-import { Media } from './entities/media.entity.js';
+import { type Media } from './entities/media.entity.js';
 
 @Injectable()
 export class MediaService {
@@ -20,9 +20,7 @@ export class MediaService {
         });
       } else if (part.includes(':')) {
         const [name, ...value] = part.split(':');
-        const modifier = SEARCH_MODIFIERS.find(
-          (mod) => mod.name === name || mod.aliases?.includes(name)
-        );
+        const modifier = SEARCH_MODIFIERS.find((mod) => mod.name === name || mod.aliases?.includes(name));
         if (modifier) {
           modifier.add(value.join(':'), queryBuilder, this.em);
         } else {
@@ -32,7 +30,7 @@ export class MediaService {
         clipSearchParts.push(part);
       }
 
-      if (clipSearchParts.length) {
+      if (clipSearchParts.length > 0) {
         return clipSearchParts.join(' ');
       }
     }

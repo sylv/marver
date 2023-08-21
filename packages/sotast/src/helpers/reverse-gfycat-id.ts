@@ -58,9 +58,21 @@ if (import.meta.vitest) {
 
   it('should reverse gfycat ids', () => {
     expect(reverseGfycatId('crowdedsaltybordercollie')).toEqual(['crowded', 'salty', 'bordercollie']);
-    expect(reverseGfycatId('thirstyindelibleamethystinepython')).toEqual(['thirsty', 'indelible', 'amethystinepython']);
-    expect(reverseGfycatId('fatherlyidenticalimperatorangel')).toEqual(['fatherly', 'identical', 'imperatorangel']);
+    expect(reverseGfycatId('thirstyindelibleamethystinepython')).toEqual([
+      'thirsty',
+      'indelible',
+      'amethystinepython',
+    ]);
+    expect(reverseGfycatId('fatherlyidenticalimperatorangel')).toEqual([
+      'fatherly',
+      'identical',
+      'imperatorangel',
+    ]);
     expect(reverseGfycatId('anxiousnegativebushbaby')).toEqual(['anxious', 'negative', 'bushbaby']);
-    expect(reverseGfycatId('Illiteratetallirrawaddydolphin')).toEqual(['illiterate', 'tall', 'irrawaddydolphin']);
+    expect(reverseGfycatId('Illiteratetallirrawaddydolphin')).toEqual([
+      'illiterate',
+      'tall',
+      'irrawaddydolphin',
+    ]);
   });
 }

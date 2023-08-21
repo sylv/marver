@@ -14,4 +14,5 @@ export enum TaskType {
   VideoGenerateTimeline,
   VideoGenerateThumbhash,
   ImageDetectFaces,
+  ImageExtractText,
 }

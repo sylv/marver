@@ -14,7 +14,10 @@ export class PersonTasks {
   @InjectRepository(Person) private personRepo: EntityRepository<Person>;
   @InjectRepository(Face) private faceRepo: EntityRepository<Face>;
 
-  constructor(private sentryService: SentryService, private em: EntityManager) {}
+  constructor(
+    private sentryService: SentryService,
+    private em: EntityManager,
+  ) {}
 
   @Task(TaskType.ImageDetectFaces, {
     concurrency: 4,
@@ -39,7 +42,7 @@ export class PersonTasks {
           boundingBox: face.bounding_box!,
           vector: this.sentryService.vectorToBuffer(face.vector!),
         },
-        { persist: true }
+        { persist: true },
       );
     }
 

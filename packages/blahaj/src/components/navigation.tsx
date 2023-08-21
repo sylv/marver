@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { FiPauseCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { setSearch, useSearchStore } from '../search';
@@ -12,7 +12,11 @@ export const Navigation: FC = () => {
     <div className="container mx-auto mt-6">
       <div className="rounded-lg bg-gray-800/60 min-h-14 flex justify-between">
         <div className="ml-16 bg-black/20">
-          <SmartSearchInput height="h-full w-[32em]" value={query} onChange={(value) => setSearch(value, navigate)} />
+          <SmartSearchInput
+            height="h-full w-[32em]"
+            value={query}
+            onChange={(value) => setSearch(value, navigate)}
+          />
         </div>
         <button className="flex items-center bg-gray-800/40 py-4 px-8 h-full mr-16 hover:bg-gray-700/40 transition group">
           <div className="flex flex-col justify-center items-start">

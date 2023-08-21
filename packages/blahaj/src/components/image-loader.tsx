@@ -1,5 +1,6 @@
+/* eslint-disable jsx-a11y/alt-text */
 import clsx from 'clsx';
-import React, { ImgHTMLAttributes, forwardRef, memo, useEffect, useMemo } from 'react';
+import React, { type ImgHTMLAttributes, forwardRef, memo, useEffect, useMemo } from 'react';
 import { thumbhashBase64ToDataUri } from '../helpers/thumbhashBase64ToDataUri';
 import useCurrentState from '../hooks/useCurrentState';
 
@@ -21,38 +22,42 @@ const DEFAULT_PLACEHOLDER_IMAGE =
  * This should be a drop-in replacement for <img />.
  * If it is not, that is considered a bug.
  */
-export const ImageLoader = memo(forwardRef<HTMLImageElement, ImageLoaderProps>(({ previewBase64, src, height, width, ...rest }, imageRef) => {
-  const [loaded, setLoaded, loadedRef] = useCurrentState(false);
-  const previewUri = useMemo(() => {
-    if (previewBase64) {
-      return thumbhashBase64ToDataUri(previewBase64);
-    }
+export const ImageLoader = memo(
+  forwardRef<HTMLImageElement, ImageLoaderProps>(
+    ({ previewBase64, src, height, width, ...rest }, imageRef) => {
+      const [loaded, setLoaded, loadedRef] = useCurrentState(false);
+      const previewUri = useMemo(() => {
+        if (previewBase64) {
+          return thumbhashBase64ToDataUri(previewBase64);
+        }
 
-    // with no previewBase64, we create a black image of the same dimensions
-    // and use that + animate-pulse to create a loading effect WITHOUT
-    // massively breaking things like object-contain and object-cover
-    return DEFAULT_PLACEHOLDER_IMAGE;
-  }, [previewBase64, height, width]);
+        // with no previewBase64, we create a black image of the same dimensions
+        // and use that + animate-pulse to create a loading effect WITHOUT
+        // massively breaking things like object-contain and object-cover
+        return DEFAULT_PLACEHOLDER_IMAGE;
+      }, [previewBase64, height, width]);
 
-  useEffect(() => {
-    setLoaded(false);
-    if (!src) return;
-    const image = new Image();
-    image.onload = () => setLoaded(true);
-    image.src = src;
-  }, [src]);
+      useEffect(() => {
+        setLoaded(false);
+        if (!src) return;
+        const image = new Image();
+        image.addEventListener('load', () => setLoaded(true));
+        image.src = src;
+      }, [src]);
 
-  const useSrc = loaded ? src : previewUri;
-  const isBlackImage = useSrc === DEFAULT_PLACEHOLDER_IMAGE;
+      const useSrc = loaded ? src : previewUri;
+      const isBlackImage = useSrc === DEFAULT_PLACEHOLDER_IMAGE;
 
-  return (
-    <img
-      {...rest}
-      className={clsx(rest.className, isBlackImage && 'animate-pulse')}
-      src={useSrc}
-      ref={imageRef}
-      height={height}
-      width={width}
-    />
-  );
-}));
+      return (
+        <img
+          {...rest}
+          className={clsx(rest.className, isBlackImage && 'animate-pulse')}
+          src={useSrc}
+          ref={imageRef}
+          height={height}
+          width={width}
+        />
+      );
+    },
+  ),
+);

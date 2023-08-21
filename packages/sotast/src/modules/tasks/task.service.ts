@@ -1,19 +1,19 @@
 import { Collection } from '@discordjs/collection';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { FilterQuery, MikroORM, RequestContext, UseRequestContext } from '@mikro-orm/core';
+import { type FilterQuery, MikroORM, RequestContext, UseRequestContext } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomInt } from 'crypto';
 import ms from 'ms';
 import PQueue from 'p-queue';
 import { setTimeout as sleep } from 'timers/promises';
 import { config } from '../../config.js';
-import { CorruptedFileError } from '../../errors/CorruptedFileError.js';
+import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
 import { File } from '../file/entities/file.entity.js';
-import { TASK_CHILD_KEY, TaskChildKey, TaskChildOptions } from './task-child.decorator.js';
-import { TASKS_KEY, TaskOptions, TasksKey } from './task.decorator.js';
+import { TASK_CHILD_KEY, type TaskChildKey, type TaskChildOptions } from './task-child.decorator.js';
+import { TASKS_KEY, type TaskOptions, type TasksKey } from './task.decorator.js';
 import { Task, TaskState } from './task.entity.js';
 import { TaskType } from './task.enum.js';
 
@@ -43,13 +43,15 @@ export class TaskService implements OnApplicationBootstrap {
   constructor(
     private discoveryService: DiscoveryService,
     private orm: MikroORM,
-    private em: EntityManager
+    private em: EntityManager,
   ) {}
 
   async onApplicationBootstrap() {
     if (config.disable_tasks) return;
     const methods = await this.discoveryService.providerMethodsWithMetaAtKey<TasksKey>(TASKS_KEY);
     for (const method of methods) {
+      if (method.meta.type !== TaskType.ImageExtractText) continue;
+
       const withMethod: LoadedTask = {
         method: method.discoveredMethod.handler.bind(method.discoveredMethod.parentClass.instance),
         queue: new PQueue({ concurrency: method.meta.concurrency }),
@@ -60,40 +62,38 @@ export class TaskService implements OnApplicationBootstrap {
 
       this.taskHandlers.set(withMethod.meta.type, withMethod);
       process.nextTick(() => {
-        this.scanForParentTasks(withMethod);
+        void this.scanForParentTasks(withMethod);
       });
     }
 
-    const children = await this.discoveryService.providerMethodsWithMetaAtKey<TaskChildKey>(
-      TASK_CHILD_KEY
-    );
-    for (const child of children) {
-      if (child.meta.parentType === undefined) {
-        throw new Error(`Task ${TaskType[child.meta.type]} is a child task but has no parentType`);
-      }
+    // const children = await this.discoveryService.providerMethodsWithMetaAtKey<TaskChildKey>(TASK_CHILD_KEY);
+    // for (const child of children) {
+    //   if (child.meta.parentType === undefined) {
+    //     throw new Error(`Task ${TaskType[child.meta.type]} is a child task but has no parentType`);
+    //   }
 
-      const parent = this.taskHandlers.get(child.meta.parentType);
-      if (!parent) {
-        throw new Error(
-          `Task ${TaskType[child.meta.type]} has parentType ${
-            TaskType[child.meta.parentType]
-          } but no parent task`
-        );
-      }
+    //   const parent = this.taskHandlers.get(child.meta.parentType);
+    //   if (!parent) {
+    //     throw new Error(
+    //       `Task ${TaskType[child.meta.type]} has parentType ${
+    //         TaskType[child.meta.parentType]
+    //       } but no parent task`,
+    //     );
+    //   }
 
-      const withMethod: LoadedChildTask = {
-        method: child.discoveredMethod.handler.bind(child.discoveredMethod.parentClass.instance),
-        queue: new PQueue({ concurrency: child.meta.concurrency }),
-        queued: new Set(),
-        meta: child.meta,
-      };
+    //   const withMethod: LoadedChildTask = {
+    //     method: child.discoveredMethod.handler.bind(child.discoveredMethod.parentClass.instance),
+    //     queue: new PQueue({ concurrency: child.meta.concurrency }),
+    //     queued: new Set(),
+    //     meta: child.meta,
+    //   };
 
-      parent.children.push(withMethod);
-      // todo: re-enable
-      // process.nextTick(() => {
-      //   this.scanForChildTasks(withMethod);
-      // });
-    }
+    //   parent.children.push(withMethod);
+    //   // todo: re-enable
+    //   // process.nextTick(() => {
+    //   //   this.scanForChildTasks(withMethod);
+    //   // });
+    // }
 
     await this.cleanupTasks();
   }
@@ -139,7 +139,7 @@ export class TaskService implements OnApplicationBootstrap {
 
       for (const file of files) {
         taskHandler.queued.add(file.id);
-        taskHandler.queue.add(() => this.runTask(taskHandler, file));
+        void taskHandler.queue.add(() => this.runTask(taskHandler, file));
       }
 
       hasMore = filesTotal > files.length;
@@ -149,13 +149,13 @@ export class TaskService implements OnApplicationBootstrap {
       const sleepFor = randomInt(15000, 30000);
       this.log.debug(
         `No more files to process for task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
-          sleepFor
-        )}...`
+          sleepFor,
+        )}...`,
       );
       await sleep(sleepFor);
     }
 
-    this.scanForParentTasks(taskHandler);
+    void this.scanForParentTasks(taskHandler);
   }
 
   // private async scanForChildTasks(taskHandler: LoadedChildTask) {
@@ -214,6 +214,10 @@ export class TaskService implements OnApplicationBootstrap {
     const start = performance.now();
     this.log.debug(`Starting ${TaskType[taskHandler.meta.type]} on "${file.path}"...`);
 
+    if (!file.path) {
+      throw new Error('File is not loaded correctly');
+    }
+
     try {
       if ('children' in taskHandler) {
         // handle running parent tasks, even though they may not have children
@@ -241,7 +245,7 @@ export class TaskService implements OnApplicationBootstrap {
       const duration = performance.now() - start;
       if (duration > 5000) {
         this.log.warn(
-          `Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(duration)} to complete.`
+          `Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(duration)} to complete.`,
         );
       }
     } catch (error: any) {
@@ -254,6 +258,7 @@ export class TaskService implements OnApplicationBootstrap {
         // todo: this one should be handled per task type because its based on
         // support by external libraries, the file isnt actually corrupt.
         error.message === 'Unsupported image type' ||
+        error.message === 'Exception calling application: unable to read file.' ||
         error.message === 'Exception calling application: Image not found';
 
       if (isMissing || isCorrupted) {
@@ -261,10 +266,7 @@ export class TaskService implements OnApplicationBootstrap {
         // todo: having a file.createReadStream() method that automatically handles this
         // might make a lot of sense, or else handling this everywhere is going to be a nightmare.
         if (isCorrupted) this.log.warn(`File ${file.id} (${file.path}) is corrupted, marking as such.`);
-        else
-          this.log.warn(
-            `File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`
-          );
+        else this.log.warn(`File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`);
 
         file.metadata.unavailable = true;
         if (isCorrupted) file.metadata.corrupted = true;
@@ -288,7 +290,7 @@ export class TaskService implements OnApplicationBootstrap {
   protected async cleanupTasks() {
     // find all task entities that have no children wanting to run and delete them
     const tasksWithChildren = this.taskHandlers.filter((task) => task.children[0]);
-    if (!tasksWithChildren.size) return;
+    if (tasksWithChildren.size === 0) return;
     const filter = {
       $or: tasksWithChildren.map((task) => ({
         type: task.meta.type,

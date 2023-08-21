@@ -73,11 +73,11 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 - An option to cache the transcode result of the first 15-30 seconds of every video
   - This would be excellent for slow remote mounts, we can start the stream quickly and hopefully we can start reading the real file before the cache runs out.
   - Filtering options would be good, so for example only videos over 10gb in the `media/movies` folder would be cached.
-- Run OCR on images
+- Run OCR on images and videos
   - Index the text and use that for search
-  - [MMOCR](https://github.com/open-mmlab/mmocr) seems like the best option for this
   - Run translatelocally, libretranslate or even Vicuna-13b if we already have it to translate the text, and with Vicuna we can even use it to clean it up or provide context (especially if it can "see" the image with CLIP, but I doubt we're gonna get that advanced)
   - Overlay the text invisibly with the same bounding box on the image so you can copy/paste it.
+  - Running on videos would be useful, for example if a sign is shown in the video, or a logo shows up that could let you easily group all videos from that studio based on the logo. But, it would be expensive computationally and probably quite slow. Maybe using a faster but less accurate OCR model on videos would be better? If so, it would be good to run the big OCR model on maybe 2-5 screenshots because it might grab logos a weaker one cannot, then the rest can be done with a faster model.
 - Batch ffmpeg segments into a single command. This should be faster and let ffmpeg go wild with the CPU/GPU.
   - It would make sense to only do this for segments later on, and keep the first few individual because getting them out the door as fast as possible is more important initially.
 - Sync the video position to the server so it remembers where you stopped watching

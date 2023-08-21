@@ -23,8 +23,15 @@ const schema = z.object({
   disable_tasks: z.boolean().default(false),
   is_development: z.boolean().default(process.env.NODE_ENV !== 'production'),
   is_production: z.boolean().default(process.env.NODE_ENV === 'production'),
+  ocr: z
+    .object({
+      enabled: z.boolean().default(true),
+      min_word_score: z.number().default(0.2),
+    })
+    .default({}),
   face_detection: z
     .object({
+      enabled: z.boolean().default(true),
       // the score required to match a face to a person
       // score is lower because most instances will only have a dozen or so people,
       // so false positives are unlikely
@@ -42,7 +49,7 @@ const schema = z.object({
         require_tags: z.array(z.string()).optional(),
         exclude_tags: z.array(z.string()).optional(),
         add_tags: z.array(z.string()).optional(),
-      })
+      }),
     )
     .default([]),
   transcode: z.object({
@@ -54,7 +61,7 @@ const schema = z.object({
         max_width: z.number().optional(),
         bitrate: z.string().transform(parseBits).optional(),
         segment_duration: z.number().default(4),
-      })
+      }),
     ),
   }),
 });

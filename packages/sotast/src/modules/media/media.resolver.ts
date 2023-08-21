@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-array-callback-reference */
 import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { wrap } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
@@ -65,13 +66,13 @@ export class MediaResolver {
   constructor(
     private imageService: ImageService,
     private fileService: MediaService,
-    private sentryService: SentryService
+    private sentryService: SentryService,
   ) {}
 
   @Query(() => Media, { nullable: true })
   async media(@Args('id') fileId: string) {
     return this.mediaRepo.findOne(fileId, {
-      populate: ['poster', 'thumbnail', 'timeline', 'subtitles', 'faces'],
+      populate: ['poster', 'thumbnail', 'timeline', 'subtitles', 'faces', 'texts'],
     });
   }
 
@@ -89,6 +90,7 @@ export class MediaResolver {
           .leftJoinAndSelect('thumbnail', 'thumbnail')
           .leftJoinAndSelect('subtitles', 'subtitles')
           .leftJoinAndSelect('faces', 'faces')
+          .leftJoinAndSelect('texts', 'texts')
           .where({
             file: {
               metadata: {
@@ -113,7 +115,7 @@ export class MediaResolver {
               .addSelect(
                 queryBuilder.raw(`cosine_similarity(media.vector, :vector) as similarity`, {
                   vector: serialized,
-                })
+                }),
               )
               .orderBy({
                 similarity: 'DESC',
@@ -151,107 +153,122 @@ export class MediaResolver {
       defaultPageSize: 20,
       paginationArgs: filter,
       paginate: async (args) => {
-        // todo: this is hacky but for videos we're only using the first
-        // vector. photos only ever have one vector so thats fine
-        const realMedia = this.mediaRepo.getReference(media.file.id);
-        if (!wrap(realMedia).isInitialized()) {
-          console.log(realMedia);
-          throw new Error('media must be a reference');
-        }
+        return [[], 0];
+        // // todo: this is hacky but for videos we're only using the first
+        // // vector. photos only ever have one vector so thats fine
+        // const realMedia = this.mediaRepo.getReference(media.file.id);
+        // if (!wrap(realMedia).isInitialized()) {
+        //   console.log(realMedia);
+        //   throw new Error('media must be a reference');
+        // }
 
-        const vectors = await realMedia.vectors.loadItems();
-        const vector = vectors[Math.floor(Math.random() * vectors.length)];
-        if (!vector) return [[], 0];
+        // const vectors = await realMedia.vectors.loadItems();
+        // const vector = vectors[Math.floor(Math.random() * vectors.length)];
+        // if (!vector) return [[], 0];
 
-        // essentially we just want to find medias that are similar but not too similar.
-        const queryBuilder = this.mediaRepo.createQueryBuilder('media');
-        queryBuilder
-          .select('*')
-          .leftJoinAndSelect('file', 'file')
-          .leftJoinAndSelect('poster', 'poster')
-          .leftJoinAndSelect('thumbnail', 'thumbnail')
-          .leftJoinAndSelect('subtitles', 'subtitles')
-          .leftJoinAndSelect('faces', 'faces')
-          .addSelect(
-            queryBuilder.raw(`cosine_similarity(media.vector, :vector) as similarity`, { vector })
-          )
-          .where({
-            file: {
-              id: { $ne: media.file.id },
-              metadata: {
-                unavailable: false,
-              },
-            },
-            $or: [
-              {
-                file: {
-                  extension: { $in: [...IMAGE_EXTENSIONS] },
-                },
-              },
-              {
-                thumbnail: { $ne: null },
-              },
-            ],
-          })
-          // dedupe medias that are the same
-          .groupBy('similarity')
-          .limit(args.limit)
-          .offset(args.offset);
+        // // essentially we just want to find medias that are similar but not too similar.
+        // const queryBuilder = this.mediaRepo.createQueryBuilder('media');
+        // queryBuilder
+        //   .select('*')
+        //   .leftJoinAndSelect('file', 'file')
+        //   .leftJoinAndSelect('poster', 'poster')
+        //   .leftJoinAndSelect('thumbnail', 'thumbnail')
+        //   .leftJoinAndSelect('subtitles', 'subtitles')
+        //   .leftJoinAndSelect('faces', 'faces')
+        //   .addSelect(queryBuilder.raw(`cosine_similarity(media.vector, :vector) as similarity`, { vector }))
+        //   .where({
+        //     file: {
+        //       id: { $ne: media.file.id },
+        //       metadata: {
+        //         unavailable: false,
+        //       },
+        //     },
+        //     $or: [
+        //       {
+        //         file: {
+        //           extension: { $in: [...IMAGE_EXTENSIONS] },
+        //         },
+        //       },
+        //       {
+        //         thumbnail: { $ne: null },
+        //       },
+        //     ],
+        //   })
+        //   // dedupe medias that are the same
+        //   .groupBy('similarity')
+        //   .limit(args.limit)
+        //   .offset(args.offset);
 
-        switch (filter.type) {
-          case undefined:
-          case null:
-          case SimilarityType.SameFolder:
-          case SimilarityType.SameType:
-          case SimilarityType.Related:
-          case SimilarityType.Images:
-          case SimilarityType.Videos:
-            queryBuilder
-              .andWhere({
-                similarity: {
-                  $lt: 0.85,
-                  $gt: 0.3,
-                },
-              })
-              .orderBy({ similarity: 'DESC' });
+        // switch (filter.type) {
+        //   case undefined:
+        //   case null:
+        //   case SimilarityType.SameFolder:
+        //   case SimilarityType.SameType:
+        //   case SimilarityType.Related:
+        //   case SimilarityType.Images:
+        //   case SimilarityType.Videos: {
+        //     queryBuilder
+        //       .andWhere({
+        //         similarity: {
+        //           $lt: 0.85,
+        //           $gt: 0.3,
+        //         },
+        //       })
+        //       .orderBy({ similarity: 'DESC' });
 
-            if (filter.type === SimilarityType.SameFolder) {
-              queryBuilder.andWhere({ directory: media.file.directory });
-            } else if (filter.type === SimilarityType.SameType) {
-              // todo: should use similar extensions, but mediaType is not accessible here
-              // eg if its an mp4 video, it should show all videos, not just mp4s
-              queryBuilder.andWhere({ extension: media.file.extension });
-            } else if (filter.type === SimilarityType.Videos) {
-              queryBuilder.andWhere({
-                extension: {
-                  $in: [...VIDEO_EXTENSIONS],
-                },
-              });
-            } else if (filter.type === SimilarityType.Images) {
-              queryBuilder.andWhere({
-                extension: {
-                  $in: [...IMAGE_EXTENSIONS],
-                },
-              });
-            }
+        //     switch (filter.type) {
+        //       case SimilarityType.SameFolder: {
+        //         queryBuilder.andWhere({ directory: media.file.directory });
 
-            break;
-          case SimilarityType.Similar:
-            queryBuilder
-              .andWhere({
-                similarity: {
-                  $gt: 0.85,
-                },
-              })
-              .orderBy({ similarity: 'DESC' });
-            break;
-        }
+        //         break;
+        //       }
+        //       case SimilarityType.SameType: {
+        //         // todo: should use similar extensions, but mediaType is not accessible here
+        //         // eg if its an mp4 video, it should show all videos, not just mp4s
+        //         queryBuilder.andWhere({ extension: media.file.extension });
 
-        // todo: getResultAndCount() removes the similarity column,
-        // but then complains that the similarity column does not exist.
-        // for now, i just disabled pagination, but its likely a mikro bug.
-        const result = await queryBuilder.getResult();
-        return [result, result.length];
+        //         break;
+        //       }
+        //       case SimilarityType.Videos: {
+        //         queryBuilder.andWhere({
+        //           extension: {
+        //             $in: [...VIDEO_EXTENSIONS],
+        //           },
+        //         });
+
+        //         break;
+        //       }
+        //       case SimilarityType.Images: {
+        //         queryBuilder.andWhere({
+        //           extension: {
+        //             $in: [...IMAGE_EXTENSIONS],
+        //           },
+        //         });
+
+        //         break;
+        //       }
+        //       // No default
+        //     }
+
+        //     break;
+        //   }
+        //   case SimilarityType.Similar: {
+        //     queryBuilder
+        //       .andWhere({
+        //         similarity: {
+        //           $gt: 0.85,
+        //         },
+        //       })
+        //       .orderBy({ similarity: 'DESC' });
+        //     break;
+        //   }
+        // }
+
+        // // todo: getResultAndCount() removes the similarity column,
+        // // but then complains that the similarity column does not exist.
+        // // for now, i just disabled pagination, but its likely a mikro bug.
+        // const result = await queryBuilder.getResult();
+        // return [result, result.length];
       },
     });
   }

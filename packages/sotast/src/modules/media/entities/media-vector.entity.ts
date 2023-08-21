@@ -6,6 +6,6 @@ export class MediaVector {
   @ManyToOne(() => Media, { primary: true, ref: true })
   media: Ref<Media>;
 
-  @Property({ type: 'blob', nullable: true })
-  data?: Buffer;
+  @Property({ type: 'blob' })
+  data: Buffer;
 }

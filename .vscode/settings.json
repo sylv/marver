@@ -2,6 +2,11 @@
   "npm.scriptExplorerExclude": ["^((?!watch|generate:watch).)*$"],
   "typescript.preferences.importModuleSpecifier": "relative",
   "graphql-config.load.legacy": true,
+  "eslint.workingDirectories": [
+    {
+      "pattern": "./{packages,apps}/*"
+    }
+  ],
   "tailwindCSS.experimental.classRegex": [
     ["clsx\\(([^)]*)\\)", "'([^']*)'", "\"([^']*)\""],
     [":\\s*?[\"'`]([^\"'`]*).*?,"],

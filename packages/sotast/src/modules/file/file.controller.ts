@@ -11,7 +11,11 @@ export class FileController {
   @InjectRepository(File) private fileRepo: EntityRepository<File>;
 
   @Get('/files/:fileId/raw')
-  async readFile(@Res() reply: FastifyReply, @Param('fileId') fileId: string, @Headers('Range') range?: string) {
+  async readFile(
+    @Res() reply: FastifyReply,
+    @Param('fileId') fileId: string,
+    @Headers('Range') range?: string,
+  ) {
     const file = await this.fileRepo.findOneOrFail(fileId);
     const parsedRange = range ? this.getRange(range, file.metadata.size) : null;
     const stream = createReadStream(file.path, {

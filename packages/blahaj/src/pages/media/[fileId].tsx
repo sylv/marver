@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiFile } from 'react-icons/fi';
 import { ImFileEmpty } from 'react-icons/im';
 import { IoIosTimer, IoIosVideocam, IoIosVolumeHigh } from 'react-icons/io';
 import { RxSize } from 'react-icons/rx';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBackgroundColours } from '../../components/background';
-import { ImageLoader } from '../../components/image-loader';
+import { ImageOverlay } from '../../components/image-overlay';
 import { Loading } from '../../components/loading';
 import { Player } from '../../components/player/player';
 import { SimilarMedia } from '../../components/similar-media';
 import { FileType, SimilarityType, useGetMediaQuery } from '../../generated/graphql';
 import { thumbhashBase64ToDataUri } from '../../helpers/thumbhashBase64ToDataUri';
 import { setFilter, useMediaStore } from './media.store';
-import { ImageOverlay } from '../../components/image-overlay';
 
 const splitTitleCase = (input: string) => {
-  return input.replace(/([A-Z]+)/g, ' $1').trim();
+  return input.replaceAll(/([A-Z]+)/g, ' $1').trim();
 };
 
 export default function File() {
@@ -72,15 +71,6 @@ export default function File() {
               ))}
             </Player>
           )}
-          {/* {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
-            <ImageLoader
-              src={data.media.thumbnailUrl}
-              height={data.media?.height || undefined}
-              width={data.media?.width || undefined}
-              previewBase64={data.media.previewBase64}
-              className="h-full w-full object-contain"
-            />
-          )} */}
           {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
             <ImageOverlay
               src={data.media.thumbnailUrl}
@@ -88,11 +78,19 @@ export default function File() {
               width={data.media?.width || undefined}
               previewBase64={data.media.previewBase64}
               className="h-[70vh] w-full object-contain"
-              overlays={data.media.faces.map((face) => ({
-                boundingBox: face.boundingBox,
-                content: face.id,
-                className: 'border border-red-600 text-red-600 truncate font-mono bg-red-400/40',
-              }))}
+              overlays={[
+                ...data.media.faces.map((face) => ({
+                  boundingBox: face.boundingBox,
+                  content: face.id,
+                  className: 'border border-red-600 text-red-600 truncate font-mono bg-red-400/40',
+                })),
+                ...data.media.texts.map((text) => ({
+                  boundingBox: text.boundingBox,
+                  content: text.text,
+                  className:
+                    'opacity-40 hover:opacity-100 border border-blue-600 text-blue-600 bg-blue-400/40 hover:text-white hover:bg-blue-400',
+                })),
+              ]}
             />
           )}
         </div>

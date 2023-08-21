@@ -20,7 +20,7 @@ export const parseDate = (date: string, hint?: Date): { date: Date; confident: b
   // Check for the presence of any separators in the date string
   let separator = '';
   for (const sep of DATE_SEPARATORS) {
-    if (date.indexOf(sep) !== -1) {
+    if (date.includes(sep)) {
       separator = sep;
       break;
     }
@@ -60,7 +60,7 @@ export const parseDate = (date: string, hint?: Date): { date: Date; confident: b
   }
 
   // Calculate the difference between the candidate timestamp and the hint timestamp
-  let hintTimestamp = hint.valueOf();
+  const hintTimestamp = hint.valueOf();
   let candidateTimestamp = new Date(Date.UTC(third, second - 1, first)).valueOf();
   if (Math.abs(candidateTimestamp - hintTimestamp) > HINT_LIMIT * 24 * 60 * 60 * 1000) {
     candidateTimestamp = new Date(Date.UTC(third, first - 1, second)).valueOf();

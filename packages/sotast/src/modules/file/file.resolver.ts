@@ -1,6 +1,15 @@
-import type { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Args, ArgsType, Field, Parent, Query, ResolveField, Resolver, registerEnumType } from '@nestjs/graphql';
+import {
+  Args,
+  ArgsType,
+  Field,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { createConnection } from 'nest-graphql-utils';
 import { VIRTUAL_TAGS } from '../../config/virtual-tags.js';
@@ -46,7 +55,7 @@ export class FileResolver {
           {
             limit: args.limit,
             offset: args.offset,
-          }
+          },
         );
       },
     });
@@ -68,7 +77,7 @@ export class FileResolver {
             description: virtualTag.description,
             color: virtualTag.color,
           },
-        })
+        }),
       );
     }
 

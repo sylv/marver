@@ -24,6 +24,17 @@ query GetMedia($fileId: String!, $filter: SimilarityType) {
         name
       }
     }
+    texts {
+      id
+      text
+      code
+      boundingBox {
+        x1
+        y1
+        x2
+        y2
+      }
+    }
     similar(type: $filter) {
       totalCount
       pageInfo {

@@ -21,7 +21,10 @@ export class FileScanService {
   private logger = new Logger(FileScanService.name);
   private lastPersist = Date.now();
 
-  constructor(protected orm: MikroORM, private em: EntityManager) {}
+  constructor(
+    protected orm: MikroORM,
+    private em: EntityManager,
+  ) {}
 
   @Cron(CronExpression.EVERY_12_HOURS)
   @UseRequestContext()
@@ -69,7 +72,7 @@ export class FileScanService {
       {
         fields: ['id', 'path', 'metadata'],
         filters: false,
-      }
+      },
     );
 
     for await (const dirent of dir) {

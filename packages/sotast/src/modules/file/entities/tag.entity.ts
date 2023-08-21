@@ -1,4 +1,13 @@
-import { Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
+import {
+  Collection,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryKey,
+  Property,
+  type Ref,
+} from '@mikro-orm/core';
 import { FileTag } from './file-tag.entity.js';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Person } from '../../people/entities/person.entity.js';

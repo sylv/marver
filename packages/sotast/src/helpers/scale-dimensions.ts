@@ -7,11 +7,11 @@ export const scaleDimensions = (current: Dimensions, max: { maxHeight?: number; 
   const { height, width } = current;
   const { maxHeight, maxWidth } = max;
   const ratio = Math.min(
-    maxWidth ? maxWidth / width : Infinity,
-    maxHeight ? maxHeight / height : Infinity
+    maxWidth ? maxWidth / width : Number.POSITIVE_INFINITY,
+    maxHeight ? maxHeight / height : Number.POSITIVE_INFINITY,
   );
 
-  if (ratio === Infinity) return current;
+  if (ratio === Number.POSITIVE_INFINITY) return current;
 
   return {
     height: Math.round(height * ratio),

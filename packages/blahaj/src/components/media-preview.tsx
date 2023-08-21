@@ -1,8 +1,13 @@
 import clsx from 'clsx';
-import React, { HTMLAttributes, forwardRef, useRef } from 'react';
+import React, { type HTMLAttributes, forwardRef, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useClient } from 'urql';
-import { GetMediaDocument, GetMediaQuery, GetMediaQueryVariables, MinimalMediaFragment } from '../generated/graphql';
+import {
+  GetMediaDocument,
+  type GetMediaQuery,
+  type GetMediaQueryVariables,
+  type MinimalMediaFragment,
+} from '../generated/graphql';
 import { useMediaStore } from '../pages/media/media.store';
 import { ImageLoader } from './image-loader';
 
@@ -59,7 +64,10 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
             fileId: media.file.id,
             filter: filter,
           })
-          .toPromise();
+          .toPromise()
+          .catch((error) => {
+            console.error('Error preloading media', error);
+          });
       }, 100);
     };
 
@@ -101,5 +109,5 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
         </div>
       </Link>
     );
-  }
+  },
 );

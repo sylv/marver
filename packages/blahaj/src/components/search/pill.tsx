@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { ReactNode, useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 import { FiHelpCircle } from 'react-icons/fi';
 
 export const Pill = ({
@@ -17,7 +17,7 @@ export const Pill = ({
   const [showHelp, setShowHelp] = useState(false);
   const classes = clsx(
     `relative rounded-full bg-gray-600/40 text-gray-500 text-sm mr-4 hover:bg-gray-700/40 transition flex items-center`,
-    active && 'bg-purple-400/40 text-purple-400 hover:bg-purple-500/40'
+    active && 'bg-purple-400/40 text-purple-400 hover:bg-purple-500/40',
   );
 
   return (

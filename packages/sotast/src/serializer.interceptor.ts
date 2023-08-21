@@ -1,19 +1,21 @@
 import {
-  CallHandler,
-  ExecutionContext,
+  type CallHandler,
+  type ExecutionContext,
   Injectable,
-  NestInterceptor,
-  PlainLiteralObject,
+  type NestInterceptor,
+  type PlainLiteralObject,
   StreamableFile,
 } from '@nestjs/common';
 import { isObject } from 'class-validator';
 import { wrap } from '@mikro-orm/core';
-import { map, Observable } from 'rxjs';
+import { map, type Observable } from 'rxjs';
 
 @Injectable()
 export class MikroOrmSerializerInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    return next.handle().pipe(map((res: PlainLiteralObject | Array<PlainLiteralObject>) => this.serialize(res)));
+    return next
+      .handle()
+      .pipe(map((res: PlainLiteralObject | Array<PlainLiteralObject>) => this.serialize(res)));
   }
 
   serialize(response: unknown): unknown {

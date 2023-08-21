@@ -1,6 +1,6 @@
-import React, { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { BoundingBox } from '../generated/graphql';
-import { ImageLoader, ImageLoaderProps } from './image-loader';
+import React, { type FC, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type BoundingBox } from '../generated/graphql';
+import { ImageLoader, type ImageLoaderProps } from './image-loader';
 
 export interface ImageOverlayProps extends ImageLoaderProps {
   overlays?: ImageOverlayItem[];
@@ -59,12 +59,14 @@ export const ImageOverlay: FC<ImageOverlayProps> = ({ overlays, ...rest }) => {
         {scaleX !== null &&
           scaleY !== null &&
           overlays?.map((overlay, index) => {
+            const As = overlay.onClick ? 'button' : 'div';
             const adjustedBoundingBox = adjustBoundingBox(overlay.boundingBox, scaleX, scaleY);
             return (
-              <div
+              <As
                 className={overlay.className}
                 onClick={overlay.onClick}
                 key={`${adjustedBoundingBox.x1}-${adjustedBoundingBox.y1}.${index}`}
+                title={overlay.content || undefined}
                 style={{
                   position: 'absolute',
                   pointerEvents: 'auto',
@@ -75,7 +77,7 @@ export const ImageOverlay: FC<ImageOverlayProps> = ({ overlays, ...rest }) => {
                 }}
               >
                 {overlay.content}
-              </div>
+              </As>
             );
           })}
       </div>

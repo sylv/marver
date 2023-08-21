@@ -1,14 +1,16 @@
 import clsx from 'clsx';
-import { HTMLAttributes, memo, useEffect, useMemo, useRef } from 'react';
+import { type HTMLAttributes, memo, useEffect, useMemo, useRef } from 'react';
 import React from 'react';
 
-export interface SmartSearchInputProps extends Omit<HTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'value'> {
+export interface SmartSearchInputProps
+  extends Omit<HTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'value'> {
   value: string;
   height: string;
   onChange: (value: string) => void;
 }
 
-const BASE_CLASSES = 'border border-1 border-transparent p-2 font-mono whitespace-pre-wrap break-words text-base';
+const BASE_CLASSES =
+  'border border-1 border-transparent p-2 font-mono whitespace-pre-wrap break-words text-base';
 
 // this is "a test" => ["this", " ", is", " ", "a test"]
 const splitQuery = (input: string): string[] => {
@@ -16,15 +18,12 @@ const splitQuery = (input: string): string[] => {
   let currentPart = '';
   let inQuotes = false;
 
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-
+  for (const char of input) {
     if (char === '"') {
       inQuotes = !inQuotes;
       currentPart += char;
     } else if (char === ' ' && !inQuotes) {
-      parts.push(currentPart);
-      parts.push(' ');
+      parts.push(currentPart, ' ');
       currentPart = '';
     } else {
       currentPart += char;
@@ -92,7 +91,7 @@ export const SmartSearchInput = memo<SmartSearchInputProps>(({ value, height, on
         }}
         className={clsx(
           'relative flex resize-none outline-none w-full bg-transparent text-transpaernt caret-white z-10 focus:border-purple-400/50',
-          BASE_CLASSES
+          BASE_CLASSES,
         )}
       />
     </div>

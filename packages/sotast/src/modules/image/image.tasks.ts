@@ -5,6 +5,7 @@ import bytes from 'bytes';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { File } from '../file/entities/file.entity.js';
+import { MediaText, MediaTextType } from '../media/entities/media-text.entity.js';
 import { MediaVector } from '../media/entities/media-vector.entity.js';
 import { SentryService } from '../sentry/sentry.service.js';
 import { Task } from '../tasks/task.decorator.js';
@@ -14,11 +15,12 @@ import { ImageService } from './image.service.js';
 @Injectable()
 export class ImageTasks {
   @InjectRepository(MediaVector) private mediaVectorRepo: EntityRepository<MediaVector>;
+  @InjectRepository(MediaText) private mediaTextRepo: EntityRepository<MediaText>;
 
   constructor(
     private imageService: ImageService,
     private sentryService: SentryService,
-    private em: EntityManager
+    private em: EntityManager,
   ) {}
 
   @Task(TaskType.ImageExtractExif, {
@@ -56,9 +58,7 @@ export class ImageTasks {
     },
   })
   async extractMetadata(file: File) {
-    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(
-      file.path
-    );
+    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(file.path);
     const media = this.imageService.createMediaFromSharpMetadata(originalMeta, file);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
@@ -94,6 +94,47 @@ export class ImageTasks {
     });
 
     await this.em.persistAndFlush(mediaVec);
+  }
+
+  @Task(TaskType.ImageExtractText, {
+    concurrency: 4,
+    filter: {
+      media: {
+        hasText: null,
+        height: { $ne: null },
+        texts: {
+          $exists: false,
+        },
+      },
+      extension: {
+        $in: [...IMAGE_EXTENSIONS],
+      },
+      metadata: {
+        size: { $lte: bytes('10mb') },
+      },
+    },
+  })
+  async extractText(file: File) {
+    const media = file.media!;
+    const results = await this.sentryService.getOCR(media.file);
+
+    media.hasText = !!results[0];
+    this.em.persist(media);
+
+    for (const result of results) {
+      if (!result.bounding_box) throw new Error('No bounding box');
+      const text = this.mediaTextRepo.create({
+        media: media,
+        boundingBox: result.bounding_box,
+        confidence: result.confidence,
+        text: result.text,
+        type: MediaTextType.OCR,
+      });
+
+      this.em.persist(text);
+    }
+
+    await this.em.flush();
   }
 
   // @Task(TaskType.ImageGeneratePerceptualHash, {

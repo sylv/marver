@@ -1,7 +1,7 @@
 import React, {
-  FC,
-  ReactNode,
-  VideoHTMLAttributes,
+  type FC,
+  type ReactNode,
+  type VideoHTMLAttributes,
   useCallback,
   useEffect,
   useRef,
@@ -11,10 +11,11 @@ import React, {
 
 // https://github.com/video-dev/hls.js/issues/5146#issuecomment-1375070955
 import type HlsType from 'hls.js';
-// @ts-expect-error
+// @ts-expect-error missing types
 import HlsMin from 'hls.js/dist/hls.min';
 import { PlayerControls } from './player-controls';
 import { useBackgroundColours } from '../background';
+
 const Hls = HlsMin as typeof HlsType;
 
 export interface VideoProps extends VideoHTMLAttributes<HTMLVideoElement> {
@@ -48,7 +49,7 @@ export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, ...res
         setBackgroundImage(url);
       });
     },
-    [startTransition]
+    [startTransition],
   );
 
   useEffect(() => {
@@ -110,7 +111,6 @@ export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, ...res
         controls
         onCanPlayThrough={checkFailedLoad}
         onLoadStart={checkFailedLoad}
-        onLoad={checkFailedLoad}
         onLoadedMetadata={checkFailedLoad}
         onPause={() => setIsPaused(true)}
         onPlay={() => setIsPaused(false)}

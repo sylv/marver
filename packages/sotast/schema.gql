@@ -108,6 +108,23 @@ type MediaTimeline {
   height: Float!
 }
 
+type BoundingBox {
+  x1: Float!
+  y1: Float!
+  x2: Float!
+  y2: Float!
+}
+
+type MediaText {
+  id: Float!
+  type: Float!
+  text: String!
+  boundingBox: BoundingBox!
+  confidence: Float!
+  code: String
+  timestamp: Float
+}
+
 type Media {
   file: File!
   height: Float
@@ -120,6 +137,9 @@ type Media {
 
   """Whether no subtitles could be generated from the audio on this video"""
   nonVerbal: Boolean
+
+  """Whether text coudl be found in the image or video"""
+  hasText: Boolean
   audioCodec: String
   hasEmbeddedSubtitles: Boolean
   hasFaces: Boolean
@@ -130,6 +150,7 @@ type Media {
   exifMetadata: MediaExifData
   subtitles: [MediaSubtitle!]!
   faces: [Face!]!
+  texts: [MediaText!]!
   durationFormatted: String
   previewBase64: String
   similar(after: String, first: Float, before: String, last: Float, offset: Float, type: SimilarityType): MediaConnection!
@@ -157,13 +178,6 @@ type MediaConnection {
   totalCount: Int!
   pageInfo: PageInfo!
   edges: [MediaEdge!]!
-}
-
-type BoundingBox {
-  x1: Float!
-  y1: Float!
-  x2: Float!
-  y2: Float!
 }
 
 type Face {

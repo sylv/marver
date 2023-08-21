@@ -1,8 +1,8 @@
 import type { FilterQuery } from '@mikro-orm/core';
 import { SetMetadata } from '@nestjs/common';
 import { recursive } from 'merge';
-import { File } from '../file/entities/file.entity.js';
-import { TaskType } from './task.enum.js';
+import { type File } from '../file/entities/file.entity.js';
+import { type TaskType } from './task.enum.js';
 
 export const TASKS_KEY = Symbol('tasks');
 export type TasksKey = TaskOptions;

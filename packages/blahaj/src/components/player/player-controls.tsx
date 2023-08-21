@@ -1,4 +1,4 @@
-import React, { RefObject, memo, useEffect, useState } from 'react';
+import React, { type RefObject, memo, useEffect, useState } from 'react';
 import isEqual from 'react-fast-compare';
 
 interface PlayerControlsProps {

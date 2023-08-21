@@ -2,7 +2,7 @@ import { Embedded, Entity, ManyToOne, PrimaryKey, Property, type Ref } from '@mi
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { ulid } from 'ulid';
 import { Media } from '../../media/entities/media.entity.js';
-import { BoundingBox } from './bounding-box.embeddable.js';
+import { BoundingBoxEmbed } from './bounding-box.embeddable.js';
 import { Person } from './person.entity.js';
 
 @Entity()
@@ -15,9 +15,9 @@ export class Face {
   @Property({ type: 'blob' })
   vector: Buffer;
 
-  @Embedded(() => BoundingBox)
-  @Field(() => BoundingBox)
-  boundingBox: BoundingBox;
+  @Embedded(() => BoundingBoxEmbed)
+  @Field(() => BoundingBoxEmbed)
+  boundingBox: BoundingBoxEmbed;
 
   @ManyToOne(() => Media, { ref: true })
   media: Ref<Media>;

@@ -8,7 +8,7 @@ import { join } from 'path';
 import sharp, { OutputInfo } from 'sharp';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
-import { CorruptedFileError } from '../../errors/CorruptedFileError.js';
+import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
 import { File } from '../file/entities/file.entity.js';
 import { ImageService } from '../image/image.service.js';
@@ -34,7 +34,7 @@ export class VideoTasks {
     private ffmpegService: FfmpegService,
     private sentryService: SentryService,
     private imageService: ImageService,
-    private em: EntityManager
+    private em: EntityManager,
   ) {}
 
   @Task(TaskType.VideoExtractMetadata, {
@@ -148,10 +148,7 @@ export class VideoTasks {
       },
     },
   })
-  async generateClipVector(
-    file: File,
-    { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>
-  ) {
+  async generateClipVector(file: File, { frames }: Awaited<ReturnType<VideoTasks['extractScreenshots']>>) {
     const media = file.media!;
     for (const frame of frames) {
       if (!frame.path) continue;

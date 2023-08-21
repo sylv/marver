@@ -1,5 +1,5 @@
 import React, { memo, useRef } from 'react';
-import { MinimalMediaFragment } from '../generated/graphql';
+import { type MinimalMediaFragment } from '../generated/graphql';
 import { useMediaListRows } from '../helpers/getRows';
 import { MediaPreview } from './media-preview';
 

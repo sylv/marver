@@ -2,10 +2,10 @@ import Accept from '@hapi/accept';
 import { BadRequestException, Controller, Get, Param, Query, Request, Response } from '@nestjs/common';
 import bytes from 'bytes';
 import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
-import type { FastifyReply, FastifyRequest } from 'fastify';
-import { ReadStream, createReadStream } from 'fs';
-import sharp, { FitEnum, FormatEnum } from 'sharp';
-import { ImageService, ProxyableImage } from './image.service.js';
+import { type FastifyReply, type FastifyRequest } from 'fastify';
+import { createReadStream, type ReadStream } from 'fs';
+import sharp, { type FitEnum, type FormatEnum } from 'sharp';
+import { ImageService, type ProxyableImage } from './image.service.js';
 
 const FIT = ['cover', 'contain', 'fill', 'inside', 'outside'] as (keyof FitEnum)[];
 // Image formats that can be animated by sharp
@@ -61,10 +61,10 @@ export class ImageController {
     @Param('data') data: string,
     @Query() query: ImageProxyQuery,
     @Request() req: FastifyRequest,
-    @Response({ passthrough: false }) reply: FastifyReply
+    @Response({ passthrough: false }) reply: FastifyReply,
   ) {
     const image = this.imageService.parseImageProxyPayload(data);
-    let { formatMime, formatKey } = await this.detectBestMimeType(query, image, req);
+    const { formatMime, formatKey } = await this.detectBestMimeType(query, image, req);
     const shouldProcess = this.shouldProcess(formatMime, query, image);
     const cleanFileName = encodeURIComponent(image.fileName);
 

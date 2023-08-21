@@ -1,7 +1,7 @@
 import bytes from 'bytes';
-import { File } from '../modules/file/entities/file.entity.js';
+import { type File } from '../modules/file/entities/file.entity.js';
 import { TagColorPresets } from '../modules/file/entities/tag.entity.js';
-import { FilterQuery } from '@mikro-orm/core';
+import { type FilterQuery } from '@mikro-orm/core';
 
 export interface VirtualTag {
   name: string;
@@ -39,14 +39,6 @@ export const VIRTUAL_TAGS: VirtualTag[] = [
     check: (file) => !!file.media?.hasFaces,
     filter: {
       media: { hasFaces: true },
-    },
-  },
-  {
-    name: 'has_clip',
-    description: 'Whether this file has CLIP vectors for search extracted.',
-    check: (file) => !!file.media?.vector,
-    filter: {
-      media: { vector: { $ne: null } },
     },
   },
   {

@@ -6,7 +6,7 @@ import ExifReader from 'exifreader';
 import { pack, unpack } from 'msgpackr';
 import sharp from 'sharp';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
-import { File } from '../file/entities/file.entity.js';
+import { type File } from '../file/entities/file.entity.js';
 import { MediaExifData } from '../media/entities/media-exif.entity.js';
 import { Media } from '../media/entities/media.entity.js';
 
@@ -38,7 +38,7 @@ export class ProxyableImage {
 
 @Injectable()
 export class ImageService {
-  private static readonly EXIF_DATE_FORMAT = /(?<year>[0-9]{4}):(?<month>[0-9]{2}):(?<day>[0-9]{2})/;
+  private static readonly EXIF_DATE_FORMAT = /(?<year>\d{4}):(?<month>\d{2}):(?<day>\d{2})/;
   @InjectRepository(MediaExifData) private exifRepo: EntityRepository<MediaExifData>;
   @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
   private logger = new Logger(ImageService.name);
@@ -199,8 +199,8 @@ export class ImageService {
     const lat = exifData['GPSLatitude'].description;
     const long = exifData['GPSLongitude'].description;
     const latRef = (exifData['GPSLatitudeRef'].value as string[])[0];
-    if (latRef === 'S') return [parseFloat(lat) * -1, parseFloat(long)];
-    return [parseFloat(lat), parseFloat(long)];
+    if (latRef === 'S') return [Number.parseFloat(lat) * -1, Number.parseFloat(long)];
+    return [Number.parseFloat(lat), Number.parseFloat(long)];
   }
 
   private parseExifDate(date: string) {
@@ -208,7 +208,7 @@ export class ImageService {
     // that as a date without some trickery.
     const clean = date.replace(ImageService.EXIF_DATE_FORMAT, '$<year>-$<month>-$<day>');
     const parsed = new Date(clean);
-    if (isNaN(parsed.getTime()) || parsed.getTime() === 0) {
+    if (Number.isNaN(parsed.getTime()) || parsed.getTime() === 0) {
       this.logger.warn(`Failed to parse date "${date}" into a valid date object`);
       return undefined;
     }

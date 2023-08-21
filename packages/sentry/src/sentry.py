@@ -1,10 +1,10 @@
+import json
+import os
 from concurrent import futures
 from functools import cached_property
-import os
-import cv2
 
-import json
 import clip
+import cv2
 import grpc
 import sentry_pb2
 import sentry_pb2_grpc
@@ -41,8 +41,8 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
 
     @cached_property
     def ocr_model(self):
-        from doctr.models import ocr_predictor
         from doctr.io import DocumentFile
+        from doctr.models import ocr_predictor
 
         print("Loading OCR model")
         model = ocr_predictor(det_arch='db_resnet50',
@@ -121,9 +121,6 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
         for block in page["blocks"]:
             for line in block["lines"]:
                 for word in line["words"]:
-                    if word['confidence'] < 0.2:
-                        continue
-
                     # geometry is in percentages, 0-1
                     # we need to convert to pixels
                     geometry = word["geometry"]
@@ -131,10 +128,10 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
                         "text": word["value"],
                         "confidence": word["confidence"],
                         "bounding_box": {
-                            "x1": round(geometry[0][0] * page_width),
-                            "y1": round(geometry[0][1] * page_height),
-                            "x2": round(geometry[1][0] * page_width),
-                            "y2": round(geometry[1][1] * page_height),
+                            "x1": round(geometry[0][0] * page_height),
+                            "y1": round(geometry[0][1] * page_width),
+                            "x2": round(geometry[1][0] * page_height),
+                            "y2": round(geometry[1][1] * page_width),
                         }
                     })
 

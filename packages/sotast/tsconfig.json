@@ -19,6 +19,7 @@
     "noUnusedLocals": true,
     "noFallthroughCasesInSwitch": true,
     "noEmitOnError": true,
+    "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "isolatedModules": true,

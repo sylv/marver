@@ -1,22 +1,26 @@
-import { EntityManager, QueryBuilder } from '@mikro-orm/better-sqlite';
+import { type EntityManager, type QueryBuilder } from '@mikro-orm/better-sqlite';
 import bytes from 'bytes';
 import ms from 'ms';
-import { Media } from '../modules/media/entities/media.entity.js';
+import { type Media } from '../modules/media/entities/media.entity.js';
 import { Face } from '../modules/people/entities/face.entity.js';
-import { config } from '../config.js';
 
 function operatorToQuery(operator: string, value: unknown): unknown | undefined {
   switch (operator) {
-    case 'gt':
+    case 'gt': {
       return { $gt: value };
-    case 'gte':
+    }
+    case 'gte': {
       return { $gte: value };
-    case 'lt':
+    }
+    case 'lt': {
       return { $lt: value };
-    case 'lte':
+    }
+    case 'lte': {
       return { $lte: value };
-    case 'eq':
+    }
+    case 'eq': {
       return value;
+    }
   }
 }
 
@@ -38,7 +42,7 @@ export const SEARCH_MODIFIERS = [
   {
     name: 'limit',
     add: (value: string, queryBuilder: QueryBuilder<Media>) => {
-      queryBuilder.limit(parseInt(value));
+      queryBuilder.limit(Number.parseInt(value));
     },
   },
   {
@@ -62,15 +66,17 @@ export const SEARCH_MODIFIERS = [
       const [operator, size] = value.split(':');
       const sizeInBytes = bytes(size);
       switch (operator) {
-        case 'eq':
+        case 'eq': {
           // within 1% of the size
           queryBuilder.andWhere({
             file: { metadata: { size: { $between: [sizeInBytes * 0.99, sizeInBytes * 1.01] } } },
           });
           break;
-        default:
+        }
+        default: {
           const parsed = operatorToQuery(operator, sizeInBytes);
           if (parsed) queryBuilder.andWhere({ file: { metadata: { size: parsed } } });
+        }
       }
     },
   },
@@ -83,13 +89,15 @@ export const SEARCH_MODIFIERS = [
       const [operator, duration] = value.split(':');
       const durationInMs = ms(duration);
       switch (operator) {
-        case 'eq':
+        case 'eq': {
           // within 1% of the duration
           queryBuilder.andWhere({ duration: { $between: [durationInMs * 0.99, durationInMs * 1.01] } });
           break;
-        default:
+        }
+        default: {
           const parsed = operatorToQuery(operator, durationInMs);
           if (parsed) queryBuilder.andWhere({ duration: parsed });
+        }
       }
     },
   },
@@ -112,7 +120,7 @@ export const SEARCH_MODIFIERS = [
     name: 'width',
     add: (value: string, queryBuilder: QueryBuilder<Media>) => {
       const [operator, width] = value.split(':');
-      const parsed = operatorToQuery(operator, parseInt(width));
+      const parsed = operatorToQuery(operator, Number.parseInt(width));
       if (parsed) queryBuilder.andWhere({ width: parsed });
     },
   },
@@ -120,7 +128,7 @@ export const SEARCH_MODIFIERS = [
     name: 'height',
     add: (value: string, queryBuilder: QueryBuilder<Media>) => {
       const [operator, height] = value.split(':');
-      const parsed = operatorToQuery(operator, parseInt(height));
+      const parsed = operatorToQuery(operator, Number.parseInt(height));
       if (parsed) queryBuilder.andWhere({ height: parsed });
     },
   },
@@ -144,7 +152,7 @@ export const SEARCH_MODIFIERS = [
         .addSelect(
           queryBuilder.raw('cosine_similarity(faces.vector, :vector) as similarity', {
             vector: faceQuery.getKnexQuery(),
-          })
+          }),
         )
         .andWhere({
           similarity: {

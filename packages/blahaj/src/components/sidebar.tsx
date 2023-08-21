@@ -1,4 +1,4 @@
-import React, { FC, ReactNode } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 import { FiHome, FiShare, FiShare2 } from 'react-icons/fi';
 
 export const Sidebar: FC<{ children: ReactNode }> = ({ children }) => {

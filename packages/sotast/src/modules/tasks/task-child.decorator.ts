@@ -1,7 +1,7 @@
-import { EntityField, FilterQuery } from '@mikro-orm/core';
+import { type EntityField, type FilterQuery } from '@mikro-orm/core';
 import { SetMetadata } from '@nestjs/common';
-import { TaskType } from './task.enum.js';
-import { File } from '../file/entities/file.entity.js';
+import { type TaskType } from './task.enum.js';
+import { type File } from '../file/entities/file.entity.js';
 
 export const TASK_CHILD_KEY = Symbol('task-child');
 export type TaskChildKey = TaskChildOptions;

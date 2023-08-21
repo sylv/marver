@@ -1,4 +1,4 @@
-import { MikroORM as BetterMikroORM } from '@mikro-orm/better-sqlite';
+import { type MikroORM as BetterMikroORM } from '@mikro-orm/better-sqlite';
 import { MikroORM } from '@mikro-orm/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -7,6 +7,8 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { fastify } from 'fastify';
 import { AppModule } from './app.module.js';
 import { MikroOrmSerializerInterceptor } from './serializer.interceptor.js';
+import { SentryService } from './modules/sentry/sentry.service.js';
+import { FileScanService } from './modules/file/file-scan.service.js';
 
 // Error.stackTraceLimit = 100;
 
@@ -29,7 +31,7 @@ app.useGlobalPipes(
     transformOptions: {
       enableImplicitConversion: true,
     },
-  })
+  }),
 );
 
 // temporary during development, auto update db schema
@@ -41,5 +43,5 @@ await app.listen(8080, '0.0.0.0', (error, address) => {
   logger.log(`Listening at ${address}`);
 });
 
-// const scanService = app.get(FileScanService);
-// await scanService.scan();
+const scanService = app.get(FileScanService);
+await scanService.scan();

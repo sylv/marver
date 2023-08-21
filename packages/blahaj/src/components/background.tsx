@@ -1,7 +1,7 @@
-import React, { FC, Fragment, memo, useEffect, useState } from 'react';
-import create from 'zustand';
+import React, { type FC, Fragment, memo, useEffect, useState } from 'react';
+import { create } from 'zustand';
 import { AnimatePresence, motion } from 'framer-motion';
-import produce from 'immer';
+import { produce } from 'immer';
 import noise from '../assets/noise.svg';
 
 const useStore = create(() => ({
@@ -23,7 +23,7 @@ export const useBackgroundColours = (coloursOrUrl: string | string[] | null) => 
           if (state.url) state.previousUrl = state.url;
           state.url = null;
           state.colours = coloursOrUrl;
-        })
+        }),
       );
     } else if (typeof coloursOrUrl === 'string') {
       useStore.setState(
@@ -32,7 +32,7 @@ export const useBackgroundColours = (coloursOrUrl: string | string[] | null) => 
           if (state.url) state.previousUrl = state.url;
           state.url = coloursOrUrl;
           state.colours = null;
-        })
+        }),
       );
     } else {
       useStore.setState(
@@ -40,7 +40,7 @@ export const useBackgroundColours = (coloursOrUrl: string | string[] | null) => 
           if (state.url) state.previousUrl = state.url;
           state.url = null;
           state.colours = null;
-        })
+        }),
       );
     }
   }, [coloursOrUrl]);
@@ -136,9 +136,11 @@ export const Background: FC = () => {
             animate={{ opacity: 0.1, transition: { duration: animateDuration } }}
             exit={{ opacity: 0 }}
           >
-            {new Array(bubbleCount).fill(null).map((_, index) => (
-              <Bubble colours={colours} index={index} key={index} />
-            ))}
+            {Array.from({ length: bubbleCount })
+              .fill(null)
+              .map((_, index) => (
+                <Bubble colours={colours} index={index} key={index} />
+              ))}
           </motion.div>
         )}
       </AnimatePresence>
