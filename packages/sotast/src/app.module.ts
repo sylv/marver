@@ -7,7 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { MercuriusDriver, type MercuriusDriverConfig } from '@nestjs/mercurius';
 import { ImageModule } from './modules/image/image.module.js';
 import { TaskModule } from './modules/tasks/task.module.js';
-import { SentryModule } from './modules/sentry/sentry.module.js';
+import { SolomonModule } from './modules/solomon/solomon.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
 import { MediaModule } from './modules/media/media.module.js';
@@ -45,7 +45,7 @@ const GQL_LOGGER = new Logger('GraphQL');
     PersonModule,
     ImageModule,
     TaskModule,
-    SentryModule,
+    SolomonModule,
     VideoModule,
     FfmpegModule,
     MediaModule,

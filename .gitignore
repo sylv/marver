@@ -82,6 +82,10 @@ typings/
 .nuxt
 dist
 
+# python cache
+__pycache__/
+*.py[cod]
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and *not* Next.js
@@ -107,3 +111,4 @@ target/
 .marverrc.yaml
 *.node
 .marver
+

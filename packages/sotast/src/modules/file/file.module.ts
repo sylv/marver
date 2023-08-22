@@ -1,6 +1,6 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
-import { SentryModule } from '../sentry/sentry.module.js';
+import { SolomonModule } from '../solomon/solomon.module.js';
 import { File } from './entities/file.entity.js';
 import { FileResolver } from './file.resolver.js';
 import { MediaService } from '../media/media.service.js';
@@ -13,7 +13,7 @@ import { FileMetadataResolver } from './file-metadata.resolver.js';
 
 @Module({
   controllers: [FileController],
-  imports: [ImageModule, MikroOrmModule.forFeature([File, FileTag, Tag]), SentryModule],
+  imports: [ImageModule, MikroOrmModule.forFeature([File, FileTag, Tag]), SolomonModule],
   providers: [FileResolver, FileScanService, MediaService, FileMetadataResolver],
   exports: [MediaService],
 })

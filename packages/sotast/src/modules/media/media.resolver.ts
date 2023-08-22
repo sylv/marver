@@ -15,10 +15,10 @@ import {
 import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { createConnection } from 'nest-graphql-utils';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
-import { Vector } from '../../generated/sentry.js';
+import { Vector } from '../../generated/solomon.js';
 import { PaginationArgs } from '../../pagination.js';
 import { ImageService } from '../image/image.service.js';
-import { SentryService } from '../sentry/sentry.service.js';
+import { SolomonService } from '../solomon/solomon.service.js';
 import { Media, MediaConnection } from './entities/media.entity.js';
 import { MediaService } from './media.service.js';
 
@@ -66,7 +66,7 @@ export class MediaResolver {
   constructor(
     private imageService: ImageService,
     private fileService: MediaService,
-    private sentryService: SentryService,
+    private solomonService: SolomonService,
   ) {}
 
   @Query(() => Media, { nullable: true })
@@ -109,7 +109,7 @@ export class MediaResolver {
         if (filter.search) {
           const parsedQuery = this.fileService.parseSearchQuery(filter.search, queryBuilder);
           if (parsedQuery) {
-            const vector = await this.sentryService.getTextVector(filter.search);
+            const vector = await this.solomonService.getTextVector(filter.search);
             const serialized = Buffer.from(Vector.toBinary(vector));
             queryBuilder
               .addSelect(

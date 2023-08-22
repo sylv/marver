@@ -163,7 +163,7 @@ importers:
         specifier: ^0.31.0
         version: 0.31.0(vite@4.4.9)
 
-  packages/sentry: {}
+  packages/solomon: {}
 
   packages/sotast:
     dependencies:

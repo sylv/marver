@@ -29,7 +29,7 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 
 - [blahaj](./packages/blahaj/) - the frontend (typescript, react, vite, graphql)
 - [sotast](./packages/sotast/) - the backend that does most of what you see (typescript, nestjs)
-- [sentry](./packages/sentry/) - machine learning grpc microservice (python)
+- [solomon](./packages/solomon/) - machine learning grpc microservice (python)
 - [squtil](./packages/squtil/) - sqlite extension that provides vector search and other utilities (rust)
 - [vidhash](./packages/vidhash/) - utilities for perceptual hashing of images and videos. (rust, ffmpeg. will give you nightmares.)
 

@@ -2,12 +2,12 @@ import { ChannelCredentials } from '@grpc/grpc-js';
 import { Injectable } from '@nestjs/common';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
 import { config } from '../../config.js';
-import { SentryServiceClient } from '../../generated/sentry.client.js';
-import { type OCR, Vector } from '../../generated/sentry.js';
+import { SolomonServiceClient } from '../../generated/solomon.client.js';
+import { type OCR, Vector } from '../../generated/solomon.js';
 
 @Injectable()
-export class SentryService {
-  private sentryService = new SentryServiceClient(
+export class SolomonService {
+  private solomonService = new SolomonServiceClient(
     new GrpcTransport({
       host: 'localhost:50051',
       channelCredentials: ChannelCredentials.createInsecure(),
@@ -15,32 +15,32 @@ export class SentryService {
   );
 
   async getFileVector(file: { path: string }) {
-    const { vector } = await this.sentryService.getVector({
+    const { vector } = await this.solomonService.getVector({
       input: {
         oneofKind: 'file_path',
         file_path: file.path,
       },
     }).response;
 
-    if (!vector) throw new Error('No vector returned from Sentry');
+    if (!vector) throw new Error('No vector returned from Solomon');
     return vector;
   }
 
   async getTextVector(text: string) {
-    const { vector } = await this.sentryService.getVector({
+    const { vector } = await this.solomonService.getVector({
       input: {
         oneofKind: 'text_input',
         text_input: text,
       },
     }).response;
 
-    if (!vector) throw new Error('No vector returned from Sentry');
+    if (!vector) throw new Error('No vector returned from Solomon');
     return vector;
   }
 
   async *detectFaces(file: { path: string }) {
     if (!config.ocr.enabled) throw new Error('OCR is disabled');
-    const { faces } = await this.sentryService.detectFaces({
+    const { faces } = await this.solomonService.detectFaces({
       file_path: file.path,
     }).response;
 
@@ -52,7 +52,7 @@ export class SentryService {
 
   async getOCR(file: { path: string }) {
     if (!config.ocr.enabled) throw new Error('OCR is disabled');
-    const { results } = await this.sentryService.getOCR({
+    const { results } = await this.solomonService.getOCR({
       file_path: file.path,
     }).response;
 

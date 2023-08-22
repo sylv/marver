@@ -7,7 +7,7 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { fastify } from 'fastify';
 import { AppModule } from './app.module.js';
 import { MikroOrmSerializerInterceptor } from './serializer.interceptor.js';
-import { SentryService } from './modules/sentry/sentry.service.js';
+import { SolomonService } from './modules/solomon/solomon.service.js';
 import { FileScanService } from './modules/file/file-scan.service.js';
 
 // Error.stackTraceLimit = 100;

@@ -6,8 +6,8 @@ from functools import cached_property
 import clip
 import cv2
 import grpc
-import sentry_pb2
-import sentry_pb2_grpc
+import solomon_pb2
+import solomon_pb2_grpc
 import torch
 from PIL import Image
 
@@ -18,7 +18,7 @@ device = os.getenv("MARVER_MACHINE_LEARNING_DEVICE",
                    "cuda" if torch.cuda.is_available() else "cpu")
 
 
-class SentryService(sentry_pb2_grpc.SentryServiceServicer):
+class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
     @cached_property
     def clip_model(self):
         print("Loading clip model using device:", device)
@@ -65,7 +65,7 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
 
             vector = image_features.flatten().tolist()
 
-            return sentry_pb2.GetVectorResponse(vector={
+            return solomon_pb2.GetVectorResponse(vector={
                 "value": vector,
             })
         else:
@@ -77,7 +77,7 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
 
             vector = text_features.flatten().tolist()
 
-            return sentry_pb2.GetVectorResponse(vector={
+            return solomon_pb2.GetVectorResponse(vector={
                 "value": vector,
             })
 
@@ -103,7 +103,7 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
                 },
             })
 
-        return sentry_pb2.DetectFacesResponse(faces=filtered)
+        return solomon_pb2.DetectFacesResponse(faces=filtered)
 
     def GetOCR(self, request, context):
         model, DocumentFile = self.ocr_model
@@ -135,17 +135,17 @@ class SentryService(sentry_pb2_grpc.SentryServiceServicer):
                         }
                     })
 
-        return sentry_pb2.GetOCRResponse(results=clean_results)
+        return solomon_pb2.GetOCRResponse(results=clean_results)
 
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    sentry_pb2_grpc.add_SentryServiceServicer_to_server(
-        SentryService(), server)
+    solomon_pb2_grpc.add_SolomonServiceServicer_to_server(
+        SolomonService(), server)
     server.add_insecure_port("[::]:50051")
     server.add_insecure_port("0.0.0.0:50051")
     server.start()
-    print("Sentry server started")
+    print("Solomon server started")
     server.wait_for_termination()
 
 

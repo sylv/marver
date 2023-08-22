@@ -2,7 +2,7 @@ import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { File } from '../file/entities/file.entity.js';
-import { SentryService } from '../sentry/sentry.service.js';
+import { SolomonService } from '../solomon/solomon.service.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
 import { Face } from './entities/face.entity.js';
@@ -15,7 +15,7 @@ export class PersonTasks {
   @InjectRepository(Face) private faceRepo: EntityRepository<Face>;
 
   constructor(
-    private sentryService: SentryService,
+    private solomonService: SolomonService,
     private em: EntityManager,
   ) {}
 
@@ -33,14 +33,14 @@ export class PersonTasks {
   })
   async detectFaces(file: File) {
     const media = file.media!;
-    const faces = this.sentryService.detectFaces(file);
+    const faces = this.solomonService.detectFaces(file);
     for await (const face of faces) {
       media.hasFaces = true;
       this.faceRepo.create(
         {
           media: media,
           boundingBox: face.bounding_box!,
-          vector: this.sentryService.vectorToBuffer(face.vector!),
+          vector: this.solomonService.vectorToBuffer(face.vector!),
         },
         { persist: true },
       );

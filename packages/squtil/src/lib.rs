@@ -1,12 +1,12 @@
 use sqlite_loadable::prelude::*;
 use sqlite_loadable::{api, define_scalar_function, Result};
 
-pub mod sentry {
-    include!(concat!(env!("OUT_DIR"), "/me.sylver.marver.sentry.rs"));
+pub mod solomon {
+    include!(concat!(env!("OUT_DIR"), "/me.sylver.marver.solomon.rs"));
 }
 
 use prost::Message;
-use sentry::Vector;
+use solomon::Vector;
 
 pub fn cosine_similarity(hash_a: &[u8], hash_b: &[u8]) -> f64 {
     if hash_a.is_empty() || hash_b.is_empty() {

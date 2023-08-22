@@ -7,7 +7,7 @@ import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { File } from '../file/entities/file.entity.js';
 import { MediaText, MediaTextType } from '../media/entities/media-text.entity.js';
 import { MediaVector } from '../media/entities/media-vector.entity.js';
-import { SentryService } from '../sentry/sentry.service.js';
+import { SolomonService } from '../solomon/solomon.service.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
 import { ImageService } from './image.service.js';
@@ -19,7 +19,7 @@ export class ImageTasks {
 
   constructor(
     private imageService: ImageService,
-    private sentryService: SentryService,
+    private solomonService: SolomonService,
     private em: EntityManager,
   ) {}
 
@@ -84,13 +84,13 @@ export class ImageTasks {
   })
   async generateClipVectors(file: File) {
     const media = file.media!;
-    // todo: handle sentry being offline, if we throw an error
+    // todo: handle solomon being offline, if we throw an error
     // here the task will be retried at a later point which means
     // a delay when the service is probably just restarting or updating.
-    const vector = await this.sentryService.getFileVector(media.file);
+    const vector = await this.solomonService.getFileVector(media.file);
     const mediaVec = this.mediaVectorRepo.create({
       media: file.media!,
-      data: this.sentryService.vectorToBuffer(vector),
+      data: this.solomonService.vectorToBuffer(vector),
     });
 
     await this.em.persistAndFlush(mediaVec);
@@ -116,7 +116,7 @@ export class ImageTasks {
   })
   async extractText(file: File) {
     const media = file.media!;
-    const results = await this.sentryService.getOCR(media.file);
+    const results = await this.solomonService.getOCR(media.file);
 
     media.hasText = !!results[0];
     this.em.persist(media);

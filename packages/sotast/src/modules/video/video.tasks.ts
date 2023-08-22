@@ -1,11 +1,11 @@
-import { MergedFrame, phashVideo } from '@marver/vidhash';
+import { type MergedFrame, phashVideo } from '@marver/vidhash';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { mkdir, rm, writeFile } from 'fs/promises';
 import ms from 'ms';
 import { join } from 'path';
-import sharp, { OutputInfo } from 'sharp';
+import sharp, { type OutputInfo } from 'sharp';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
@@ -17,7 +17,7 @@ import { MediaThumbnail } from '../media/entities/media-thumbnail.entity.js';
 import { MediaTimeline } from '../media/entities/media-timeline.entity.js';
 import { MediaVector } from '../media/entities/media-vector.entity.js';
 import { Media } from '../media/entities/media.entity.js';
-import { SentryService } from '../sentry/sentry.service.js';
+import { SolomonService } from '../solomon/solomon.service.js';
 import { TaskChild } from '../tasks/task-child.decorator.js';
 import { Task, TaskParent } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
@@ -32,7 +32,7 @@ export class VideoTasks {
 
   constructor(
     private ffmpegService: FfmpegService,
-    private sentryService: SentryService,
+    private solomonService: SolomonService,
     private imageService: ImageService,
     private em: EntityManager,
   ) {}
@@ -152,10 +152,10 @@ export class VideoTasks {
     const media = file.media!;
     for (const frame of frames) {
       if (!frame.path) continue;
-      const vector = await this.sentryService.getFileVector({ path: frame.path });
+      const vector = await this.solomonService.getFileVector({ path: frame.path });
       const mediaVector = this.mediaVectorRepo.create({
         media: media,
-        data: this.sentryService.vectorToBuffer(vector),
+        data: this.solomonService.vectorToBuffer(vector),
       });
 
       this.em.persist(mediaVector);
@@ -181,7 +181,7 @@ export class VideoTasks {
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
     let layerIndex = 0;
-    let height = 100;
+    const height = 100;
     let width: number | null = null;
     for (const frame of framesWithPaths) {
       const result: { data: Buffer; info: OutputInfo } = await sharp(frame.path)

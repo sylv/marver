@@ -10,7 +10,7 @@ import { MediaSubtitle } from '../media/entities/media-subtitle.entity.js';
 import { MediaThumbnail } from '../media/entities/media-thumbnail.entity.js';
 import { MediaTimeline } from '../media/entities/media-timeline.entity.js';
 import { Media } from '../media/entities/media.entity.js';
-import { SentryModule } from '../sentry/sentry.module.js';
+import { SolomonModule } from '../solomon/solomon.module.js';
 import { SubtitleController } from './subtitle.controller.js';
 import { SubtitleService } from './subtitle.service.js';
 import { VideoController } from './video.controller.js';
@@ -22,7 +22,7 @@ import { MediaVector } from '../media/entities/media-vector.entity.js';
   controllers: [VideoController, SubtitleController],
   imports: [
     FfmpegModule,
-    SentryModule,
+    SolomonModule,
     ImageModule,
     MikroOrmModule.forFeature([
       File,

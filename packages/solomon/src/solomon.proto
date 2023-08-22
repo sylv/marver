@@ -1,7 +1,7 @@
 syntax = "proto3";
-package me.sylver.marver.sentry;
+package me.sylver.marver.solomon;
 
-service SentryService {
+service SolomonService {
     rpc GetVector (GetVectorRequest) returns (GetVectorResponse) {}
     rpc DetectFaces (DetectFacesRequest) returns (DetectFacesResponse) {}
     rpc GetOCR (GetOCRRequest) returns (GetOCRResponse) {}

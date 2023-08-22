@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import sentry_pb2 as sentry__pb2
+import solomon_pb2 as solomon__pb2
 
 
-class SentryServiceStub(object):
+class SolomonServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,23 +15,23 @@ class SentryServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetVector = channel.unary_unary(
-                '/me.sylver.marver.sentry.SentryService/GetVector',
-                request_serializer=sentry__pb2.GetVectorRequest.SerializeToString,
-                response_deserializer=sentry__pb2.GetVectorResponse.FromString,
+                '/me.sylver.marver.solomon.SolomonService/GetVector',
+                request_serializer=solomon__pb2.GetVectorRequest.SerializeToString,
+                response_deserializer=solomon__pb2.GetVectorResponse.FromString,
                 )
         self.DetectFaces = channel.unary_unary(
-                '/me.sylver.marver.sentry.SentryService/DetectFaces',
-                request_serializer=sentry__pb2.DetectFacesRequest.SerializeToString,
-                response_deserializer=sentry__pb2.DetectFacesResponse.FromString,
+                '/me.sylver.marver.solomon.SolomonService/DetectFaces',
+                request_serializer=solomon__pb2.DetectFacesRequest.SerializeToString,
+                response_deserializer=solomon__pb2.DetectFacesResponse.FromString,
                 )
         self.GetOCR = channel.unary_unary(
-                '/me.sylver.marver.sentry.SentryService/GetOCR',
-                request_serializer=sentry__pb2.GetOCRRequest.SerializeToString,
-                response_deserializer=sentry__pb2.GetOCRResponse.FromString,
+                '/me.sylver.marver.solomon.SolomonService/GetOCR',
+                request_serializer=solomon__pb2.GetOCRRequest.SerializeToString,
+                response_deserializer=solomon__pb2.GetOCRResponse.FromString,
                 )
 
 
-class SentryServiceServicer(object):
+class SolomonServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetVector(self, request, context):
@@ -53,31 +53,31 @@ class SentryServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_SentryServiceServicer_to_server(servicer, server):
+def add_SolomonServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetVector': grpc.unary_unary_rpc_method_handler(
                     servicer.GetVector,
-                    request_deserializer=sentry__pb2.GetVectorRequest.FromString,
-                    response_serializer=sentry__pb2.GetVectorResponse.SerializeToString,
+                    request_deserializer=solomon__pb2.GetVectorRequest.FromString,
+                    response_serializer=solomon__pb2.GetVectorResponse.SerializeToString,
             ),
             'DetectFaces': grpc.unary_unary_rpc_method_handler(
                     servicer.DetectFaces,
-                    request_deserializer=sentry__pb2.DetectFacesRequest.FromString,
-                    response_serializer=sentry__pb2.DetectFacesResponse.SerializeToString,
+                    request_deserializer=solomon__pb2.DetectFacesRequest.FromString,
+                    response_serializer=solomon__pb2.DetectFacesResponse.SerializeToString,
             ),
             'GetOCR': grpc.unary_unary_rpc_method_handler(
                     servicer.GetOCR,
-                    request_deserializer=sentry__pb2.GetOCRRequest.FromString,
-                    response_serializer=sentry__pb2.GetOCRResponse.SerializeToString,
+                    request_deserializer=solomon__pb2.GetOCRRequest.FromString,
+                    response_serializer=solomon__pb2.GetOCRResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'me.sylver.marver.sentry.SentryService', rpc_method_handlers)
+            'me.sylver.marver.solomon.SolomonService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class SentryService(object):
+class SolomonService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -91,9 +91,9 @@ class SentryService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.sentry.SentryService/GetVector',
-            sentry__pb2.GetVectorRequest.SerializeToString,
-            sentry__pb2.GetVectorResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/GetVector',
+            solomon__pb2.GetVectorRequest.SerializeToString,
+            solomon__pb2.GetVectorResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -108,9 +108,9 @@ class SentryService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.sentry.SentryService/DetectFaces',
-            sentry__pb2.DetectFacesRequest.SerializeToString,
-            sentry__pb2.DetectFacesResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/DetectFaces',
+            solomon__pb2.DetectFacesRequest.SerializeToString,
+            solomon__pb2.DetectFacesResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -125,8 +125,8 @@ class SentryService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.sentry.SentryService/GetOCR',
-            sentry__pb2.GetOCRRequest.SerializeToString,
-            sentry__pb2.GetOCRResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/GetOCR',
+            solomon__pb2.GetOCRRequest.SerializeToString,
+            solomon__pb2.GetOCRResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
