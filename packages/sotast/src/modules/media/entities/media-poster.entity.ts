@@ -2,12 +2,12 @@ import { Entity, Property } from '@mikro-orm/core';
 import { ObjectType } from '@nestjs/graphql';
 import mime from 'mime-types';
 import { join } from 'path';
-import { MediaAsset } from './media-asset.entity.js';
-import { File } from '../../file/entities/file.entity.js';
+import { MediaAssetEntity } from './media-asset.entity.js';
+import { FileEntity } from '../../file/entities/file.entity.js';
 
 @Entity()
-@ObjectType()
-export class MediaPoster extends MediaAsset {
+@ObjectType('MediaPoster')
+export class MediaPosterEntity extends MediaAssetEntity {
   @Property()
   generated: boolean;
 
@@ -17,6 +17,6 @@ export class MediaPoster extends MediaAsset {
   @Property({ persist: false })
   get path() {
     const extension = mime.extension(this.mimeType);
-    return join(File.getMetadataFolder(this.media.file.id), `poster.${extension}`);
+    return join(FileEntity.getMetadataFolder(this.media.file.id), `poster.${extension}`);
   }
 }

@@ -9,7 +9,7 @@ import { ImageOverlay } from '../../components/image-overlay';
 import { Loading } from '../../components/loading';
 import { Player } from '../../components/player/player';
 import { SimilarMedia } from '../../components/similar-media';
-import { FileType, SimilarityType, useGetMediaQuery } from '../../generated/graphql';
+import { FileType, SimilarityType, useGetMediaQuery } from '../../@generated/graphql';
 import { thumbhashBase64ToDataUri } from '../../helpers/thumbhashBase64ToDataUri';
 import { setFilter, useMediaStore } from './media.store';
 
@@ -27,7 +27,7 @@ export default function File() {
 
   const filter = useMediaStore((state) => state.filter);
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
-  const [{ data, fetching, error }] = useGetMediaQuery({
+  const { data, loading, error } = useGetMediaQuery({
     variables: {
       fileId: fileId,
       filter: filter,
@@ -45,7 +45,7 @@ export default function File() {
   useBackgroundColours(backgroundUrl);
 
   if (error) return <div>Oh no... {error.message}</div>;
-  if (fetching || !data?.media) return <Loading />;
+  if (loading || !data?.media) return <Loading />;
 
   return (
     <div className="container mx-auto flex gap-3 mt-3">
@@ -101,7 +101,7 @@ export default function File() {
           <div className="flex gap-2 mt-1 text-xs text-gray-400">
             <span className="flex gap-1 items-center">
               <FiFile />
-              {data.media.file.metadata.sizeFormatted} {data.media.file.type?.toLowerCase()}
+              {data.media.file.info.sizeFormatted} {data.media.file.type?.toLowerCase()}
             </span>
             {data.media?.width && data.media?.height && (
               <span className="flex gap-1 items-center">
@@ -130,7 +130,9 @@ export default function File() {
           </div>
           <div id="tags" className="flex gap-2 mt-2">
             <button className="bg-red-500/40 text-sm lowercase p-1 rounded">important tag</button>
-            <button className="bg-purple-500/40 text-sm lowercase p-1 rounded">artist name idk</button>
+            <button className="bg-purple-500/40 text-sm lowercase p-1 rounded">
+              artist name idk
+            </button>
             <button className="bg-dark-100/30 text-sm lowercase p-1 rounded">cool</button>
             <button className="bg-dark-100/30 text-sm lowercase p-1 rounded">poggers tag</button>
             <button className="bg-dark-100/30 text-sm lowercase p-1 rounded">balls</button>

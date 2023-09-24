@@ -1,13 +1,13 @@
+import { useApolloClient } from '@apollo/client';
 import clsx from 'clsx';
-import React, { type HTMLAttributes, forwardRef, useRef } from 'react';
+import { forwardRef, useRef, type HTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
-import { useClient } from 'urql';
 import {
   GetMediaDocument,
   type GetMediaQuery,
   type GetMediaQueryVariables,
   type MinimalMediaFragment,
-} from '../generated/graphql';
+} from '../@generated/graphql';
 import { useMediaStore } from '../pages/media/media.store';
 import { ImageLoader } from './image-loader';
 
@@ -28,7 +28,7 @@ const scaleDownImage = (height: number, width: number) => {
 
 export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
   ({ media, height, width, ...rest }, ref) => {
-    const client = useClient();
+    const client = useApolloClient();
     const preloadTimeoutRef = useRef<number | undefined>(undefined);
     const filter = useMediaStore((state) => state.filter);
 
@@ -60,11 +60,13 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
       preloadTimeoutRef.current = window.setTimeout(() => {
         console.debug(`Preloading media ${media.file.id}`);
         client
-          .query<GetMediaQuery, GetMediaQueryVariables>(GetMediaDocument, {
-            fileId: media.file.id,
-            filter: filter,
+          .query<GetMediaQuery, GetMediaQueryVariables>({
+            query: GetMediaDocument,
+            variables: {
+              fileId: media.file.id,
+              filter: filter,
+            },
           })
-          .toPromise()
           .catch((error) => {
             console.error('Error preloading media', error);
           });
@@ -89,7 +91,7 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
       >
         <div className="transition opacity-0 pointer-events-none absolute inset-0 z-10 group-hover:opacity-100 bg-gradient-to-t from-purple-600/90 to-transparent">
           <div className="p-3 flex justify-end items-start h-full flex-col">
-            <span className="text-xs text-gray-400">{media.file.metadata.sizeFormatted}</span>
+            <span className="text-xs text-gray-400">{media.file.info.sizeFormatted}</span>
             <h3 className="max-w-full truncate">{media.file.name}</h3>
           </div>
         </div>

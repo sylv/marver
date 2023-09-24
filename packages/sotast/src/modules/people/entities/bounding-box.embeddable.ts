@@ -1,10 +1,10 @@
 import { Embeddable, Property } from '@mikro-orm/core';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { type BoundingBox } from '../../../generated/solomon.js';
+import { type BoundingBox } from '../../../@generated/solomon.js';
 
 @Embeddable()
 @ObjectType('BoundingBox')
-export class BoundingBoxEmbed implements BoundingBox {
+export class BoundingBoxEmbeddable implements BoundingBox {
   @Property()
   @Field()
   x1: number;

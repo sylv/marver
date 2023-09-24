@@ -1,18 +1,19 @@
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
-import { File } from '../file/entities/file.entity.js';
+import { FileEntity } from '../file/entities/file.entity.js';
 import { SolomonService } from '../solomon/solomon.service.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
-import { Face } from './entities/face.entity.js';
-import { Person } from './entities/person.entity.js';
+import { FaceEntity } from './entities/face.entity.js';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
+import { PersonEntity } from '../metadata/entities/person.entity.js';
+import { embeddingToBuffer } from '../../helpers/embedding.js';
 
 @Injectable()
 export class PersonTasks {
-  @InjectRepository(Person) private personRepo: EntityRepository<Person>;
-  @InjectRepository(Face) private faceRepo: EntityRepository<Face>;
+  @InjectRepository(PersonEntity) private personRepo: EntityRepository<PersonEntity>;
+  @InjectRepository(FaceEntity) private faceRepo: EntityRepository<FaceEntity>;
 
   constructor(
     private solomonService: SolomonService,
@@ -21,7 +22,7 @@ export class PersonTasks {
 
   @Task(TaskType.ImageDetectFaces, {
     concurrency: 4,
-    filter: {
+    fileFilter: {
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
@@ -31,7 +32,7 @@ export class PersonTasks {
       },
     },
   })
-  async detectFaces(file: File) {
+  async detectFaces(file: FileEntity) {
     const media = file.media!;
     const faces = this.solomonService.detectFaces(file);
     for await (const face of faces) {
@@ -40,7 +41,7 @@ export class PersonTasks {
         {
           media: media,
           boundingBox: face.bounding_box!,
-          vector: this.solomonService.vectorToBuffer(face.vector!),
+          vector: embeddingToBuffer(face.embedding!),
         },
         { persist: true },
       );

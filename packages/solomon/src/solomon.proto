@@ -2,20 +2,20 @@ syntax = "proto3";
 package me.sylver.marver.solomon;
 
 service SolomonService {
-    rpc GetVector (GetVectorRequest) returns (GetVectorResponse) {}
+    rpc GetImageEmbedding (GetImageEmbeddingRequest) returns (GetImageEmbeddingResponse) {}
     rpc DetectFaces (DetectFacesRequest) returns (DetectFacesResponse) {}
     rpc GetOCR (GetOCRRequest) returns (GetOCRResponse) {}
 }
 
-message GetVectorRequest {
+message GetImageEmbeddingRequest {
     oneof input {
         string file_path = 4;
         string text_input = 5;
     }
 }
 
-message GetVectorResponse {
-    Vector vector = 1;
+message GetImageEmbeddingResponse {
+    Embedding embedding = 1;
 }
 
 message DetectFacesRequest {
@@ -28,7 +28,7 @@ message DetectFacesResponse {
 
 message Face {
     BoundingBox bounding_box = 1;
-    Vector vector = 2;
+    Embedding embedding = 2;
     float confidence = 3;
 }
 
@@ -39,7 +39,7 @@ message BoundingBox {
     float y2 = 4;
 }
 
-message Vector {
+message Embedding {
     repeated float value = 1;
 }
 

@@ -12,6 +12,9 @@ import { VideoModule } from './modules/video/video.module.js';
 import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { PersonModule } from './modules/people/person.module.js';
+import { config } from './config.js';
+import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
+import { MetadataModule } from './modules/metadata/metadata.module.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
@@ -20,8 +23,8 @@ const GQL_LOGGER = new Logger('GraphQL');
     MikroOrmModule.forRoot(ORM_CONFIG),
     GraphQLModule.forRoot<MercuriusDriverConfig>({
       driver: MercuriusDriver,
-      jit: 1,
-      autoSchemaFile: 'schema.gql',
+      jit: config.is_production ? 5 : 1,
+      autoSchemaFile: config.is_production ? true : 'schema.gql',
       fieldResolverEnhancers: ['interceptors', 'guards', 'filters'],
       errorFormatter: (execution) => {
         for (const error of execution.errors!) {
@@ -49,6 +52,8 @@ const GQL_LOGGER = new Logger('GraphQL');
     VideoModule,
     FfmpegModule,
     MediaModule,
+    RehoboamModule,
+    MetadataModule,
   ],
 })
 export class AppModule {}

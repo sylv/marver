@@ -8,13 +8,15 @@ import {
   Property,
   type Ref,
 } from '@mikro-orm/core';
-import { FileTag } from './file-tag.entity.js';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { Person } from '../../people/entities/person.entity.js';
+import { FileTagEntity } from './file-tag.entity.js';
+import { PersonEntity } from '../../metadata/entities/person.entity.js';
 
 @Entity()
-@ObjectType()
-export class Tag {
+@ObjectType('Tag')
+export class TagEntity {
+  constructor(name: string) {}
+
   @PrimaryKey()
   @Field(() => ID)
   name: string;
@@ -28,17 +30,17 @@ export class Tag {
   @Property({ nullable: true })
   color?: number;
 
-  @ManyToOne(() => Tag, { nullable: true, ref: true })
-  parent?: Ref<Tag>;
+  @ManyToOne(() => TagEntity, { nullable: true, ref: true })
+  parent?: Ref<TagEntity>;
 
-  @OneToMany(() => Tag, (tag) => tag.parent)
-  children = new Collection<Tag>(this);
+  @OneToMany(() => TagEntity, (tag) => tag.parent)
+  children = new Collection<TagEntity>(this);
 
-  @OneToOne(() => Person, (person) => person.tag, { nullable: true, ref: true })
-  person?: Ref<Person>;
+  @OneToOne(() => PersonEntity, (person) => person.tag, { nullable: true, ref: true })
+  person?: Ref<PersonEntity>;
 
-  @OneToMany(() => FileTag, (file) => file.tag)
-  files = new Collection<FileTag>(this);
+  @OneToMany(() => FileTagEntity, (file) => file.tag)
+  files = new Collection<FileTagEntity>(this);
 }
 
 export enum TagColorPresets {

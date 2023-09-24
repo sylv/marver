@@ -53,6 +53,17 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 
 ### ideas
 
+- LLM integrations
+  - Extract metadata from file names and other sources extremely easily.
+  - Convert metadata files that live along side files to usable data, no matter the metadata format.
+    - It would also be cool if it could look at .sqlite files on disk and see if they are relevant, and if they are, generating SQL to query them and extract information. Some tools like `gallery-dl` will dump a load of metadata into an sqlite file, but that data is pretty much inaccessible without specialized tooling.
+  - Generate clean names for files, `my_photo_2019_1.jpg` -> `My Photo`.
+    - Once metadata is extracted, it could take into account all metadata. The file name might just be a hash, but metadata resolution might have found a website that has a better title, and extra information like view counts and artists involved. Combining all that into a title would be cool.
+  - Generating galleries from file names, `my_photo_21.jpg` and `my_photo_22.jpg` should be together
+  - Looking up metadata for files (for example, looking for a plot summary on wikipedia instead of a specific API integration to do it), that would also let it pull metadata from other sites like youtube, tvdb, reddit.
+  - Cleaning up OCR and voice-to-text results
+  - Generating SQL queries based on user input
+  - Determining the best way to display each file
 - Document support
   - Detect scanned receipts
   - Preview support for PDFs/other documents
@@ -103,15 +114,6 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
 - Tags should be a graph.
   - An "apple pie" tag would be a child of the "food" tag. Searching for "food" also searches for "apple pie", as well as "burger" and other related tags.
 - Extract tags in file names like `my photo #beach #dog`
-- It's cliche but embedding an LLM would actually be fantastic, especially with fine tuning on a smaller (<3B) model.
-  - Metadata extraction is hard, regex does not work. An LLM could be fine-tuned to extract metadata from file names.
-  - Some files will have .json files with metadata, an LLM could be used to extract information without knowing what the structure of the json file is.
-  - It can generate clean names for files, eg `my_photo_2019.jpg` -> `My Photo`
-  - It could link together files based on the path. For example `my_photo_21.jpg` and `my_photo_22.jpg` should be in the same gallery/album, but that's not obvious from the file name without a human or LLM looking at both at the same time.
-  - It would definitely be overkill, but it could simplify a lot of useful features.
-  - [GPT-JSON](https://github.com/piercefreeman/gpt-json) would be a good way to generate JSON without wasting time generating the JSON structure.
-  - It would have to be optional and ideally a few different model sizes so you can pick the one that fits best with your system. A fine-tuned 3B model might be enough but a 13B model would likely do significantly better, even if it uses 4x the memory. That's a tradeoff the user should be able to make.
-  - It could be used to reorganise files on disk. If you have a load of files dumped into a folder, based on all the available metadata and a given file structure, it could determine where each file should go. This could be done "virtually", only shown in the interface, or by moving the actual files on disk which would be considerably riskier.
 - Sort options (tag count, date scanned, date created, size, bitrate, title, type, duration, resolution, views, favourites, path, randomly, etc)
 - Use `<img srcset />` and let the browser decide on the best image type, instead of guessing based on the `Accept` header.
 - Storage breakdown somewhere. Show % of images, videos, other. Could be cool to also show a bar at the bottom of images/photos to show duplicates or very similar images. [MacOS storage breakdown](https://i.imgur.com/hoBR9zF.png) would be a good example.
@@ -138,3 +140,11 @@ marver is comprised of multiple smaller pieces, but once it's ready for deployme
   - This would let search take the metadata from the file name into account, for example a file named `Ryan at the Park.jpg` would take priority over `Tim at the Park.jpg` if you searched for just `ryan`. In theory anyway, in practice I'm not sure that's how it would work but it can't hurt. Probably.
 - Include JSON, SQLite, CSV and XML files in scans and pull metadata from them.
   - Lots of tools can write metadata to these files about downloads, but there is no standard format. So using an LLM to extract the metadata would be perfect.
+- Pressing the right arrow with a skip intro/credits button on screen should skip to the end of the intro, not the normal +30s
+- Jobs that use external services start out with a concurrency of 1, then scale to the configured amount when it the first job completes.
+  - For solomon, this helps because it ensures models are loaded and in memory before bombarding it with requests.
+  - For other external services, it ensures we have access and that they are available.
+- Sync photos from your phone to marver
+  - iOS would will be hard
+  - Would be totally cool though
+  - This would make more sense once marver gets file upload capabilities

@@ -1,5 +1,5 @@
 import bytes from 'bytes';
-import { type File } from '../modules/file/entities/file.entity.js';
+import { type FileEntity } from '../modules/file/entities/file.entity.js';
 import { TagColorPresets } from '../modules/file/entities/tag.entity.js';
 import { type FilterQuery } from '@mikro-orm/core';
 
@@ -7,9 +7,9 @@ export interface VirtualTag {
   name: string;
   description: string;
   color?: TagColorPresets;
-  check: (file: File) => boolean;
-  set?: (file: File) => void;
-  filter: FilterQuery<File>;
+  check: (file: FileEntity) => boolean;
+  set?: (file: FileEntity) => void;
+  filter: FilterQuery<FileEntity>;
 }
 
 export const VIRTUAL_TAGS: VirtualTag[] = [
@@ -17,9 +17,9 @@ export const VIRTUAL_TAGS: VirtualTag[] = [
     name: 'unavailable',
     description: 'Whether this file is unavailable.',
     color: TagColorPresets.Red,
-    check: (file) => file.metadata.unavailable,
+    check: (file) => file.info.unavailable,
     filter: {
-      metadata: {
+      info: {
         unavailable: true,
       },
     },
@@ -28,9 +28,9 @@ export const VIRTUAL_TAGS: VirtualTag[] = [
     name: 'corrupted',
     description: 'Whether this file is corrupted.',
     color: TagColorPresets.Red,
-    check: (file) => file.metadata.corrupted,
+    check: (file) => file.info.corrupted,
     filter: {
-      metadata: { corrupted: true },
+      info: { corrupted: true },
     },
   },
   {
@@ -80,9 +80,9 @@ export const VIRTUAL_TAGS: VirtualTag[] = [
   {
     name: 'huge_filesize',
     description: 'Whether this file has a filesize that is huge.',
-    check: (file) => file.metadata.size > bytes('10MB'),
+    check: (file) => file.info.size > bytes('10MB'),
     filter: {
-      metadata: { size: { $gt: bytes('10MB') } },
+      info: { size: { $gt: bytes('10MB') } },
     },
   },
 ];

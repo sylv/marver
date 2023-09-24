@@ -2,11 +2,8 @@ overwrite: true
 schema: '../sotast/schema.gql'
 documents: 'src/**/*.graphql'
 generates:
-  src/generated/graphql.tsx:
+  src/@generated/graphql.tsx:
     plugins:
       - 'typescript'
       - 'typescript-operations'
-      - 'typescript-urql'
-  src/generated/introspection.json:
-    plugins:
-      - 'urql-introspection'
+      - 'typescript-react-apollo'

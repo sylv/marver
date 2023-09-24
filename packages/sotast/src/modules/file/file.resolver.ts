@@ -15,8 +15,8 @@ import { createConnection } from 'nest-graphql-utils';
 import { VIRTUAL_TAGS } from '../../config/virtual-tags.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
 import { PaginationArgs } from '../../pagination.js';
-import { FileTag } from './entities/file-tag.entity.js';
-import { File, FileConnection } from './entities/file.entity.js';
+import { FileTagEntity } from './entities/file-tag.entity.js';
+import { FileEntity, FileConnection } from './entities/file.entity.js';
 
 enum FileType {
   Image,
@@ -34,12 +34,12 @@ class FileFilter extends PaginationArgs {
   search?: string;
 }
 
-@Resolver(() => File)
+@Resolver(() => FileEntity)
 export class FileResolver {
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
-  @InjectRepository(FileTag) private fileTagRepo: EntityRepository<FileTag>;
+  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
+  @InjectRepository(FileTagEntity) private fileTagRepo: EntityRepository<FileTagEntity>;
 
-  @Query(() => File, { nullable: true })
+  @Query(() => FileEntity, { nullable: true })
   async file(@Args('id') id: string) {
     return this.fileRepo.findOne(id);
   }
@@ -55,14 +55,14 @@ export class FileResolver {
           {
             limit: args.limit,
             offset: args.offset,
-          },
+          }
         );
       },
     });
   }
 
-  @ResolveField(() => [FileTag])
-  async tags(@Parent() file: File) {
+  @ResolveField(() => [FileTagEntity])
+  async tags(@Parent() file: FileEntity) {
     await file.tags.init({ populate: ['tag'] });
     const fileTags = file.tags.getItems();
     const virtualTags = VIRTUAL_TAGS.filter((tag) => tag.check(file));
@@ -77,14 +77,14 @@ export class FileResolver {
             description: virtualTag.description,
             color: virtualTag.color,
           },
-        }),
+        })
       );
     }
 
     return fileTags;
   }
   @ResolveField(() => FileType, { nullable: true })
-  type(@Parent() file: File) {
+  type(@Parent() file: FileEntity) {
     if (!file.extension) return;
     if (IMAGE_EXTENSIONS.has(file.extension)) return FileType.Image;
     if (VIDEO_EXTENSIONS.has(file.extension)) return FileType.Video;

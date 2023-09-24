@@ -1,5 +1,5 @@
 import { type RefObject, useEffect, useMemo, useState } from 'react';
-import { type MinimalMediaFragment } from '../generated/graphql';
+import { type MinimalMediaFragment } from '../@generated/graphql';
 
 export interface ImageLike<T> {
   height: number;
@@ -68,7 +68,7 @@ export const getRows = <T>(images: ImageLike<T>[], options: RowOptions): Rowifie
 
 export const useMediaListRows = (
   mediaList: MinimalMediaFragment[] | undefined | null,
-  options: Omit<RowOptions, 'containerWidth'> & { containerRef: RefObject<HTMLDivElement> },
+  options: Omit<RowOptions, 'containerWidth'> & { containerRef: RefObject<HTMLDivElement> }
 ): RowifiedImage<MinimalMediaFragment>[] => {
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
 

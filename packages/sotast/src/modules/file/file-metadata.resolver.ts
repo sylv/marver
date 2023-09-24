@@ -1,11 +1,11 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import bytes from 'bytes';
-import { FileMetadata } from './entities/file-metadata.embeddable.js';
+import { FileInfoEmbeddable } from './entities/file-info.embeddable.js';
 
-@Resolver(() => FileMetadata)
-export class FileMetadataResolver {
+@Resolver(() => FileInfoEmbeddable)
+export class FileInfoResolver {
   @ResolveField(() => String)
-  sizeFormatted(@Parent() metadata: FileMetadata) {
+  sizeFormatted(@Parent() metadata: FileInfoEmbeddable) {
     return bytes(metadata.size);
   }
 }

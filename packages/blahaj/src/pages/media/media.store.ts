@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SimilarityType } from '../../generated/graphql';
+import { SimilarityType } from '../../@generated/graphql';
 
 export const useMediaStore = create(() => ({
   filter: SimilarityType.Related,

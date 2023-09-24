@@ -1,8 +1,8 @@
 import { type EntityManager, type QueryBuilder } from '@mikro-orm/better-sqlite';
 import bytes from 'bytes';
 import ms from 'ms';
-import { type Media } from '../modules/media/entities/media.entity.js';
-import { Face } from '../modules/people/entities/face.entity.js';
+import { type MediaEntity } from '../modules/media/entities/media.entity.js';
+import { FaceEntity } from '../modules/people/entities/face.entity.js';
 
 function operatorToQuery(operator: string, value: unknown): unknown | undefined {
   switch (operator) {
@@ -29,7 +29,7 @@ export const SEARCH_MODIFIERS = [
     // inpath:test
     name: 'inpath',
     aliases: ['in_path', 'path'],
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       queryBuilder.andWhere({
         file: {
           path: {
@@ -41,14 +41,14 @@ export const SEARCH_MODIFIERS = [
   },
   {
     name: 'limit',
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       queryBuilder.limit(Number.parseInt(value));
     },
   },
   {
     name: 'inname',
     aliases: ['in_name', 'name', 'in_filename'],
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       queryBuilder.andWhere({
         file: {
           name: {
@@ -62,20 +62,20 @@ export const SEARCH_MODIFIERS = [
     // size:gt:10mb
     // size:lte:10mb
     name: 'size',
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       const [operator, size] = value.split(':');
       const sizeInBytes = bytes(size);
       switch (operator) {
         case 'eq': {
           // within 1% of the size
           queryBuilder.andWhere({
-            file: { metadata: { size: { $between: [sizeInBytes * 0.99, sizeInBytes * 1.01] } } },
+            file: { info: { size: { $between: [sizeInBytes * 0.99, sizeInBytes * 1.01] } } },
           });
           break;
         }
         default: {
           const parsed = operatorToQuery(operator, sizeInBytes);
-          if (parsed) queryBuilder.andWhere({ file: { metadata: { size: parsed } } });
+          if (parsed) queryBuilder.andWhere({ file: { info: { size: parsed } } });
         }
       }
     },
@@ -84,14 +84,16 @@ export const SEARCH_MODIFIERS = [
     // duration:gt:10m
     // duration:lte:10m
     name: 'duration',
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       queryBuilder.andWhere({ duration: { $ne: null } });
       const [operator, duration] = value.split(':');
       const durationInMs = ms(duration);
       switch (operator) {
         case 'eq': {
           // within 1% of the duration
-          queryBuilder.andWhere({ duration: { $between: [durationInMs * 0.99, durationInMs * 1.01] } });
+          queryBuilder.andWhere({
+            duration: { $between: [durationInMs * 0.99, durationInMs * 1.01] },
+          });
           break;
         }
         default: {
@@ -104,21 +106,21 @@ export const SEARCH_MODIFIERS = [
   {
     name: 'ext',
     aliases: ['extension'],
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       queryBuilder.andWhere({ file: { extension: value } });
     },
   },
   {
     name: 'favourite',
     aliases: ['favourited'],
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       const isTrue = value === 'true' || value === '1' || value === 'yes';
-      queryBuilder.andWhere({ file: { metadata: { favourite: isTrue } } });
+      queryBuilder.andWhere({ file: { info: { favourite: isTrue } } });
     },
   },
   {
     name: 'width',
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       const [operator, width] = value.split(':');
       const parsed = operatorToQuery(operator, Number.parseInt(width));
       if (parsed) queryBuilder.andWhere({ width: parsed });
@@ -126,7 +128,7 @@ export const SEARCH_MODIFIERS = [
   },
   {
     name: 'height',
-    add: (value: string, queryBuilder: QueryBuilder<Media>) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
       const [operator, height] = value.split(':');
       const parsed = operatorToQuery(operator, Number.parseInt(height));
       if (parsed) queryBuilder.andWhere({ height: parsed });
@@ -134,12 +136,12 @@ export const SEARCH_MODIFIERS = [
   },
   {
     name: 'face',
-    add: (value: string, queryBuilder: QueryBuilder<Media>, em: EntityManager) => {
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>, em: EntityManager) => {
       // value is a faceId
       // we use cosine similarity on the face vector to find media
       // with similar faces to the given faceId
       const faceQuery = em
-        .createQueryBuilder(Face)
+        .createQueryBuilder(FaceEntity)
         .where({ id: value })
         .orWhere({
           person: {

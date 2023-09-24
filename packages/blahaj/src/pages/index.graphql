@@ -11,8 +11,8 @@ query GetMediaList($search: String, $after: String) {
       node {
         ...MinimalMedia
         file {
-          metadata {
-            createdAt
+          info {
+            diskCreatedAt
           }
         }
       }
@@ -33,7 +33,7 @@ fragment MinimalMedia on Media {
     id
     path
     name
-    metadata {
+    info {
       size
       sizeFormatted
     }

@@ -1,7 +1,7 @@
 import { type EntityField, type FilterQuery } from '@mikro-orm/core';
 import { SetMetadata } from '@nestjs/common';
 import { type TaskType } from './task.enum.js';
-import { type File } from '../file/entities/file.entity.js';
+import { type FileEntity } from '../file/entities/file.entity.js';
 
 export const TASK_CHILD_KEY = Symbol('task-child');
 export type TaskChildKey = TaskChildOptions;
@@ -10,8 +10,8 @@ export interface TaskChildOptions {
   parentType: TaskType;
   type: TaskType;
   concurrency: number;
-  filter: FilterQuery<File>;
-  populate?: EntityField<File>[];
+  filter: FilterQuery<FileEntity>;
+  populate?: EntityField<FileEntity>[];
 }
 
 export const TaskChild = (type: TaskType, options: Omit<TaskChildOptions, 'type'>) => {

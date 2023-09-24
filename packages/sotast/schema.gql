@@ -13,7 +13,63 @@ type PageInfo {
   hasNextPage: Boolean!
 }
 
-type FileMetadata {
+type Completion {
+  id: ID!
+  type: String!
+  data: JSONObject!
+  errorMessage: String
+  result: JSONObject
+
+  """Examples used for this completion"""
+  examples: [CompletionExample!]!
+  state: CompletionState!
+  alwaysInclude: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  examplesSimilarity: Float
+}
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+enum CompletionState {
+  PendingCompletion
+  PendingVerification
+  VerifiedHybrid
+  VerifiedAuto
+  VerifiedManual
+  BuiltIn
+  Error
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""Provides CompletionEntity item and a cursor to its position"""
+type CompletionEdge {
+  """The position of this CompletionEntity item"""
+  cursor: String!
+  node: Completion!
+}
+
+type CompletionConnection {
+  """Total number of CompletionEntity items"""
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [CompletionEdge!]!
+}
+
+type CompletionExample {
+  completion: Completion!
+  example: Completion!
+  similarity: Float!
+}
+
+type FileInfoEmbeddable {
   size: Float!
   corrupted: Boolean!
   unavailable: Boolean!
@@ -22,21 +78,15 @@ type FileMetadata {
   serverCreatedAt: DateTime!
   diskModifiedAt: DateTime!
   diskCreatedAt: DateTime!
-  createdAt: DateTime!
   sizeFormatted: String!
 }
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
 
 type File {
   id: ID!
   name: String!
   directory: String!
   path: String!
-  metadata: FileMetadata!
+  info: FileInfoEmbeddable!
   media: Media
   mimeType: String
   extension: String
@@ -49,15 +99,15 @@ enum FileType {
   Video
 }
 
-"""Provides File item and a cursor to its position"""
+"""Provides FileEntity item and a cursor to its position"""
 type FileEdge {
-  """The position of this File item"""
+  """The position of this FileEntity item"""
   cursor: String!
   node: File!
 }
 
 type FileConnection {
-  """Total number of File items"""
+  """Total number of FileEntity items"""
   totalCount: Int!
   pageInfo: PageInfo!
   edges: [FileEdge!]!
@@ -96,6 +146,23 @@ type MediaSubtitle {
   displayName: String!
 }
 
+type BoundingBox {
+  x1: Float!
+  y1: Float!
+  x2: Float!
+  y2: Float!
+}
+
+type MediaText {
+  id: ID!
+  type: Float!
+  text: String!
+  boundingBox: BoundingBox!
+  confidence: Float!
+  code: String
+  timestamp: Float
+}
+
 type MediaThumbnail {
   mimeType: String!
   width: Float!
@@ -106,23 +173,6 @@ type MediaTimeline {
   mimeType: String!
   width: Float!
   height: Float!
-}
-
-type BoundingBox {
-  x1: Float!
-  y1: Float!
-  x2: Float!
-  y2: Float!
-}
-
-type MediaText {
-  id: Float!
-  type: Float!
-  text: String!
-  boundingBox: BoundingBox!
-  confidence: Float!
-  code: String
-  timestamp: Float
 }
 
 type Media {
@@ -147,7 +197,7 @@ type Media {
   thumbnail: MediaThumbnail!
   timeline: MediaTimeline!
   poster: MediaPoster!
-  exifMetadata: MediaExifData
+  exifData: MediaExifData
   subtitles: [MediaSubtitle!]!
   faces: [Face!]!
   texts: [MediaText!]!
@@ -166,15 +216,15 @@ enum SimilarityType {
   Videos
 }
 
-"""Provides Media item and a cursor to its position"""
+"""Provides MediaEntity item and a cursor to its position"""
 type MediaEdge {
-  """The position of this Media item"""
+  """The position of this MediaEntity item"""
   cursor: String!
   node: Media!
 }
 
 type MediaConnection {
-  """Total number of Media items"""
+  """Total number of MediaEntity items"""
   totalCount: Int!
   pageInfo: PageInfo!
   edges: [MediaEdge!]!
@@ -189,6 +239,11 @@ type Face {
 type Person {
   id: ID!
   name: String!
+  aliases: String!
+  description: String
+  birthDate: DateTime
+  deathDate: DateTime
+  tag: Tag!
 }
 
 type Tag {
@@ -205,4 +260,10 @@ type Query {
   files(after: String, first: Float, before: String, last: Float, offset: Float, search: String): FileConnection!
   media(id: String!): Media
   mediaList(after: String, first: Float, before: String, last: Float, offset: Float, search: String, beforeDate: DateTime, afterDate: DateTime): MediaConnection!
+  completions(after: String, first: Float, before: String, last: Float, offset: Float, state: CompletionState): CompletionConnection!
+}
+
+type Mutation {
+  verifyCompletion(id: ID!): Completion!
+  rejectCompletion(id: ID!): Completion!
 }

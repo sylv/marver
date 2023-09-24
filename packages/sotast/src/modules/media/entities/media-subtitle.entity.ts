@@ -1,15 +1,14 @@
 import { Entity, ManyToOne, OptionalProps, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import ISO6391 from 'iso-639-1';
-import { ulid } from 'ulid';
-import { Media } from './media.entity.js';
+import { MediaEntity } from './media.entity.js';
 
 @Entity()
-@ObjectType()
-export class MediaSubtitle {
-  @PrimaryKey()
+@ObjectType('MediaSubtitle')
+export class MediaSubtitleEntity {
+  @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
-  id: string = ulid();
+  id: number;
 
   @Property()
   @Field()
@@ -31,8 +30,8 @@ export class MediaSubtitle {
   @Field()
   generated: boolean;
 
-  @ManyToOne(() => Media, { ref: true })
-  media: Ref<Media>;
+  @ManyToOne(() => MediaEntity, { ref: true })
+  media: Ref<MediaEntity>;
 
   @Property({ persist: false, type: 'string' })
   @Field(() => String)
@@ -50,7 +49,8 @@ export class MediaSubtitle {
   @Field(() => String)
   get displayName() {
     const parts = [this.languageNameNative];
-    if (this.languageNameNative !== this.languageNameEnglish) parts.push(`(${this.languageNameEnglish})`);
+    if (this.languageNameNative !== this.languageNameEnglish)
+      parts.push(`(${this.languageNameEnglish})`);
     if (this.hearingImpaired) parts.push('(hearing impaired)');
     else if (this.forced) parts.push('(forced)');
     if (this.generated) parts.push('(auto)');

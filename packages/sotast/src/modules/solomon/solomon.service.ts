@@ -1,9 +1,9 @@
 import { ChannelCredentials } from '@grpc/grpc-js';
 import { Injectable } from '@nestjs/common';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
+import { SolomonServiceClient } from '../../@generated/solomon.client.js';
+import { type OCR } from '../../@generated/solomon.js';
 import { config } from '../../config.js';
-import { SolomonServiceClient } from '../../generated/solomon.client.js';
-import { type OCR, Vector } from '../../generated/solomon.js';
 
 @Injectable()
 export class SolomonService {
@@ -15,27 +15,27 @@ export class SolomonService {
   );
 
   async getFileVector(file: { path: string }) {
-    const { vector } = await this.solomonService.getVector({
+    const { embedding } = await this.solomonService.getImageEmbedding({
       input: {
         oneofKind: 'file_path',
         file_path: file.path,
       },
     }).response;
 
-    if (!vector) throw new Error('No vector returned from Solomon');
-    return vector;
+    if (!embedding) throw new Error('No vector returned from Solomon');
+    return embedding;
   }
 
-  async getTextVector(text: string) {
-    const { vector } = await this.solomonService.getVector({
+  async getTextEmbedding(text: string) {
+    const { embedding } = await this.solomonService.getImageEmbedding({
       input: {
         oneofKind: 'text_input',
         text_input: text,
       },
     }).response;
 
-    if (!vector) throw new Error('No vector returned from Solomon');
-    return vector;
+    if (!embedding) throw new Error('No vector returned from Solomon');
+    return embedding;
   }
 
   async *detectFaces(file: { path: string }) {
@@ -101,14 +101,5 @@ export class SolomonService {
     }
 
     return merged;
-  }
-
-  vectorToBuffer(vector: Vector) {
-    const array = Vector.toBinary(vector);
-    return Buffer.from(array);
-  }
-
-  bufferToVector(buffer: Buffer) {
-    return Vector.fromBinary(buffer);
   }
 }

@@ -1,4 +1,4 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
@@ -6,9 +6,9 @@ import ExifReader from 'exifreader';
 import { pack, unpack } from 'msgpackr';
 import sharp from 'sharp';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
-import { type File } from '../file/entities/file.entity.js';
-import { MediaExifData } from '../media/entities/media-exif.entity.js';
-import { Media } from '../media/entities/media.entity.js';
+import { type FileEntity } from '../file/entities/file.entity.js';
+import { MediaExifDataEntity } from '../media/entities/media-exif.entity.js';
+import { MediaEntity } from '../media/entities/media.entity.js';
 
 export class ProxyableImage {
   @IsString()
@@ -39,10 +39,9 @@ export class ProxyableImage {
 @Injectable()
 export class ImageService {
   private static readonly EXIF_DATE_FORMAT = /(?<year>\d{4}):(?<month>\d{2}):(?<day>\d{2})/;
-  @InjectRepository(MediaExifData) private exifRepo: EntityRepository<MediaExifData>;
-  @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
-  private logger = new Logger(ImageService.name);
-  constructor(private em: EntityManager) {}
+  @InjectRepository(MediaExifDataEntity) private exifRepo: EntityRepository<MediaExifDataEntity>;
+  @InjectRepository(MediaEntity) private mediaRepo: EntityRepository<MediaEntity>;
+  private log = new Logger(ImageService.name);
 
   parseImageProxyPayload(payload: string): ProxyableImage {
     return unpack(Buffer.from(payload, 'base64url'));
@@ -53,14 +52,14 @@ export class ImageService {
     return `/api/files/${fileId}/imgproxy/${payload.toString('base64url')}`;
   }
 
-  createMediaProxyUrl(media: Media) {
-    if (media.file.metadata.unavailable) return null;
+  createMediaProxyUrl(media: MediaEntity) {
+    if (media.file.info.unavailable) return null;
     if (media.file.extension && IMAGE_EXTENSIONS.has(media.file.extension)) {
       return this.createImageProxyUrl(media.file.id, {
         fileName: media.file.name,
         mimeType: media.file.mimeType,
         path: media.file.path,
-        size: media.file.metadata.size,
+        size: media.file.info.size,
         height: media.height,
         width: media.width,
         isAnimated: media.isAnimated || media.file.mimeType === 'image/gif',
@@ -123,7 +122,7 @@ export class ImageService {
     };
   }
 
-  createMediaFromSharpMetadata(data: sharp.Metadata, file: File) {
+  createMediaFromSharpMetadata(data: sharp.Metadata, file: FileEntity) {
     const isAnimated = data.pages ? data.pages > 0 : !!data.delay;
     const meta = this.mediaRepo.create({
       height: data.height,
@@ -152,7 +151,7 @@ export class ImageService {
     return meta;
   }
 
-  async createExifFromFile(media: Media) {
+  async createExifFromFile(media: MediaEntity) {
     const exif = this.exifRepo.create({ media });
     try {
       const exifData = await ExifReader.load(media.file.path);
@@ -174,11 +173,6 @@ export class ImageService {
       if (location) {
         exif.latitude = location[0];
         exif.longitude = location[1];
-      }
-
-      if (exif.dateTime) {
-        media.file.metadata.createdAt = exif.dateTime;
-        this.em.persist(media.file);
       }
     } catch (error: any) {
       if (error.name !== 'MetadataMissingError') {
@@ -209,7 +203,7 @@ export class ImageService {
     const clean = date.replace(ImageService.EXIF_DATE_FORMAT, '$<year>-$<month>-$<day>');
     const parsed = new Date(clean);
     if (Number.isNaN(parsed.getTime()) || parsed.getTime() === 0) {
-      this.logger.warn(`Failed to parse date "${date}" into a valid date object`);
+      this.log.warn(`Failed to parse date "${date}" into a valid date object`);
       return undefined;
     }
 

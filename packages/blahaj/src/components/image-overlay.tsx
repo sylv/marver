@@ -1,5 +1,5 @@
 import React, { type FC, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { type BoundingBox } from '../generated/graphql';
+import { type BoundingBox } from '../@generated/graphql';
 import { ImageLoader, type ImageLoaderProps } from './image-loader';
 
 export interface ImageOverlayProps extends ImageLoaderProps {

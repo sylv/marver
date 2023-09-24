@@ -8,17 +8,17 @@ import PQueue from 'p-queue';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { config } from '../../config.js';
-import { File } from './entities/file.entity.js';
+import { FileEntity } from './entities/file.entity.js';
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()
 export class FileScanService {
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
+  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
 
   private directoryQueue = new PQueue({ concurrency: 8 });
   private fileQueue = new PQueue({ concurrency: 16 });
   private staged = 0;
-  private logger = new Logger(FileScanService.name);
+  private log = new Logger(FileScanService.name);
   private lastPersist = Date.now();
 
   constructor(
@@ -44,19 +44,19 @@ export class FileScanService {
     await this.fileRepo
       .createQueryBuilder()
       .update({
-        metadata: {
+        info: {
           unavailable: true,
         },
       })
       .where({
         ['path_dirname(path)']: config.source_dirs,
-        metadata: {
+        info: {
           serverCheckedAt: { $lt: lastCheckedAt },
         },
       });
 
     const duration = performance.now() - start;
-    this.logger.log(`Scanned source in ${duration}ms`);
+    this.log.log(`Scanned source in ${duration}ms`);
   }
 
   /**
@@ -65,12 +65,13 @@ export class FileScanService {
    * You should await this.queue.onIdle() to ensure all files have been scanned.
    */
   private async scanDirectory(directory: string) {
+    // todo: skip this directory and children directories if a .marverignore file exists
     const start = performance.now();
     const dir = await opendir(directory, { bufferSize: 1000 });
     const existingFiles = await this.fileRepo.find(
       { directory },
       {
-        fields: ['id', 'path', 'metadata'],
+        fields: ['id', 'path', 'info'],
         filters: false,
       },
     );
@@ -87,14 +88,14 @@ export class FileScanService {
     }
 
     const duration = performance.now() - start;
-    this.logger.debug(`Read files in "${directory}" in ${duration}ms`);
+    this.log.debug(`Read files in "${directory}" in ${duration}ms`);
   }
 
-  private async scanFile(path: string, existingFiles: File[]) {
+  private async scanFile(path: string, existingFiles: FileEntity[]) {
     const existing = existingFiles.find((file) => file.path === path);
     if (existing) {
-      existing.metadata.serverCheckedAt = new Date();
-      existing.metadata.unavailable = false;
+      existing.info.serverCheckedAt = new Date();
+      existing.info.unavailable = false;
       this.staged++;
       if (this.shouldPersist) {
         await this.persist();
@@ -103,18 +104,17 @@ export class FileScanService {
       return;
     }
 
-    const info = await stat(path);
     // on WSL birthtime is always 0, so we use mtime instead
+    const info = await stat(path);
     const birthtime = info.birthtimeMs === 0 ? info.mtime : info.birthtime;
     const file = this.fileRepo.create({
       path: path,
-      metadata: {
+      info: {
         size: info.size,
         serverCheckedAt: new Date(),
         serverCreatedAt: new Date(),
         diskModifiedAt: info.mtime,
         diskCreatedAt: birthtime,
-        createdAt: birthtime,
       },
     });
 
@@ -140,6 +140,6 @@ export class FileScanService {
     this.staged = 0;
     this.lastPersist = Date.now();
     await this.em.flush();
-    this.logger.debug(`Persisted ${count} files`);
+    this.log.debug(`Persisted ${count} files`);
   }
 }

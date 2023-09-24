@@ -1,9 +1,9 @@
 import { Entity, Filter, ManyToOne, Property, type Ref } from '@mikro-orm/core';
-import { Tag } from './tag.entity.js';
-import { File } from './file.entity.js';
+import { TagEntity } from './tag.entity.js';
+import { FileEntity } from './file.entity.js';
 import { Field, ObjectType } from '@nestjs/graphql';
 
-@ObjectType()
+@ObjectType('FileTag')
 @Entity()
 @Filter({
   name: 'match_percent',
@@ -13,13 +13,13 @@ import { Field, ObjectType } from '@nestjs/graphql';
     },
   },
 })
-export class FileTag {
-  @ManyToOne(() => Tag, { primary: true })
-  @Field(() => Tag)
-  tag: Ref<Tag>;
+export class FileTagEntity {
+  @ManyToOne(() => TagEntity, { primary: true })
+  @Field(() => TagEntity)
+  tag: Ref<TagEntity>;
 
-  @ManyToOne(() => File, { primary: true })
-  file: Ref<File>;
+  @ManyToOne(() => FileEntity, { primary: true })
+  file: Ref<FileEntity>;
 
   @Property()
   @Field()

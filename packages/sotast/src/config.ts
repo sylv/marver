@@ -2,8 +2,9 @@ import { loadConfig } from '@ryanke/venera';
 import bytes from 'bytes';
 import { resolve } from 'path';
 import z from 'zod';
+import ms from 'ms';
 
-const BITS_REGEX = /(?<value>[0-9\.]+) ?(?<unit>mbps|kbps)/i;
+const BITS_REGEX = /(?<value>[\d.]+) ?(?<unit>mbps|kbps)/i;
 const parseBits = (input: string) => {
   const match = input.match(BITS_REGEX);
   if (!match) {
@@ -21,6 +22,11 @@ const schema = z.object({
   max_hashable_size: z.string().default('100MB').transform(bytes),
   secret: z.string().transform((secret) => new TextEncoder().encode(secret)),
   disable_tasks: z.boolean().default(false),
+  orm_debug: z.boolean().default(false),
+  startup_timeout: z
+    .string()
+    .default('30s')
+    .transform((value) => ms(value)),
   is_development: z.boolean().default(process.env.NODE_ENV !== 'production'),
   is_production: z.boolean().default(process.env.NODE_ENV === 'production'),
   ocr: z
@@ -42,6 +48,13 @@ const schema = z.object({
       min_face_score: z.number().default(0.7),
     })
     .default({}),
+  services: z.object({
+    llm: z.object({
+      enabled: z.boolean().default(true),
+      server_url: z.string().default('http://localhost:8080'),
+      template: z.string(),
+    }),
+  }),
   virtual_tags: z
     .array(
       z.object({

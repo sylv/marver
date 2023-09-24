@@ -11,16 +11,20 @@ import {
 import { Field, ObjectType } from '@nestjs/graphql';
 import ms from 'ms';
 import { Connection } from 'nest-graphql-utils';
-import { File } from '../../file/entities/file.entity.js';
-import { Face } from '../../people/entities/face.entity.js';
-import { MediaExifData } from './media-exif.entity.js';
-import { MediaPerceptualHash } from './media-perceptual-hash.entity.js';
-import { MediaPoster } from './media-poster.entity.js';
-import { MediaSubtitle } from './media-subtitle.entity.js';
-import { MediaThumbnail } from './media-thumbnail.entity.js';
-import { MediaTimeline } from './media-timeline.entity.js';
-import { MediaVector } from './media-vector.entity.js';
-import { MediaText } from './media-text.entity.js';
+import { FileEntity } from '../../file/entities/file.entity.js';
+import {
+  MetadataEntity,
+  type MetadataEntityUnion,
+} from '../../metadata/entities/metadata.entity.js';
+import { FaceEntity } from '../../people/entities/face.entity.js';
+import { MediaEmbeddingEntity } from './media-embedding.js';
+import { MediaExifDataEntity } from './media-exif.entity.js';
+import { MediaPerceptualHashEntity } from './media-perceptual-hash.entity.js';
+import { MediaPosterEntity } from './media-poster.entity.js';
+import { MediaSubtitleEntity } from './media-subtitle.entity.js';
+import { MediaTextEntity } from './media-text.entity.js';
+import { MediaThumbnailEntity } from './media-thumbnail.entity.js';
+import { MediaTimelineEntity } from './media-timeline.entity.js';
 
 /** This is necessary for MikroORM property validation to pass when ordering by similarity, a computed property. */
 @ObjectType({ isAbstract: true })
@@ -36,11 +40,11 @@ abstract class MediaSortingProps {
 }
 
 @Entity()
-@ObjectType()
-export class Media extends MediaSortingProps {
-  @OneToOne(() => File, { primary: true, eager: true })
-  @Field(() => File)
-  file: File;
+@ObjectType('Media')
+export class MediaEntity extends MediaSortingProps {
+  @OneToOne(() => FileEntity, { primary: true, eager: true })
+  @Field(() => FileEntity)
+  file: FileEntity;
 
   @Property({ nullable: true })
   @Field({ nullable: true })
@@ -100,44 +104,50 @@ export class Media extends MediaSortingProps {
   @Field({ nullable: true })
   isAnimated?: boolean;
 
-  @OneToMany(() => MediaVector, (vector) => vector.media, { eager: true })
-  vectors = new Collection<MediaVector>(this);
+  @OneToMany(() => MediaEmbeddingEntity, (vector) => vector.media, { eager: true })
+  vectors = new Collection<MediaEmbeddingEntity>(this);
 
   /** Thumbhash-computed preview */
   // todo: this should be lazy-loaded, only if graphql requests it.
   @Property({ type: 'blob', nullable: true })
   preview?: Buffer;
 
-  @OneToOne(() => MediaThumbnail, (thumbnail) => thumbnail.media, { ref: true, nullable: true })
-  @Field(() => MediaThumbnail)
-  thumbnail?: Ref<MediaThumbnail>;
+  @OneToOne(() => MediaThumbnailEntity, (thumbnail) => thumbnail.media, {
+    ref: true,
+    nullable: true,
+  })
+  @Field(() => MediaThumbnailEntity)
+  thumbnail?: Ref<MediaThumbnailEntity>;
 
-  @OneToOne(() => MediaTimeline, (timeline) => timeline.media, { ref: true, nullable: true })
-  @Field(() => MediaTimeline)
-  timeline?: Ref<MediaTimeline>;
+  @OneToOne(() => MediaTimelineEntity, (timeline) => timeline.media, { ref: true, nullable: true })
+  @Field(() => MediaTimelineEntity)
+  timeline?: Ref<MediaTimelineEntity>;
 
-  @OneToOne(() => MediaPoster, (poster) => poster.media, { ref: true, nullable: true })
-  @Field(() => MediaPoster)
-  poster?: Ref<MediaPoster>;
+  @OneToOne(() => MediaPosterEntity, (poster) => poster.media, { ref: true, nullable: true })
+  @Field(() => MediaPosterEntity)
+  poster?: Ref<MediaPosterEntity>;
 
-  @OneToOne(() => MediaExifData, (exif) => exif.media, { ref: true, nullable: true })
-  @Field(() => MediaExifData, { nullable: true })
-  exifMetadata?: Ref<MediaExifData>;
+  @OneToOne(() => MetadataEntity, { ref: true, nullable: true })
+  metadata?: Ref<MetadataEntityUnion>;
 
-  @OneToMany(() => MediaSubtitle, (subtitle) => subtitle.media)
-  @Field(() => [MediaSubtitle])
-  subtitles = new Collection<MediaSubtitle>(this);
+  @OneToOne(() => MediaExifDataEntity, (exif) => exif.media, { ref: true, nullable: true })
+  @Field(() => MediaExifDataEntity, { nullable: true })
+  exifData?: Ref<MediaExifDataEntity>;
 
-  @OneToMany(() => MediaPerceptualHash, (phash) => phash.media)
-  perceptualHashes = new Collection<MediaPerceptualHash>(this);
+  @OneToMany(() => MediaSubtitleEntity, (subtitle) => subtitle.media)
+  @Field(() => [MediaSubtitleEntity])
+  subtitles = new Collection<MediaSubtitleEntity>(this);
 
-  @OneToMany(() => Face, (face) => face.media)
-  @Field(() => [Face])
-  faces = new Collection<Face>(this);
+  @OneToMany(() => MediaPerceptualHashEntity, (phash) => phash.media)
+  perceptualHashes = new Collection<MediaPerceptualHashEntity>(this);
 
-  @OneToMany(() => MediaText, (text) => text.media)
-  @Field(() => [MediaText])
-  texts = new Collection<MediaText>(this);
+  @OneToMany(() => FaceEntity, (face) => face.media)
+  @Field(() => [FaceEntity])
+  faces = new Collection<FaceEntity>(this);
+
+  @OneToMany(() => MediaTextEntity, (text) => text.media)
+  @Field(() => [MediaTextEntity])
+  texts = new Collection<MediaTextEntity>(this);
 
   @Property({ nullable: true, persist: false, type: 'string' })
   @Field(() => String, { nullable: true })
@@ -151,4 +161,6 @@ export class Media extends MediaSortingProps {
 }
 
 @ObjectType()
-export class MediaConnection extends Connection(Media) {}
+export class MediaConnection extends Connection(MediaEntity, {
+  edgeName: 'MediaEdge',
+}) {}

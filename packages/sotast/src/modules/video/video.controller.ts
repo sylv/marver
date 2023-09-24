@@ -14,7 +14,7 @@ import {
 import { spawn } from 'child_process';
 import { createHash } from 'crypto';
 import { type FastifyReply } from 'fastify';
-import { FfprobeData } from 'fluent-ffmpeg';
+import { type FfprobeData } from 'fluent-ffmpeg';
 import { createReadStream } from 'fs';
 import { mkdir, stat } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -22,19 +22,19 @@ import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { config } from '../../config.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
-import { File } from '../file/entities/file.entity.js';
-import { Dimensions, scaleDimensions } from '../../helpers/scale-dimensions.js';
+import { FileEntity } from '../file/entities/file.entity.js';
+import { type Dimensions, scaleDimensions } from '../../helpers/scale-dimensions.js';
 
 @Controller()
 export class VideoController {
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
-  private logger = new Logger(VideoController.name);
+  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
+  private log = new Logger(VideoController.name);
   constructor(private ffmpegService: FfmpegService) {}
 
   @Get('/files/:fileId/vidproxy/index.m3u8')
   async videoProxy(@Param('fileId') fileId: string, @Res() reply: FastifyReply) {
     const file = await this.fileRepo.findOneOrFail(fileId);
-    if (file.metadata.unavailable) {
+    if (file.info.unavailable) {
       throw new NotFoundException('File is unavailable');
     }
 
@@ -43,7 +43,8 @@ export class VideoController {
     const lines = ['#EXTM3U\n'];
 
     for (const profile of config.transcode.video_profiles) {
-      if (profile.max_height && videoStream.height && profile.max_height > videoStream.height) continue;
+      if (profile.max_height && videoStream.height && profile.max_height > videoStream.height)
+        continue;
       if (profile.max_width && videoStream.width && profile.max_width > videoStream.width) continue;
       const scaledSize = scaleDimensions(videoStream as Dimensions, {
         maxHeight: profile.max_height,
@@ -52,7 +53,7 @@ export class VideoController {
 
       const bitrate = profile.bitrate || videoStream.bit_rate!;
       lines.push(
-        `#EXT-X-STREAM-INF:BANDWIDTH=${bitrate},RESOLUTION=${scaledSize.width}x${scaledSize.height}`
+        `#EXT-X-STREAM-INF:BANDWIDTH=${bitrate},RESOLUTION=${scaledSize.width}x${scaledSize.height}`,
       );
       lines.push(`${encodeURIComponent(profile.name)}.m3u8\n`);
     }
@@ -60,7 +61,9 @@ export class VideoController {
     if (config.is_development) {
       // makes debugging easier, you can view the m3u8 file in the browser
       // without it trying to download it as a file.
-      reply.header('Content-Type', 'text/plain; charset=utf-8').header('Content-Disposition', 'inline');
+      reply
+        .header('Content-Type', 'text/plain; charset=utf-8')
+        .header('Content-Disposition', 'inline');
     } else {
       // more "correct" + caching
       reply
@@ -72,12 +75,15 @@ export class VideoController {
   }
 
   @Get('/files/:fileId/vidproxy/:profileName.m3u8')
-  async videoProxyProfile(@Param('fileId') fileId: string, @Param('profileName') profileName: string) {
+  async videoProxyProfile(
+    @Param('fileId') fileId: string,
+    @Param('profileName') profileName: string,
+  ) {
     const profile = config.transcode.video_profiles.find((p) => p.name === profileName);
     if (!profile) throw new BadRequestException('Invalid profile');
 
     const file = await this.fileRepo.findOneOrFail(fileId);
-    if (file.metadata.unavailable) {
+    if (file.info.unavailable) {
       throw new NotFoundException('File is unavailable');
     }
 
@@ -119,7 +125,7 @@ export class VideoController {
     @Param('profileName') profileName: string,
     @Param('segmentIndex') segmentIndex: string,
     @Query('sp', ParseIntPipe) startPosition: number,
-    @Res() reply: FastifyReply
+    @Res() reply: FastifyReply,
   ) {
     const start = performance.now();
     const profile = config.transcode.video_profiles.find((p) => p.name === profileName);
@@ -216,7 +222,9 @@ export class VideoController {
     args.push(outTemplate);
     await mkdir(outDir, { recursive: true });
 
-    this.logger.debug(`Running "ffmpeg ${args.join(' ')}" for segment ${segmentIndex} of ${file.path}`);
+    this.log.debug(
+      `Running "ffmpeg ${args.join(' ')}" for segment ${segmentIndex} of ${file.path}`,
+    );
     const ffmpeg = spawn('ffmpeg', args, {
       // todo: toggling passthrough should be a config option
       // or, forwarding it to a viewable stream somewhere.
@@ -231,7 +239,7 @@ export class VideoController {
       });
     });
 
-    this.logger.debug(`Finished segment ${segmentIndex} in ${performance.now() - start}ms`);
+    this.log.debug(`Finished segment ${segmentIndex} in ${performance.now() - start}ms`);
     // return createReadStream(outFile);
     reply.send(createReadStream(outFile));
   }

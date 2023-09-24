@@ -30,10 +30,11 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
     def face_model(self):
         from insightface.app import FaceAnalysis
 
+        providers = device == "cuda" and ["CUDAExecutionProvider"] or ["CPUExecutionProvider"]
         model = FaceAnalysis(
             name=fr_model_name,
             allowed_modules=["detection", "recognition"],
-            providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+            providers=providers
         )
 
         model.prepare(ctx_id=0, det_size=(640, 640))
@@ -51,8 +52,8 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
 
         return model, DocumentFile
 
-    def GetVector(self, request, context):
-        # Load the image and generate the vector
+    def GetImageEmbedding(self, request, context):
+        # Load the image and generate the embedding
         model, preprocess, device = self.clip_model
 
         if request.file_path:
@@ -63,10 +64,10 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
                 image_features = model.encode_image(image)
                 image_features /= image_features.norm(dim=-1, keepdim=True)
 
-            vector = image_features.flatten().tolist()
+            embedding = image_features.flatten().tolist()
 
-            return solomon_pb2.GetVectorResponse(vector={
-                "value": vector,
+            return solomon_pb2.GetImageEmbeddingResponse(embedding={
+                "value": embedding,
             })
         else:
             text_input = request.text_input
@@ -75,10 +76,10 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
                 text_features = model.encode_text(text)
                 text_features /= text_features.norm(dim=-1, keepdim=True)
 
-            vector = text_features.flatten().tolist()
+            embedding = text_features.flatten().tolist()
 
-            return solomon_pb2.GetVectorResponse(vector={
-                "value": vector,
+            return solomon_pb2.GetImageEmbeddingResponse(embedding={
+                "value": embedding,
             })
 
     def DetectFaces(self, request, context):
@@ -98,7 +99,7 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
                     "x2": round(face.bbox[2]),
                     "y2": round(face.bbox[3]),
                 },
-                "vector": {
+                "embedding": {
                     "value": face.normed_embedding.tolist(),
                 },
             })

@@ -14,13 +14,13 @@ import {
 } from '@nestjs/graphql';
 import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { createConnection } from 'nest-graphql-utils';
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
-import { Vector } from '../../generated/solomon.js';
+import { Embedding } from '../../@generated/solomon.js';
 import { PaginationArgs } from '../../pagination.js';
 import { ImageService } from '../image/image.service.js';
 import { SolomonService } from '../solomon/solomon.service.js';
-import { Media, MediaConnection } from './entities/media.entity.js';
+import { MediaConnection, MediaEntity } from './entities/media.entity.js';
 import { MediaService } from './media.service.js';
+import { embeddingToBuffer } from '../../helpers/embedding.js';
 
 enum SimilarityType {
   Related,
@@ -59,9 +59,9 @@ class MediaFilter extends PaginationArgs {
   afterDate?: Date;
 }
 
-@Resolver(() => Media)
+@Resolver(() => MediaEntity)
 export class MediaResolver {
-  @InjectRepository(Media) private mediaRepo: EntityRepository<Media>;
+  @InjectRepository(MediaEntity) private mediaRepo: EntityRepository<MediaEntity>;
 
   constructor(
     private imageService: ImageService,
@@ -69,7 +69,7 @@ export class MediaResolver {
     private solomonService: SolomonService,
   ) {}
 
-  @Query(() => Media, { nullable: true })
+  @Query(() => MediaEntity, { nullable: true })
   async media(@Args('id') fileId: string) {
     return this.mediaRepo.findOne(fileId, {
       populate: ['poster', 'thumbnail', 'timeline', 'subtitles', 'faces', 'texts'],
@@ -93,7 +93,7 @@ export class MediaResolver {
           .leftJoinAndSelect('texts', 'texts')
           .where({
             file: {
-              metadata: {
+              info: {
                 unavailable: false,
               },
             },
@@ -102,19 +102,19 @@ export class MediaResolver {
           .offset(args.offset);
 
         if (filter.afterDate)
-          queryBuilder.andWhere({ file: { metadata: { createdAt: { $gte: filter.afterDate } } } });
+          queryBuilder.andWhere({ file: { info: { createdAt: { $gte: filter.afterDate } } } });
         if (filter.beforeDate)
-          queryBuilder.andWhere({ file: { metadata: { createdAt: { $lte: filter.beforeDate } } } });
+          queryBuilder.andWhere({ file: { info: { createdAt: { $lte: filter.beforeDate } } } });
 
         if (filter.search) {
           const parsedQuery = this.fileService.parseSearchQuery(filter.search, queryBuilder);
           if (parsedQuery) {
-            const vector = await this.solomonService.getTextVector(filter.search);
-            const serialized = Buffer.from(Vector.toBinary(vector));
+            const embedding = await this.solomonService.getTextEmbedding(filter.search);
+            const serialized = embeddingToBuffer(embedding);
             queryBuilder
               .addSelect(
-                queryBuilder.raw(`cosine_similarity(media.vector, :vector) as similarity`, {
-                  vector: serialized,
+                queryBuilder.raw(`cosine_similarity(media.embedding, :embedding) as similarity`, {
+                  embedding: serialized,
                 }),
               )
               .orderBy({
@@ -124,7 +124,7 @@ export class MediaResolver {
         } else {
           queryBuilder.orderBy({
             file: {
-              metadata: {
+              info: {
                 createdAt: 'DESC',
               },
             },
@@ -142,13 +142,13 @@ export class MediaResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  previewBase64(@Parent() media: Media) {
+  previewBase64(@Parent() media: MediaEntity) {
     if (!media.preview) return null;
     return media.preview.toString('base64');
   }
 
   @ResolveField(() => MediaConnection)
-  async similar(@Parent() media: Media, @Args() filter: SimilarFilter) {
+  async similar(@Parent() media: MediaEntity, @Args() filter: SimilarFilter) {
     return createConnection({
       defaultPageSize: 20,
       paginationArgs: filter,
@@ -274,7 +274,7 @@ export class MediaResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  async thumbnailUrl(@Parent() _mediaRef: Media) {
+  async thumbnailUrl(@Parent() _mediaRef: MediaEntity) {
     // graphql requires the @Query(() => File) or whatever be serialized
     // so it can validate fields exist, then the serialized object is passed to
     // the field resolvers. this is problematic because refs are stripped and serialized

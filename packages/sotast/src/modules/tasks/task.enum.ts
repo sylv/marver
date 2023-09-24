@@ -1,12 +1,12 @@
 export enum TaskType {
   FileComputeHashes,
   ImageGenerateThumbhash,
-  ImageExtractMetadata,
+  CreateImageMedia,
   ImageGenerateClipVectors,
   ImageExtractExif,
   ImageGeneratePerceptualHash,
   VideoGenerateSubtitles,
-  VideoExtractMetadata,
+  CreateVideoMedia,
   VideoExtractScreenshots,
   VideoPickThumbnail,
   VideoPickPoster,
@@ -15,4 +15,5 @@ export enum TaskType {
   VideoGenerateThumbhash,
   ImageDetectFaces,
   ImageExtractText,
+  ExtractMetadata,
 }

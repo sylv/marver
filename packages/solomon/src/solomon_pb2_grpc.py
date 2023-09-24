@@ -14,10 +14,10 @@ class SolomonServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetVector = channel.unary_unary(
-                '/me.sylver.marver.solomon.SolomonService/GetVector',
-                request_serializer=solomon__pb2.GetVectorRequest.SerializeToString,
-                response_deserializer=solomon__pb2.GetVectorResponse.FromString,
+        self.GetImageEmbedding = channel.unary_unary(
+                '/me.sylver.marver.solomon.SolomonService/GetImageEmbedding',
+                request_serializer=solomon__pb2.GetImageEmbeddingRequest.SerializeToString,
+                response_deserializer=solomon__pb2.GetImageEmbeddingResponse.FromString,
                 )
         self.DetectFaces = channel.unary_unary(
                 '/me.sylver.marver.solomon.SolomonService/DetectFaces',
@@ -34,7 +34,7 @@ class SolomonServiceStub(object):
 class SolomonServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetVector(self, request, context):
+    def GetImageEmbedding(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -55,10 +55,10 @@ class SolomonServiceServicer(object):
 
 def add_SolomonServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetVector': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetVector,
-                    request_deserializer=solomon__pb2.GetVectorRequest.FromString,
-                    response_serializer=solomon__pb2.GetVectorResponse.SerializeToString,
+            'GetImageEmbedding': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetImageEmbedding,
+                    request_deserializer=solomon__pb2.GetImageEmbeddingRequest.FromString,
+                    response_serializer=solomon__pb2.GetImageEmbeddingResponse.SerializeToString,
             ),
             'DetectFaces': grpc.unary_unary_rpc_method_handler(
                     servicer.DetectFaces,
@@ -81,7 +81,7 @@ class SolomonService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetVector(request,
+    def GetImageEmbedding(request,
             target,
             options=(),
             channel_credentials=None,
@@ -91,9 +91,9 @@ class SolomonService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/GetVector',
-            solomon__pb2.GetVectorRequest.SerializeToString,
-            solomon__pb2.GetVectorResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/GetImageEmbedding',
+            solomon__pb2.GetImageEmbeddingRequest.SerializeToString,
+            solomon__pb2.GetImageEmbeddingResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

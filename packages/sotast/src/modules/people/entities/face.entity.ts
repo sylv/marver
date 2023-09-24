@@ -1,28 +1,27 @@
 import { Embedded, Entity, ManyToOne, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { ulid } from 'ulid';
-import { Media } from '../../media/entities/media.entity.js';
-import { BoundingBoxEmbed } from './bounding-box.embeddable.js';
-import { Person } from './person.entity.js';
+import { MediaEntity } from '../../media/entities/media.entity.js';
+import { PersonEntity } from '../../metadata/entities/person.entity.js';
+import { BoundingBoxEmbeddable } from './bounding-box.embeddable.js';
 
 @Entity()
-@ObjectType()
-export class Face {
-  @PrimaryKey()
+@ObjectType('Face')
+export class FaceEntity {
+  @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
-  id: string = ulid();
+  id: number;
 
   @Property({ type: 'blob' })
   vector: Buffer;
 
-  @Embedded(() => BoundingBoxEmbed)
-  @Field(() => BoundingBoxEmbed)
-  boundingBox: BoundingBoxEmbed;
+  @Embedded(() => BoundingBoxEmbeddable)
+  @Field(() => BoundingBoxEmbeddable)
+  boundingBox: BoundingBoxEmbeddable;
 
-  @ManyToOne(() => Media, { ref: true })
-  media: Ref<Media>;
+  @ManyToOne(() => MediaEntity, { ref: true })
+  media: Ref<MediaEntity>;
 
-  @ManyToOne(() => Person, { ref: true, nullable: true })
-  @Field(() => Person, { nullable: true })
-  person?: Ref<Person>;
+  @ManyToOne(() => PersonEntity, { ref: true, nullable: true })
+  @Field(() => PersonEntity, { nullable: true })
+  person?: Ref<PersonEntity>;
 }

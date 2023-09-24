@@ -17,14 +17,14 @@ import { extname, join } from 'path';
 import { ulid } from 'ulid';
 import { config } from '../../../config.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';
-import { Media } from '../../media/entities/media.entity.js';
-import { Task } from '../../tasks/task.entity.js';
-import { FileMetadata } from './file-metadata.embeddable.js';
-import { FileTag } from './file-tag.entity.js';
+import { MediaEntity } from '../../media/entities/media.entity.js';
+import { TaskEntity } from '../../tasks/task.entity.js';
+import { FileInfoEmbeddable } from './file-info.embeddable.js';
+import { FileTagEntity } from './file-tag.entity.js';
 
-@ObjectType()
 @Entity()
-export class File {
+@ObjectType('File')
+export class FileEntity {
   @PrimaryKey()
   @Field(() => ID)
   id: string = ulid();
@@ -42,19 +42,23 @@ export class File {
   @Field()
   path: string;
 
-  @OneToMany(() => FileTag, (tag) => tag.file)
-  tags = new Collection<FileTag>(this);
+  @OneToMany(() => FileTagEntity, (tag) => tag.file)
+  tags = new Collection<FileTagEntity>(this);
 
-  @Embedded(() => FileMetadata)
-  @Field(() => FileMetadata)
-  metadata: FileMetadata;
+  @Embedded(() => FileInfoEmbeddable)
+  @Field(() => FileInfoEmbeddable)
+  info: FileInfoEmbeddable;
 
-  @OneToOne(() => Media, (media) => media.file, { nullable: true, eager: true, onDelete: 'set null' })
-  @Field(() => Media, { nullable: true })
-  media?: Media;
+  @OneToOne(() => MediaEntity, (media) => media.file, {
+    nullable: true,
+    eager: true,
+    onDelete: 'set null',
+  })
+  @Field(() => MediaEntity, { nullable: true })
+  media?: MediaEntity;
 
-  @OneToMany(() => Task, (task) => task.file)
-  tasks = new Collection<Task>(this);
+  @OneToMany(() => TaskEntity, (task) => task.file)
+  tasks = new Collection<TaskEntity>(this);
 
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
@@ -71,12 +75,17 @@ export class File {
     return extname(this.path).slice(1) || null;
   }
 
+  /**
+   * The folder where additional resources for this file should be stored.
+   * For example, thumbnails that are generated for this file.
+   */
   @Property({ persist: false })
   get metadataFolder() {
-    // note: this must work with only this.id loaded,
-    // because sometimes refs won't be loaded but we still
-    // need the meta dir.
-    return File.getMetadataFolder(this.id);
+    // this.id is the only field guaranteed to be loaded.
+    // all others could be filtered out by the query, or may not
+    // have been set yet, introducing subtle bugs and data being put in the wrong place.
+    const self = this as { id: string };
+    return FileEntity.getMetadataFolder(self.id);
   }
 
   @Property({ persist: false })
@@ -97,4 +106,6 @@ export class File {
 }
 
 @ObjectType()
-export class FileConnection extends Connection(File) {}
+export class FileConnection extends Connection(FileEntity, {
+  edgeName: 'FileEdge',
+}) {}

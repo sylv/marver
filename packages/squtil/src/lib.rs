@@ -8,27 +8,27 @@ pub mod solomon {
 use prost::Message;
 use solomon::Vector;
 
-pub fn cosine_similarity(hash_a: &[u8], hash_b: &[u8]) -> f64 {
-    if hash_a.is_empty() || hash_b.is_empty() {
+pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f64 {
+    if vec_a.is_empty() || vec_b.is_empty() {
         return 0.0;
     }
 
     // hash_a and hash_b are Vectors which we have to decode
-    let hash_a = Vector::decode(hash_a).unwrap();
-    let hash_b = Vector::decode(hash_b).unwrap();
+    let vec_a = Vector::decode(vec_a).unwrap();
+    let vec_b = Vector::decode(vec_b).unwrap();
 
-    let dot = hash_a
+    let dot = vec_a
         .value
         .iter()
-        .zip(hash_b.value.iter())
+        .zip(vec_b.value.iter())
         .fold(0.0, |acc, (&a, &b)| acc + (a as f64) * (b as f64));
-    let mag_a = hash_a
+    let mag_a = vec_a
         .value
         .iter()
         .map(|&x| x as f64 * x as f64)
         .sum::<f64>()
         .sqrt();
-    let mag_b = hash_b
+    let mag_b = vec_b
         .value
         .iter()
         .map(|&x| x as f64 * x as f64)

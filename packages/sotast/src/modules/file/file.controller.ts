@@ -4,11 +4,11 @@ import { BadRequestException, Controller, Get, Headers, Param, Res } from '@nest
 import { type FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
 import parseRange from 'range-parser';
-import { File } from './entities/file.entity.js';
+import { FileEntity } from './entities/file.entity.js';
 
 @Controller()
 export class FileController {
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
+  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
 
   @Get('/files/:fileId/raw')
   async readFile(
@@ -17,7 +17,7 @@ export class FileController {
     @Headers('Range') range?: string,
   ) {
     const file = await this.fileRepo.findOneOrFail(fileId);
-    const parsedRange = range ? this.getRange(range, file.metadata.size) : null;
+    const parsedRange = range ? this.getRange(range, file.info.size) : null;
     const stream = createReadStream(file.path, {
       start: parsedRange?.start,
       end: parsedRange?.end,
@@ -25,11 +25,11 @@ export class FileController {
 
     if (parsedRange) {
       reply
-        .header('Content-Range', `bytes ${parsedRange.start}-${parsedRange.end}/${file.metadata.size}`)
+        .header('Content-Range', `bytes ${parsedRange.start}-${parsedRange.end}/${file.info.size}`)
         .header('Content-Length', parsedRange.end - parsedRange.start + 1)
         .status(206);
     } else {
-      reply.header('Content-Length', file.metadata.size);
+      reply.header('Content-Length', file.info.size);
     }
 
     reply

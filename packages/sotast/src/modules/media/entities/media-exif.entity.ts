@@ -1,12 +1,12 @@
 import { Entity, Index, OneToOne, Property, type Ref } from '@mikro-orm/core';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Media } from './media.entity.js';
+import { MediaEntity } from './media.entity.js';
 
 @Entity()
-@ObjectType()
-export class MediaExifData {
-  @OneToOne(() => Media, { primary: true, ref: true })
-  media: Ref<Media>;
+@ObjectType('MediaExifData')
+export class MediaExifDataEntity {
+  @OneToOne(() => MediaEntity, { primary: true, ref: true })
+  media: Ref<MediaEntity>;
 
   @Property({ nullable: true })
   @Field({ nullable: true })

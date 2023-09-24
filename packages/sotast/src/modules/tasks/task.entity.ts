@@ -1,6 +1,6 @@
 import { Entity, Enum, ManyToOne, PrimaryKeyProp, Property, type Ref } from '@mikro-orm/core';
 import { TaskType } from './task.enum.js';
-import { File } from '../file/entities/file.entity.js';
+import { FileEntity } from '../file/entities/file.entity.js';
 
 // Tasks that have not started will not have task entities associated with them.
 export enum TaskState {
@@ -9,9 +9,9 @@ export enum TaskState {
 }
 
 @Entity()
-export class Task {
-  @ManyToOne(() => File, { primary: true, ref: true })
-  file: Ref<File>;
+export class TaskEntity {
+  @ManyToOne(() => FileEntity, { primary: true, ref: true })
+  file: Ref<FileEntity>;
 
   @Enum({ items: () => TaskType, primary: true, type: 'int' })
   type: TaskType;
@@ -21,6 +21,18 @@ export class Task {
 
   @Property({ type: 'jsonb', nullable: true })
   result?: unknown;
+
+  @Property({ nullable: true })
+  errorMessage?: string;
+
+  @Property()
+  retries: number;
+
+  @Property()
+  startedAt: Date;
+
+  @Property()
+  endedAt: Date;
 
   [PrimaryKeyProp]: 'entityId';
 }

@@ -4,11 +4,11 @@ import { MediaResolver } from './media.resolver.js';
 import { FileModule } from '../file/file.module.js';
 import { ImageModule } from '../image/image.module.js';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Media } from './entities/media.entity.js';
+import { MediaEntity } from './entities/media.entity.js';
 import { SolomonModule } from '../solomon/solomon.module.js';
 
 @Module({
-  imports: [FileModule, ImageModule, SolomonModule, MikroOrmModule.forFeature([Media])],
+  imports: [FileModule, ImageModule, SolomonModule, MikroOrmModule.forFeature([MediaEntity])],
   providers: [MediaResolver, MediaService],
 })
 export class MediaModule {}

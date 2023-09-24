@@ -112,3 +112,7 @@ target/
 *.node
 .marver
 
+prompt.txt
+output.txt
+result.txt
+playground.ts

@@ -4,9 +4,10 @@ import { Injectable } from '@nestjs/common';
 import bytes from 'bytes';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
-import { File } from '../file/entities/file.entity.js';
-import { MediaText, MediaTextType } from '../media/entities/media-text.entity.js';
-import { MediaVector } from '../media/entities/media-vector.entity.js';
+import { embeddingToBuffer } from '../../helpers/embedding.js';
+import { FileEntity } from '../file/entities/file.entity.js';
+import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
+import { MediaTextEntity, MediaTextType } from '../media/entities/media-text.entity.js';
 import { SolomonService } from '../solomon/solomon.service.js';
 import { Task } from '../tasks/task.decorator.js';
 import { TaskType } from '../tasks/task.enum.js';
@@ -14,8 +15,9 @@ import { ImageService } from './image.service.js';
 
 @Injectable()
 export class ImageTasks {
-  @InjectRepository(MediaVector) private mediaVectorRepo: EntityRepository<MediaVector>;
-  @InjectRepository(MediaText) private mediaTextRepo: EntityRepository<MediaText>;
+  @InjectRepository(MediaEmbeddingEntity)
+  private mediaEmbeddingRepo: EntityRepository<MediaEmbeddingEntity>;
+  @InjectRepository(MediaTextEntity) private mediaTextRepo: EntityRepository<MediaTextEntity>;
 
   constructor(
     private imageService: ImageService,
@@ -25,15 +27,15 @@ export class ImageTasks {
 
   @Task(TaskType.ImageExtractExif, {
     concurrency: 4,
-    filter: {
+    fileFilter: {
       media: {
         height: { $ne: null },
-        exifMetadata: null,
+        exifData: null,
       },
       extension: {
         $in: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
       },
-      metadata: {
+      info: {
         size: {
           $gte: bytes('500kb'), // very small images probably wont have exif data
           $lte: bytes('50mb'), // very large images can be fucky to process
@@ -41,24 +43,26 @@ export class ImageTasks {
       },
     },
   })
-  async extractExif(file: File) {
+  async extractExif(file: FileEntity) {
     const media = file.media!;
     const exif = await this.imageService.createExifFromFile(media);
     await this.em.persistAndFlush(exif);
   }
 
-  @Task(TaskType.ImageExtractMetadata, {
+  @Task(TaskType.CreateImageMedia, {
     concurrency: 4,
-    filter: {
+    fileFilter: {
       extension: { $in: [...IMAGE_EXTENSIONS] },
       media: null,
-      metadata: {
+      info: {
         size: { $lte: bytes('100mb') },
       },
     },
   })
-  async extractMetadata(file: File) {
-    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(file.path);
+  async extractMetadata(file: FileEntity) {
+    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(
+      file.path,
+    );
     const media = this.imageService.createMediaFromSharpMetadata(originalMeta, file);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
@@ -67,7 +71,7 @@ export class ImageTasks {
 
   @Task(TaskType.ImageGenerateClipVectors, {
     concurrency: 4,
-    filter: {
+    fileFilter: {
       media: {
         height: { $ne: null },
         vectors: {
@@ -77,20 +81,20 @@ export class ImageTasks {
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
-      metadata: {
+      info: {
         size: { $lte: bytes('10mb') },
       },
     },
   })
-  async generateClipVectors(file: File) {
+  async generateClipVectors(file: FileEntity) {
     const media = file.media!;
     // todo: handle solomon being offline, if we throw an error
     // here the task will be retried at a later point which means
     // a delay when the service is probably just restarting or updating.
     const vector = await this.solomonService.getFileVector(media.file);
-    const mediaVec = this.mediaVectorRepo.create({
+    const mediaVec = this.mediaEmbeddingRepo.create({
       media: file.media!,
-      data: this.solomonService.vectorToBuffer(vector),
+      data: embeddingToBuffer(vector),
     });
 
     await this.em.persistAndFlush(mediaVec);
@@ -98,7 +102,7 @@ export class ImageTasks {
 
   @Task(TaskType.ImageExtractText, {
     concurrency: 4,
-    filter: {
+    fileFilter: {
       media: {
         hasText: null,
         height: { $ne: null },
@@ -109,12 +113,12 @@ export class ImageTasks {
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
-      metadata: {
+      info: {
         size: { $lte: bytes('10mb') },
       },
     },
   })
-  async extractText(file: File) {
+  async extractText(file: FileEntity) {
     const media = file.media!;
     const results = await this.solomonService.getOCR(media.file);
 

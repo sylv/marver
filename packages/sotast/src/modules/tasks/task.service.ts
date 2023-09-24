@@ -1,7 +1,7 @@
 import { Collection } from '@discordjs/collection';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { type FilterQuery, MikroORM, RequestContext, UseRequestContext } from '@mikro-orm/core';
+import { MikroORM, RequestContext, UseRequestContext, type FilterQuery } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -11,15 +11,16 @@ import PQueue from 'p-queue';
 import { setTimeout as sleep } from 'timers/promises';
 import { config } from '../../config.js';
 import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
-import { File } from '../file/entities/file.entity.js';
-import { TASK_CHILD_KEY, type TaskChildKey, type TaskChildOptions } from './task-child.decorator.js';
+import { FileEntity } from '../file/entities/file.entity.js';
+import { type TaskChildOptions } from './task-child.decorator.js';
 import { TASKS_KEY, type TaskOptions, type TasksKey } from './task.decorator.js';
-import { Task, TaskState } from './task.entity.js';
+import { TaskEntity, TaskState } from './task.entity.js';
 import { TaskType } from './task.enum.js';
+import { setTimeout } from 'timers';
 
 // todo: cleanupMethod is never used
 export interface LoadedTask {
-  method: (entity: File) => Promise<unknown>;
+  method: (entity: FileEntity) => Promise<unknown>;
   meta: TaskOptions;
   children: LoadedChildTask[];
   queue: PQueue;
@@ -27,7 +28,7 @@ export interface LoadedTask {
 }
 
 export interface LoadedChildTask {
-  method: (entity: File, parentResult: unknown) => Promise<void>;
+  method: (entity: FileEntity, parentResult: unknown) => Promise<void>;
   meta: TaskChildOptions;
   queue: PQueue;
   queued: Set<string>;
@@ -35,8 +36,8 @@ export interface LoadedChildTask {
 
 @Injectable()
 export class TaskService implements OnApplicationBootstrap {
-  @InjectRepository(Task) private taskRepo: EntityRepository<Task>;
-  @InjectRepository(File) private fileRepo: EntityRepository<File>;
+  @InjectRepository(TaskEntity) private taskRepo: EntityRepository<TaskEntity>;
+  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
 
   private readonly taskHandlers = new Collection<TaskType, LoadedTask>();
   private readonly log = new Logger(TaskService.name);
@@ -50,8 +51,6 @@ export class TaskService implements OnApplicationBootstrap {
     if (config.disable_tasks) return;
     const methods = await this.discoveryService.providerMethodsWithMetaAtKey<TasksKey>(TASKS_KEY);
     for (const method of methods) {
-      if (method.meta.type !== TaskType.ImageExtractText) continue;
-
       const withMethod: LoadedTask = {
         method: method.discoveredMethod.handler.bind(method.discoveredMethod.parentClass.instance),
         queue: new PQueue({ concurrency: method.meta.concurrency }),
@@ -61,9 +60,11 @@ export class TaskService implements OnApplicationBootstrap {
       };
 
       this.taskHandlers.set(withMethod.meta.type, withMethod);
-      process.nextTick(() => {
+
+      const scanDelay = config.is_development ? 500 : 5000;
+      setTimeout(() => {
         void this.scanForParentTasks(withMethod);
-      });
+      }, scanDelay);
     }
 
     // const children = await this.discoveryService.providerMethodsWithMetaAtKey<TaskChildKey>(TASK_CHILD_KEY);
@@ -102,18 +103,44 @@ export class TaskService implements OnApplicationBootstrap {
     // todo: clump tasks for the same file into the same time frame to avoid sporadic file reads
     // that will result in things like rclone caching to be more effective on slow network mounts,
     // because we'd read the same file 5 times in a row instead of over the course of a day.
+    // it might even make sense to have a config option that operates on a single file at a time, waiting until
+    // all tasks for that file are complete before moving to the next one. that could help in a lot of situations
     const fetchCount = taskHandler.meta.concurrency * 4;
     await taskHandler.queue.onSizeLessThan(fetchCount / 2);
+
+    // todo: hash the @TaskHandler function and when it changes,
+    // retry failed tasks for that handler, even if they are over
+    // the retry count.
+
+    // todo: let @TaskHandlers have a "revision" property that is
+    // included on the result. if the task has run but errored out w/ max retries,
+    // retry the task if the revision number has changed.
 
     let hasMore = null;
     const em = this.orm.em.fork();
     await RequestContext.createAsync(em, async () => {
-      const query: FilterQuery<File> = {
+      const query: FilterQuery<FileEntity> = {
         $and: [
-          taskHandler.meta.filter,
+          taskHandler.meta.fileFilter,
           {
+            // don't run a task if its already running/scheduled
             id: {
               $nin: [...taskHandler.queued],
+            },
+          },
+          {
+            // don't run a task if it has already run for that file
+            // (for parent tasks, or for tasks with lockTask enabled)
+            id: {
+              // types are wrong, this totally works.
+              // (until an update breaks it silently)
+              $nin: this.taskRepo
+                .createQueryBuilder()
+                .select('file_id')
+                .where({
+                  type: taskHandler.meta.type,
+                })
+                .getKnexQuery() as any,
             },
           },
         ],
@@ -124,12 +151,6 @@ export class TaskService implements OnApplicationBootstrap {
         query.$and!.push({
           $or: taskHandler.children.map((child) => child.meta.filter),
         });
-        // and only run if there isnt already a task result waiting
-        query.$not = {
-          tasks: {
-            type: taskHandler.meta.type,
-          },
-        };
       }
 
       const [files, filesTotal] = await this.fileRepo.findAndCount(query, {
@@ -155,7 +176,9 @@ export class TaskService implements OnApplicationBootstrap {
       await sleep(sleepFor);
     }
 
-    void this.scanForParentTasks(taskHandler);
+    process.nextTick(() => {
+      void this.scanForParentTasks(taskHandler);
+    });
   }
 
   // private async scanForChildTasks(taskHandler: LoadedChildTask) {
@@ -210,11 +233,16 @@ export class TaskService implements OnApplicationBootstrap {
   //   this.scanForChildTasks(taskHandler);
   // }
 
-  private async runTask(taskHandler: LoadedTask | LoadedChildTask, file: File, parentOutput?: unknown) {
+  private async runTask(
+    taskHandler: LoadedTask | LoadedChildTask,
+    file: FileEntity,
+    parentOutput?: unknown,
+  ) {
+    const startedAt = new Date();
     const start = performance.now();
     this.log.debug(`Starting ${TaskType[taskHandler.meta.type]} on "${file.path}"...`);
 
-    if (!file.path) {
+    if (!file.path || !file.id) {
       throw new Error('File is not loaded correctly');
     }
 
@@ -222,14 +250,19 @@ export class TaskService implements OnApplicationBootstrap {
       if ('children' in taskHandler) {
         // handle running parent tasks, even though they may not have children
         const result = await taskHandler.method(file);
-        if (taskHandler.children[0]) {
+        const endedAt = new Date();
+        if (taskHandler.children[0] || taskHandler.meta.lockTask) {
+          const keepResult = !!taskHandler.children[0];
           // if the task has children, we have to say we completed the task so they can run,
           // especially if they have to access the return data.
           const task = this.taskRepo.create({
             file: file,
             type: taskHandler.meta.type,
             state: TaskState.Completed,
-            result: result,
+            result: keepResult ? result : null,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            retries: 0,
           });
 
           // todo: if there are >100 task results for a task type, pause and wait for the
@@ -245,7 +278,9 @@ export class TaskService implements OnApplicationBootstrap {
       const duration = performance.now() - start;
       if (duration > 5000) {
         this.log.warn(
-          `Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(duration)} to complete.`,
+          `Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(
+            duration,
+          )} to complete.`,
         );
       }
     } catch (error: any) {
@@ -265,21 +300,34 @@ export class TaskService implements OnApplicationBootstrap {
         // todo: this assumes entityId is the file id, which may not be true in the future.
         // todo: having a file.createReadStream() method that automatically handles this
         // might make a lot of sense, or else handling this everywhere is going to be a nightmare.
-        if (isCorrupted) this.log.warn(`File ${file.id} (${file.path}) is corrupted, marking as such.`);
-        else this.log.warn(`File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`);
+        if (isCorrupted)
+          this.log.warn(`File ${file.id} (${file.path}) is corrupted, marking as such.`);
+        else
+          this.log.warn(
+            `File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`,
+          );
 
-        file.metadata.unavailable = true;
-        if (isCorrupted) file.metadata.corrupted = true;
+        file.info.unavailable = true;
+        if (isCorrupted) file.info.corrupted = true;
         await this.em.persistAndFlush(file);
 
         return;
       }
 
-      // todo: if a task throws an error it will get into an infinite loop. we should create
-      // a task entity in an error state and filter it out of the task queue with some kind
-      // of retry mechanism.
+      const endedAt = new Date();
+      const task = this.taskRepo.create({
+        file: file,
+        type: taskHandler.meta.type,
+        state: TaskState.Failed,
+        errorMessage: error.message,
+        result: null,
+        startedAt: startedAt,
+        endedAt: endedAt,
+        retries: 0,
+      });
+
+      await this.em.persistAndFlush(task);
       throw error;
-      // this.log.error(error);
     } finally {
       taskHandler.queued.delete(file.id);
     }
