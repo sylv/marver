@@ -7,25 +7,13 @@
 > **Warning**
 > marver is not ready, a lot is unimplemented and it might not even run. DO NOT USE MARVER IN PRODUCTION (yet)! If you give it access to your family photos and it deletes them or edits your grandparents to have funny clown hats, that's on you.
 
-> **Note**
-> This is what is _intended_. See the feature list and ideas sections for a more accurate representation.
-
 marver takes your messy, unorganised media and turns it into your personal streaming service, photo viewer and media library.
 
 marver will index your media and make it as user-friendly as possible. Point marver at your nas and it will extract information as best it can based on the file name, file contents, supporting files (subtitles, json, etc) and whatever else it can get its grubby little hands on. marver will take all that information and make it searchable, filterable, and viewable. If it can't find enough metadata, you can help push it in the right direction - attach a YouTube ID, IMDb ID, etc to a file and it'll grab the view count, comments, plot, poster, etc and display it along side the file. It's like Plex but for more than just movies and tv shows, and with a stronger focus on extracting metadata. Have a load of family photos laying around on your NAS? Let marver index them and generate albums based on faces, locations, dates, etc.
 
-## goals
-
-- Privacy is important. Looking up metadata online is fine, as long as it is not revealing any information about you or your files.
-- No uploads, use something else to handle that for now.
-- No authentication/users for now. Setup a reverse proxy with basic auth instead. In the future user support will come.
-- Metadata extraction must be great.
-  - Other alternatives are generally bad at this, requiring a specific file structure and naming scheme for it to work.
-  - File metadata can contain a significant amount of information.
-
 ## pieces
 
-marver is comprised of multiple smaller pieces, but once it's ready for deployment all these will be shipped in a single docker image.
+once marver is ready for deployment all these will be shipped in a single docker image.
 
 - [blahaj](./packages/blahaj/) - the frontend (typescript, react, vite, graphql)
 - [sotast](./packages/sotast/) - the backend that does most of what you see (typescript, nestjs)
