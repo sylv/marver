@@ -1,5 +1,5 @@
 import { MikroORM, UseRequestContext } from '@mikro-orm/core';
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';

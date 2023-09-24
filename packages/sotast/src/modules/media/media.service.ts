@@ -1,4 +1,4 @@
-import { EntityManager, type QueryBuilder } from '@mikro-orm/better-sqlite';
+import { EntityManager, type QueryBuilder } from '@mikro-orm/sqlite';
 import { Injectable } from '@nestjs/common';
 import { SEARCH_MODIFIERS } from '../../config/search-modifiers.js';
 import { type MediaEntity } from './entities/media.entity.js';

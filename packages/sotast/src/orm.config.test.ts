@@ -1,4 +1,4 @@
-import { defineConfig } from '@mikro-orm/better-sqlite';
+import { defineConfig } from '@mikro-orm/sqlite';
 import { LoadStrategy } from '@mikro-orm/core';
 import { NotFoundException } from '@nestjs/common';
 

@@ -1,6 +1,6 @@
 import { Collection } from '@discordjs/collection';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/sqlite';
 import { MikroORM, RequestContext, UseRequestContext, type FilterQuery } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';

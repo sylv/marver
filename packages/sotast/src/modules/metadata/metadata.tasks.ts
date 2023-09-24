@@ -1,4 +1,4 @@
-import type { EntityRepository } from '@mikro-orm/better-sqlite';
+import type { EntityRepository } from '@mikro-orm/sqlite';
 import { EntityManager, ref, type ObjectQuery } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';

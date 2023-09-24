@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-array-callback-reference */
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityRepository } from '@mikro-orm/sqlite';
 import { wrap } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {

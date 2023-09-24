@@ -1,4 +1,4 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { FileEntity } from '../file/entities/file.entity.js';

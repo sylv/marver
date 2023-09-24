@@ -1,5 +1,5 @@
-import { type MikroORM as BetterMikroORM } from '@mikro-orm/better-sqlite';
-import { MikroORM } from '@mikro-orm/core';
+import { MetadataStorage, MikroORM } from '@mikro-orm/core';
+import { type MikroORM as BetterMikroORM } from '@mikro-orm/sqlite';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -10,6 +10,20 @@ import { performance } from 'perf_hooks';
 import { AppModule } from './app.module.js';
 import { config } from './config.js';
 import { MikroOrmSerializerInterceptor } from './serializer.interceptor.js';
+
+// todo: bun doesn't emit decorator metadata for enums, but typescript does.
+// this fixes the metadata by inferring the type from the enum values, which
+// mikroorm expects.
+const metadata = MetadataStorage.getMetadata();
+for (const item of Object.values(metadata)) {
+  for (const prop of Object.values(item.properties)) {
+    if (prop.enum && !prop.type) {
+      const items = (prop.items as any as () => Record<string, string | number>)();
+      const hasNumberItems = Object.values(items).some((value) => typeof value === 'number');
+      prop.type = hasNumberItems ? 'number' : 'string';
+    }
+  }
+}
 
 const start = performance.now();
 const startupTimer = setTimeout(() => {

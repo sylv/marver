@@ -1,4 +1,4 @@
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityRepository } from '@mikro-orm/sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';

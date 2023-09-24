@@ -1,4 +1,4 @@
-import { type EntityManager, type QueryBuilder } from '@mikro-orm/better-sqlite';
+import { type EntityManager, type QueryBuilder } from '@mikro-orm/sqlite';
 import bytes from 'bytes';
 import ms from 'ms';
 import { type MediaEntity } from '../modules/media/entities/media.entity.js';

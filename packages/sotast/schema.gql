@@ -13,105 +13,42 @@ type PageInfo {
   hasNextPage: Boolean!
 }
 
-type Completion {
-  id: ID!
-  type: String!
-  data: JSONObject!
-  errorMessage: String
-  result: JSONObject
-
-  """Examples used for this completion"""
-  examples: [CompletionExample!]!
-  state: CompletionState!
-  alwaysInclude: Boolean!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  examplesSimilarity: Float
+type FileTag {
+  tag: Tag!
+  system: Boolean!
 }
 
-"""
-The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-"""
-scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+type Tag {
+  name: ID!
+}
 
-enum CompletionState {
-  PendingCompletion
-  PendingVerification
-  VerifiedHybrid
-  VerifiedAuto
-  VerifiedManual
-  BuiltIn
-  Error
+type BoundingBox {
+  x1: Float!
+  y1: Float!
+  x2: Float!
+  y2: Float!
+}
+
+type Face {
+  id: ID!
+  boundingBox: BoundingBox!
+  person: Person
+}
+
+type Person {
+  id: ID!
+  name: String!
+  aliases: String!
+  description: String
+  birthDate: DateTime
+  deathDate: DateTime
+  tag: Tag!
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
-
-"""Provides CompletionEntity item and a cursor to its position"""
-type CompletionEdge {
-  """The position of this CompletionEntity item"""
-  cursor: String!
-  node: Completion!
-}
-
-type CompletionConnection {
-  """Total number of CompletionEntity items"""
-  totalCount: Int!
-  pageInfo: PageInfo!
-  edges: [CompletionEdge!]!
-}
-
-type CompletionExample {
-  completion: Completion!
-  example: Completion!
-  similarity: Float!
-}
-
-type FileInfoEmbeddable {
-  size: Float!
-  corrupted: Boolean!
-  unavailable: Boolean!
-  favourite: Boolean!
-  serverCheckedAt: DateTime!
-  serverCreatedAt: DateTime!
-  diskModifiedAt: DateTime!
-  diskCreatedAt: DateTime!
-  sizeFormatted: String!
-}
-
-type File {
-  id: ID!
-  name: String!
-  directory: String!
-  path: String!
-  info: FileInfoEmbeddable!
-  media: Media
-  mimeType: String
-  extension: String
-  tags: [FileTag!]!
-  type: FileType
-}
-
-enum FileType {
-  Image
-  Video
-}
-
-"""Provides FileEntity item and a cursor to its position"""
-type FileEdge {
-  """The position of this FileEntity item"""
-  cursor: String!
-  node: File!
-}
-
-type FileConnection {
-  """Total number of FileEntity items"""
-  totalCount: Int!
-  pageInfo: PageInfo!
-  edges: [FileEdge!]!
-}
 
 type MediaExifData {
   lensMake: String
@@ -146,21 +83,21 @@ type MediaSubtitle {
   displayName: String!
 }
 
-type BoundingBox {
-  x1: Float!
-  y1: Float!
-  x2: Float!
-  y2: Float!
-}
-
 type MediaText {
   id: ID!
-  type: Float!
+  type: MediaTextType!
   text: String!
   boundingBox: BoundingBox!
   confidence: Float!
   code: String
   timestamp: Float
+}
+
+enum MediaTextType {
+  OCR
+  Cleaned
+  Manual
+  Translated
 }
 
 type MediaThumbnail {
@@ -230,29 +167,99 @@ type MediaConnection {
   edges: [MediaEdge!]!
 }
 
-type Face {
-  id: ID!
-  boundingBox: BoundingBox!
-  person: Person
+type FileInfoEmbeddable {
+  size: Float!
+  corrupted: Boolean!
+  unavailable: Boolean!
+  favourite: Boolean!
+  serverCheckedAt: DateTime!
+  serverCreatedAt: DateTime!
+  diskModifiedAt: DateTime!
+  diskCreatedAt: DateTime!
+  sizeFormatted: String!
 }
 
-type Person {
+type File {
   id: ID!
   name: String!
-  aliases: String!
-  description: String
-  birthDate: DateTime
-  deathDate: DateTime
-  tag: Tag!
+  directory: String!
+  path: String!
+  info: FileInfoEmbeddable!
+  media: Media
+  mimeType: String
+  extension: String
+  tags: [FileTag!]!
+  type: FileType
 }
 
-type Tag {
-  name: ID!
+enum FileType {
+  Image
+  Video
 }
 
-type FileTag {
-  tag: Tag!
-  system: Boolean!
+"""Provides FileEntity item and a cursor to its position"""
+type FileEdge {
+  """The position of this FileEntity item"""
+  cursor: String!
+  node: File!
+}
+
+type FileConnection {
+  """Total number of FileEntity items"""
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [FileEdge!]!
+}
+
+type CompletionExample {
+  completion: Completion!
+  example: Completion!
+  similarity: Float!
+}
+
+type Completion {
+  id: ID!
+  type: String!
+  data: JSONObject!
+  errorMessage: String
+  result: JSONObject
+
+  """Examples used for this completion"""
+  examples: [CompletionExample!]!
+  state: CompletionState!
+  alwaysInclude: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  examplesSimilarity: Float
+}
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+enum CompletionState {
+  PendingCompletion
+  PendingVerification
+  VerifiedHybrid
+  VerifiedAuto
+  VerifiedManual
+  BuiltIn
+  Error
+}
+
+"""Provides CompletionEntity item and a cursor to its position"""
+type CompletionEdge {
+  """The position of this CompletionEntity item"""
+  cursor: String!
+  node: Completion!
+}
+
+type CompletionConnection {
+  """Total number of CompletionEntity items"""
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [CompletionEdge!]!
 }
 
 type Query {

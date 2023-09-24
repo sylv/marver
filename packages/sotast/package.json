@@ -3,10 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "watch": "tsup --watch --onSuccess \"node ./dist/main.js\"",
-    "build": "tsc --noEmit && tsup",
+    "watch": "bun run --watch src/main.ts",
     "test": "vitest run",
-    "mikro-orm": "NODE_OPTIONS=\"--loader ts-node/esm\" mikro-orm",
     "generate": "protoc --ts_out ./src/@generated --ts_opt optimize_speed,use_proto_field_name --proto_path=../solomon/src ../solomon/src/solomon.proto --experimental_allow_proto3_optional && node ./scripts/fix-imports.mjs ./src/@generated"
   },
   "dependencies": {
@@ -14,12 +12,11 @@
     "@golevelup/nestjs-discovery": "^4.0.0",
     "@grpc/grpc-js": "^1.9.3",
     "@hapi/accept": "^6.0.2",
-    "@marver/vidhash": "workspace:^",
     "@mercuriusjs/gateway": "^2.0.0",
-    "@mikro-orm/better-sqlite": "^5.8.2",
     "@mikro-orm/core": "^5.8.2",
     "@mikro-orm/migrations": "^5.8.2",
     "@mikro-orm/nestjs": "^5.2.2",
+    "@mikro-orm/sqlite": "^5.8.2",
     "@nestjs/common": "^10.2.6",
     "@nestjs/core": "^10.2.6",
     "@nestjs/graphql": "^12.0.9",
@@ -30,7 +27,6 @@
     "@protobuf-ts/runtime": "^2.9.1",
     "@protobuf-ts/runtime-rpc": "^2.9.1",
     "@ryanke/venera": "^1.0.5",
-    "@types/better-sqlite3": "^7.6.5",
     "bytes": "^3.1.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -57,11 +53,11 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "sharp": "^0.32.6",
+    "sqlite3": "^5.1.6",
     "string-strip-html": "^13.4.3",
     "subtitle": "^4.2.1",
     "thumbhash-node": "^0.1.3",
     "ulid": "^2.3.0",
-    "undici": "^5.25.2",
     "zod": "^3.22.2"
   },
   "devDependencies": {
@@ -75,7 +71,7 @@
     "@types/fluent-ffmpeg": "^2.1.22",
     "@types/mime-types": "^2.1.1",
     "@types/ms": "^0.7.31",
-    "@types/node": "^20.6.4",
+    "bun-types": "^1.0.3",
     "@types/range-parser": "^1.2.4",
     "eslint": "^8.50.0",
     "glob": "^10.3.6",
@@ -92,5 +88,9 @@
     "configPaths": [
       "./src/orm.config.ts"
     ]
-  }
+  },
+  "trustedDependencies": [
+    "sharp",
+    "sqlite3"
+  ]
 }

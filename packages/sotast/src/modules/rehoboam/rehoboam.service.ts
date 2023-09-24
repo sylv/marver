@@ -1,5 +1,5 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import type { EntityRepository } from '@mikro-orm/better-sqlite';
+import type { EntityRepository } from '@mikro-orm/sqlite';
 import { EntityManager, MikroORM, RequestContext, UseRequestContext } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
@@ -72,8 +72,8 @@ export class RehoboamService implements OnApplicationBootstrap {
 
         this.log.log(`Finished loading rehoboam task examples`);
         void this.scanForRequest();
-      } catch (error) {
-        this.log.error(error);
+      } catch (error: any) {
+        this.log.error(error, error.stack);
         process.exit(1);
       }
     }, scanDelay);

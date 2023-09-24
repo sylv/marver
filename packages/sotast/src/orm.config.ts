@@ -1,10 +1,10 @@
-import { defineConfig } from '@mikro-orm/better-sqlite';
+import { defineConfig } from '@mikro-orm/sqlite';
+import { UnderscoreNamingStrategy } from '@mikro-orm/core';
 import { Logger, NotFoundException } from '@nestjs/common';
-import type { Database } from 'better-sqlite3';
+import type { Database } from 'bun:sqlite';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
-import { UnderscoreNamingStrategy } from '@mikro-orm/core';
 
 export const ORM_LOGGER = new Logger('MikroORM');
 export const MIGRATIONS_TABLE_NAME = 'mikro_orm_migrations';
@@ -16,10 +16,14 @@ class CustomNamingStrategy extends UnderscoreNamingStrategy {
   }
 }
 
+const IS_TS = import.meta.url.endsWith('.ts');
+const TS_ENTITIES = ['src/**/*.entity.ts'];
+const JS_ENTITIES = ['dist/**/*.entity.js'];
+
 export default defineConfig({
   dbName: join(config.metadata_dir, 'mesa.db'),
-  entities: ['dist/**/*.entity.js'],
-  entitiesTs: ['src/**/*.entity.ts'],
+  entities: IS_TS ? TS_ENTITIES : JS_ENTITIES,
+  entitiesTs: TS_ENTITIES,
   persistOnCreate: false,
   namingStrategy: CustomNamingStrategy,
   debug: config.orm_debug,

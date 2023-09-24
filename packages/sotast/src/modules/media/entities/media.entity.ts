@@ -7,6 +7,7 @@ import {
   PrimaryKeyType,
   Property,
   type Ref,
+  type Rel,
 } from '@mikro-orm/core';
 import { Field, ObjectType } from '@nestjs/graphql';
 import ms from 'ms';
@@ -44,7 +45,7 @@ abstract class MediaSortingProps {
 export class MediaEntity extends MediaSortingProps {
   @OneToOne(() => FileEntity, { primary: true, eager: true })
   @Field(() => FileEntity)
-  file: FileEntity;
+  file: Rel<FileEntity>;
 
   @Property({ nullable: true })
   @Field({ nullable: true })

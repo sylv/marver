@@ -78,6 +78,23 @@ export class MetadataEntityMovie extends MetadataEntity {
   tvdbId?: string;
 }
 
+@Entity({ discriminatorValue: MetadataCategory.TVShow })
+export class MetadataEntityTVShow extends MetadataEntity {
+  category: MetadataCategory.TVShow;
+
+  @Property()
+  title: string;
+
+  @Property({ nullable: true })
+  year?: number;
+
+  @Property({ nullable: true })
+  imdbId?: string;
+
+  @Property({ nullable: true })
+  tvdbId?: string;
+}
+
 @Entity({ discriminatorValue: MetadataCategory.TVEpisode })
 export class MetadataEntityTVEpisode extends MetadataEntity {
   category: MetadataCategory.TVEpisode;
@@ -93,23 +110,6 @@ export class MetadataEntityTVEpisode extends MetadataEntity {
 
   @Property({ type: 'jsonb', nullable: true })
   episodeNumbers?: number[];
-
-  @Property({ nullable: true })
-  imdbId?: string;
-
-  @Property({ nullable: true })
-  tvdbId?: string;
-}
-
-@Entity({ discriminatorValue: MetadataCategory.TVShow })
-export class MetadataEntityTVShow extends MetadataEntity {
-  category: MetadataCategory.TVShow;
-
-  @Property()
-  title: string;
-
-  @Property({ nullable: true })
-  year?: number;
 
   @Property({ nullable: true })
   imdbId?: string;

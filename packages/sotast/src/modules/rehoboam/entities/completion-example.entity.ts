@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, Property, type Rel } from '@mikro-orm/core';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { CompletionEntity } from './completion.entity.js';
 
@@ -7,11 +7,11 @@ import { CompletionEntity } from './completion.entity.js';
 export class CompletionExampleEntity {
   @ManyToOne(() => CompletionEntity, { eager: true, primary: true, onDelete: 'cascade' })
   @Field(() => CompletionEntity)
-  completion: CompletionEntity;
+  completion: Rel<CompletionEntity>;
 
   @ManyToOne(() => CompletionEntity, { eager: true, primary: true, onDelete: 'cascade' })
   @Field(() => CompletionEntity)
-  example: CompletionEntity;
+  example: Rel<CompletionEntity>;
 
   @Property()
   @Field()

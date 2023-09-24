@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { writeFileSync } from 'fs';
 import { performance } from 'perf_hooks';
-import { Client } from 'undici';
 import { Embedding } from '../../../@generated/solomon.js';
 import { config } from '../../../config.js';
 
@@ -57,20 +56,10 @@ export interface Message {
 @Injectable()
 export class LlamaCppService {
   private log = new Logger(LlamaCppService.name);
-  private _client: Client;
-  get client() {
-    if (this._client) return this._client;
-    if (!config.services.llm.enabled) {
-      throw new Error('LLM is not enabled');
-    }
-
-    this._client = new Client(config.services.llm.server_url);
-    return this._client;
-  }
 
   async embedding(input: string): Promise<Embedding> {
-    const response = await this.client.request({
-      path: '/embedding',
+    const url = config.services.llm.server_url + '/embedding';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -78,11 +67,11 @@ export class LlamaCppService {
       }),
     });
 
-    if (response.statusCode !== 200) {
-      throw new Error(`LLM server returned ${response.statusCode}`);
+    if (response.status !== 200) {
+      throw new Error(`LLM server returned ${response.status}`);
     }
 
-    const json = (await response.body.json()) as { embedding: number[] };
+    const json = (await response.json()) as { embedding: number[] };
     const embedding = json.embedding;
     if (embedding.every((item) => item === 0)) {
       throw new Error(`LLM server returned an empty embedding. Is embedding enabled?`);
@@ -97,8 +86,9 @@ export class LlamaCppService {
     const start = performance.now();
     const prompt = 'prompt' in input ? input.prompt : this.messagesToPrompt(input.messages);
     writeFileSync('prompt.txt', prompt);
-    const response = await this.client.request({
-      path: '/completion',
+
+    const url = config.services.llm.server_url + '/completion';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -108,11 +98,11 @@ export class LlamaCppService {
       }),
     });
 
-    if (response.statusCode !== 200) {
-      throw new Error(`LLM server returned ${response.statusCode}`);
+    if (response.status !== 200) {
+      throw new Error(`LLM server returned ${response.status}`);
     }
 
-    const json = (await response.body.json()) as { content: string };
+    const json = (await response.json()) as { content: string };
     const end = performance.now();
     const duration = end - start;
     this.log.debug(`LLM took ${duration}ms`);

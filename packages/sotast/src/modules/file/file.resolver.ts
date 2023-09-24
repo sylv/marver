@@ -1,4 +1,4 @@
-import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityRepository } from '@mikro-orm/sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {
   Args,
@@ -55,7 +55,7 @@ export class FileResolver {
           {
             limit: args.limit,
             offset: args.offset,
-          }
+          },
         );
       },
     });
@@ -77,7 +77,7 @@ export class FileResolver {
             description: virtualTag.description,
             color: virtualTag.color,
           },
-        })
+        }),
       );
     }
 
