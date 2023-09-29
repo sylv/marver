@@ -1,6 +1,7 @@
 import {
   Collection,
   Entity,
+  Index,
   OneToMany,
   OneToOne,
   PrimaryKeyProp,
@@ -48,10 +49,12 @@ export class MediaEntity extends MediaSortingProps {
 
   @Property({ nullable: true })
   @Field({ nullable: true })
+  @Index()
   height?: number;
 
   @Property({ nullable: true })
   @Field({ nullable: true })
+  @Index()
   width?: number;
 
   @Property({ nullable: true })

@@ -19,7 +19,7 @@ export class SubtitleController {
       id: subtitleId,
     });
 
-    const subStream = createReadStream(subtitles.path, 'utf8')
+    let subStream = createReadStream(subtitles.path, 'utf8')
       .pipe(parser.parse())
       .pipe(parser.filter(this.subtitleService.cleanSubtitleNode))
       .pipe(parser.stringify({ format: 'WebVTT' }));

@@ -1,13 +1,14 @@
-import { MikroORM, UseRequestContext } from '@mikro-orm/core';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { MikroORM, UseRequestContext } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { CronExpression } from '@nestjs/schedule';
 import { opendir, stat } from 'fs/promises';
 import PQueue from 'p-queue';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { config } from '../../config.js';
+import { PublicCron } from '../task/public-cron.decorator.js';
 import { FileEntity } from './entities/file.entity.js';
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
@@ -26,7 +27,10 @@ export class FileScanService {
     private em: EntityManager,
   ) {}
 
-  @Cron(CronExpression.EVERY_12_HOURS)
+  @PublicCron(CronExpression.EVERY_12_HOURS, {
+    name: 'Scan Files',
+    description: 'Index new files and mark missing files as unavailable',
+  })
   @UseRequestContext()
   async scan() {
     const start = performance.now();

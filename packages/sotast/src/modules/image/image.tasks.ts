@@ -8,9 +8,8 @@ import { embeddingToBuffer } from '../../helpers/embedding.js';
 import { FileEntity } from '../file/entities/file.entity.js';
 import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
 import { MediaTextEntity, MediaTextType } from '../media/entities/media-text.entity.js';
+import { Queue } from '../queue/queue.decorator.js';
 import { SolomonService } from '../solomon/solomon.service.js';
-import { Task } from '../tasks/task.decorator.js';
-import { TaskType } from '../tasks/task.enum.js';
 import { ImageService } from './image.service.js';
 
 @Injectable()
@@ -25,19 +24,19 @@ export class ImageTasks {
     private em: EntityManager,
   ) {}
 
-  @Task(TaskType.ImageExtractExif, {
-    concurrency: 4,
+  @Queue('IMAGE_EXTRACT_EXIF', {
+    targetConcurrency: 4,
+    thirdPartyDependant: false,
     fileFilter: {
       media: {
         height: { $ne: null },
         exifData: null,
       },
       extension: {
-        $in: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
+        $in: ['jog', 'tif', 'png', 'webp'],
       },
       info: {
         size: {
-          $gte: bytes('500kb'), // very small images probably wont have exif data
           $lte: bytes('50mb'), // very large images can be fucky to process
         },
       },
@@ -49,8 +48,9 @@ export class ImageTasks {
     await this.em.persistAndFlush(exif);
   }
 
-  @Task(TaskType.CreateImageMedia, {
-    concurrency: 4,
+  @Queue('CREATE_IMAGE_MEDIA', {
+    targetConcurrency: 4,
+    thirdPartyDependant: false,
     fileFilter: {
       extension: { $in: [...IMAGE_EXTENSIONS] },
       media: null,
@@ -63,14 +63,16 @@ export class ImageTasks {
     const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(
       file.path,
     );
+
     const media = this.imageService.createMediaFromSharpMetadata(originalMeta, file);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     media.preview = Buffer.from(hash);
     await this.em.persistAndFlush(media);
   }
 
-  @Task(TaskType.ImageGenerateClipVectors, {
-    concurrency: 4,
+  @Queue('IMAGE_GENERATE_CLIP_EMBEDDING', {
+    targetConcurrency: 4,
+    thirdPartyDependant: true,
     fileFilter: {
       media: {
         height: { $ne: null },
@@ -100,8 +102,9 @@ export class ImageTasks {
     await this.em.persistAndFlush(mediaVec);
   }
 
-  @Task(TaskType.ImageExtractText, {
-    concurrency: 4,
+  @Queue('IMAGE_EXTRACT_TEXT', {
+    targetConcurrency: 4,
+    thirdPartyDependant: true,
     fileFilter: {
       media: {
         hasText: null,
@@ -141,7 +144,7 @@ export class ImageTasks {
     await this.em.flush();
   }
 
-  // @Task(TaskType.ImageGeneratePerceptualHash, {
+  // @Queue(TaskType.ImageGeneratePerceptualHash, {
   //   concurrency: 2,
   //   filter: {
   //     file: {

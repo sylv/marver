@@ -1,4 +1,4 @@
-import { Embeddable, Property } from '@mikro-orm/core';
+import { Embeddable, Index, Property } from '@mikro-orm/core';
 import { Field, ObjectType } from '@nestjs/graphql';
 
 @Embeddable()
@@ -6,6 +6,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 export class FileInfoEmbeddable {
   @Field()
   @Property()
+  @Index()
   size: number;
 
   @Field()
@@ -18,6 +19,7 @@ export class FileInfoEmbeddable {
 
   @Field()
   @Property()
+  @Index()
   favourite: boolean = false;
 
   @Property()

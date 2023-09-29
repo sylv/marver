@@ -255,15 +255,25 @@ type FileTag {
   system: Boolean!
 }
 
+type Task {
+  id: ID!
+  name: String!
+  description: String
+  running: Boolean
+  nextRunAt: Float!
+}
+
 type Query {
   file(id: String!): File
   files(after: String, first: Float, before: String, last: Float, offset: Float, search: String): FileConnection!
   media(id: String!): Media
   mediaList(after: String, first: Float, before: String, last: Float, offset: Float, search: String, beforeDate: DateTime, afterDate: DateTime): MediaConnection!
   completions(after: String, first: Float, before: String, last: Float, offset: Float, state: CompletionState): CompletionConnection!
+  tasks: [Task!]!
 }
 
 type Mutation {
   verifyCompletion(id: ID!): Completion!
   rejectCompletion(id: ID!): Completion!
+  runTask(id: ID!): Task!
 }

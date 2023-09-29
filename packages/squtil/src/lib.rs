@@ -6,7 +6,7 @@ pub mod solomon {
 }
 
 use prost::Message;
-use solomon::Vector;
+use solomon::Embedding;
 
 pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f64 {
     if vec_a.is_empty() || vec_b.is_empty() {
@@ -14,8 +14,8 @@ pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f64 {
     }
 
     // hash_a and hash_b are Vectors which we have to decode
-    let vec_a = Vector::decode(vec_a).unwrap();
-    let vec_b = Vector::decode(vec_b).unwrap();
+    let vec_a = Embedding::decode(vec_a).unwrap();
+    let vec_b = Embedding::decode(vec_b).unwrap();
 
     let dot = vec_a
         .value

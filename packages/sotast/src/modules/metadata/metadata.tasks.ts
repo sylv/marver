@@ -8,8 +8,7 @@ import { normalizePath } from '../../helpers/normalize-path.js';
 import { FileEntity } from '../file/entities/file.entity.js';
 import { Callback } from '../rehoboam/decorators/callback.decorator.js';
 import { RehoboamService } from '../rehoboam/rehoboam.service.js';
-import { Task } from '../tasks/task.decorator.js';
-import { TaskType } from '../tasks/task.enum.js';
+import { Queue } from '../queue/queue.decorator.js';
 import {
   MetadataCategory,
   MetadataEntity,
@@ -36,8 +35,9 @@ export class MetadataTasks {
     private em: EntityManager,
   ) {}
 
-  @Task(TaskType.ExtractMetadata, {
-    concurrency: 1,
+  @Queue('EXTRACT_METADATA', {
+    targetConcurrency: 1,
+    thirdPartyDependant: false,
     lockTask: true,
     fileFilter: {
       media: {

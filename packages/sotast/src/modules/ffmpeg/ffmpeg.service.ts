@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import ffmpeg, { type FfprobeData } from 'fluent-ffmpeg';
-import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
 import { LRUCache } from 'lru-cache';
 import ms from 'ms';
+import { JobError } from '../queue/job.error.js';
 
 @Injectable()
 export class FfmpegService {
@@ -17,9 +17,12 @@ export class FfmpegService {
     return new Promise((resolve, reject) => {
       ffmpeg.ffprobe(path, (err, metadata) => {
         if (err) {
-          if (err.message.includes('Invalid data found when processing input'))
-            reject(new CorruptedFileError(path));
-          else reject(err);
+          if (err.message.includes('Invalid data found when processing input')) {
+            reject(new JobError(err.message, { corruptFile: true }));
+          } else {
+            reject(err);
+          }
+
           return;
         }
 

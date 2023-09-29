@@ -1,18 +1,13 @@
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
-import { mkdir, readFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import ISO6391 from 'iso-639-1';
 import LanguageDetect from 'languagedetect';
-import { dirname, join } from 'path';
 import { stripHtml } from 'string-strip-html';
-import { type Node, parseSync } from 'subtitle';
-import { VIDEO_EXTENSIONS } from '../../constants.js';
+import { parseSync, type Node } from 'subtitle';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
-import { FileEntity } from '../file/entities/file.entity.js';
 import { MediaSubtitleEntity } from '../media/entities/media-subtitle.entity.js';
-import { Task } from '../tasks/task.decorator.js';
-import { TaskType } from '../tasks/task.enum.js';
 
 const SUBTITLE_STRIP_PATTERN =
   /JOINNOW|free code|Downloaded from|Support us and become a VIP member|subtitles|corrected by|corrections by|rate this subtitle|created by|Advertise your product or brand here|tvsubtitles|YTS|YIFY|www\.|https:|ripped by|opensubtitles|sub(scene|rip)|podnapisi|addic7ed|titlovi|bozxphd|sazu489|psagmeno|normita|anoxmous|\. ?com|©|™|Free Online Movies|Subtitle edited by/;
@@ -26,7 +21,7 @@ export class SubtitleService {
     private em: EntityManager,
   ) {}
 
-  // @Task(TaskType.VideoGenerateSubtitles, {
+  // @Queue(QueueType.VideoGenerateSubtitles, {
   //   concurrency: 1,
   //   fileFilter: {
   //     extension: { $in: [...VIDEO_EXTENSIONS] },
@@ -106,9 +101,10 @@ export class SubtitleService {
       const cleaned = this.cleanSubtitleNode(node);
       if (!cleaned) continue;
       const guesses = dector.detect(node.data.text, 2);
-      if (!guesses[1]) continue;
-      if (guesses[0][1] < 0.2) continue;
+      if (!guesses[1]) continue; // require at least 2 guesses
+      if (guesses[0][1] < 0.2) continue; // require at least 20% confidence
       if (guesses[0][1] - guesses[1][1] > 0.1) {
+        // require at least 10% difference between top 2 guesses
         const topGuessName = guesses[0];
         const existingGuess = guessCounts.get(topGuessName[0]) || 0;
         guessCounts.set(topGuessName[0], existingGuess + 1);

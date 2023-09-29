@@ -14,11 +14,11 @@ import { SolomonModule } from '../solomon/solomon.module.js';
 import { SubtitleController } from './subtitle.controller.js';
 import { SubtitleService } from './subtitle.service.js';
 import { VideoController } from './video.controller.js';
-import { VideoTasks } from './video.tasks.js';
+import { VideoQueues } from './video.queues.js';
 import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
 
 @Module({
-  providers: [VideoTasks, SubtitleService],
+  providers: [VideoQueues, SubtitleService],
   controllers: [VideoController, SubtitleController],
   imports: [
     FfmpegModule,

@@ -1,14 +1,13 @@
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
-import { FileEntity } from '../file/entities/file.entity.js';
-import { SolomonService } from '../solomon/solomon.service.js';
-import { Task } from '../tasks/task.decorator.js';
-import { TaskType } from '../tasks/task.enum.js';
-import { FaceEntity } from './entities/face.entity.js';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
-import { PersonEntity } from '../metadata/entities/person.entity.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
+import { FileEntity } from '../file/entities/file.entity.js';
+import { PersonEntity } from '../metadata/entities/person.entity.js';
+import { Queue } from '../queue/queue.decorator.js';
+import { SolomonService } from '../solomon/solomon.service.js';
+import { FaceEntity } from './entities/face.entity.js';
 
 @Injectable()
 export class PersonTasks {
@@ -20,8 +19,9 @@ export class PersonTasks {
     private em: EntityManager,
   ) {}
 
-  @Task(TaskType.ImageDetectFaces, {
-    concurrency: 4,
+  @Queue('IMAGE_DETECT_FACES', {
+    targetConcurrency: 4,
+    thirdPartyDependant: true,
     fileFilter: {
       extension: {
         $in: [...IMAGE_EXTENSIONS],

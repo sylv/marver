@@ -260,11 +260,17 @@ export type MediaTimeline = {
 export type Mutation = {
   __typename?: 'Mutation';
   rejectCompletion: Completion;
+  runTask: Task;
   verifyCompletion: Completion;
 };
 
 
 export type MutationRejectCompletionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRunTaskArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -302,6 +308,7 @@ export type Query = {
   files: FileConnection;
   media?: Maybe<Media>;
   mediaList: MediaConnection;
+  tasks: Array<Task>;
 };
 
 
@@ -360,6 +367,15 @@ export type Tag = {
   name: Scalars['ID']['output'];
 };
 
+export type Task = {
+  __typename?: 'Task';
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  nextRunAt: Scalars['DateTime']['output'];
+  running?: Maybe<Scalars['Boolean']['output']>;
+};
+
 export type CompletionsQueryVariables = Exact<{
   state: CompletionState;
 }>;
@@ -401,6 +417,20 @@ export type GetMediaQueryVariables = Exact<{
 
 export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number }, person?: { __typename?: 'Person', id: string, name: string } | null }>, texts: Array<{ __typename?: 'MediaText', id: string, text: string, code?: string | null, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }>, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } } }> } } | null };
 
+export type TasksQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TasksQuery = { __typename?: 'Query', tasks: Array<{ __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: any }> };
+
+export type RunTaskMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RunTaskMutation = { __typename?: 'Mutation', runTask: { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: any } };
+
+export type RegularTaskFragment = { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: any };
+
 export const RegularCompletionFragmentDoc = gql`
     fragment RegularCompletion on Completion {
   id
@@ -439,6 +469,15 @@ export const MinimalMediaFragmentDoc = gql`
       sizeFormatted
     }
   }
+}
+    `;
+export const RegularTaskFragmentDoc = gql`
+    fragment RegularTask on Task {
+  id
+  name
+  description
+  running
+  nextRunAt
 }
     `;
 export const CompletionsDocument = gql`
@@ -683,3 +722,70 @@ export function useGetMediaLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetMediaQueryHookResult = ReturnType<typeof useGetMediaQuery>;
 export type GetMediaLazyQueryHookResult = ReturnType<typeof useGetMediaLazyQuery>;
 export type GetMediaQueryResult = Apollo.QueryResult<GetMediaQuery, GetMediaQueryVariables>;
+export const TasksDocument = gql`
+    query Tasks {
+  tasks {
+    ...RegularTask
+  }
+}
+    ${RegularTaskFragmentDoc}`;
+
+/**
+ * __useTasksQuery__
+ *
+ * To run a query within a React component, call `useTasksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTasksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTasksQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useTasksQuery(baseOptions?: Apollo.QueryHookOptions<TasksQuery, TasksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TasksQuery, TasksQueryVariables>(TasksDocument, options);
+      }
+export function useTasksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TasksQuery, TasksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TasksQuery, TasksQueryVariables>(TasksDocument, options);
+        }
+export type TasksQueryHookResult = ReturnType<typeof useTasksQuery>;
+export type TasksLazyQueryHookResult = ReturnType<typeof useTasksLazyQuery>;
+export type TasksQueryResult = Apollo.QueryResult<TasksQuery, TasksQueryVariables>;
+export const RunTaskDocument = gql`
+    mutation RunTask($id: ID!) {
+  runTask(id: $id) {
+    ...RegularTask
+  }
+}
+    ${RegularTaskFragmentDoc}`;
+export type RunTaskMutationFn = Apollo.MutationFunction<RunTaskMutation, RunTaskMutationVariables>;
+
+/**
+ * __useRunTaskMutation__
+ *
+ * To run a mutation, you first call `useRunTaskMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRunTaskMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [runTaskMutation, { data, loading, error }] = useRunTaskMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRunTaskMutation(baseOptions?: Apollo.MutationHookOptions<RunTaskMutation, RunTaskMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RunTaskMutation, RunTaskMutationVariables>(RunTaskDocument, options);
+      }
+export type RunTaskMutationHookResult = ReturnType<typeof useRunTaskMutation>;
+export type RunTaskMutationResult = Apollo.MutationResult<RunTaskMutation>;
+export type RunTaskMutationOptions = Apollo.BaseMutationOptions<RunTaskMutation, RunTaskMutationVariables>;

@@ -1,0 +1,19 @@
+query Tasks {
+  tasks {
+    ...RegularTask
+  }
+}
+
+mutation RunTask($id: ID!) {
+  runTask(id: $id) {
+    ...RegularTask
+  }
+}
+
+fragment RegularTask on Task {
+  id
+  name
+  description
+  running
+  nextRunAt
+}

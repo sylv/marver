@@ -69,6 +69,7 @@ export class LlamaCppService {
   }
 
   async embedding(input: string): Promise<Embedding> {
+    throw new Error('Timeout connecting to server');
     const response = await this.client.request({
       path: '/embedding',
       method: 'POST',

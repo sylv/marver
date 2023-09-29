@@ -1,29 +1,21 @@
-import { type MergedFrame, phashVideo } from '@marver/vidhash';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
-import { mkdir, rm, writeFile } from 'fs/promises';
-import ms from 'ms';
-import { join } from 'path';
-import sharp, { type OutputInfo } from 'sharp';
-import { rgbaToThumbHash } from 'thumbhash-node';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
-import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
 import { FileEntity } from '../file/entities/file.entity.js';
 import { ImageService } from '../image/image.service.js';
+import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
 import { MediaPosterEntity } from '../media/entities/media-poster.entity.js';
 import { MediaThumbnailEntity } from '../media/entities/media-thumbnail.entity.js';
 import { MediaTimelineEntity } from '../media/entities/media-timeline.entity.js';
-import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
 import { MediaEntity } from '../media/entities/media.entity.js';
+import { JobError } from '../queue/job.error.js';
+import { Queue } from '../queue/queue.decorator.js';
 import { SolomonService } from '../solomon/solomon.service.js';
-import { TaskChild } from '../tasks/task-child.decorator.js';
-import { Task, TaskParent } from '../tasks/task.decorator.js';
-import { TaskType } from '../tasks/task.enum.js';
 
 @Injectable()
-export class VideoTasks {
+export class VideoQueues {
   @InjectRepository(MediaEntity) private mediaRepo: EntityRepository<MediaEntity>;
   @InjectRepository(MediaEmbeddingEntity)
   private mediaEmbeddingRepo: EntityRepository<MediaEmbeddingEntity>;
@@ -40,8 +32,9 @@ export class VideoTasks {
     private em: EntityManager,
   ) {}
 
-  @Task(TaskType.CreateVideoMedia, {
-    concurrency: 4,
+  @Queue('CREATE_VIDEO_MEDIA', {
+    targetConcurrency: 4,
+    thirdPartyDependant: false,
     fileFilter: {
       media: null,
       extension: {
@@ -86,13 +79,13 @@ export class VideoTasks {
     }
 
     if (!hasStream) {
-      throw new CorruptedFileError(file.path);
+      throw new JobError('No video or audio streams found', { corruptFile: true });
     }
 
     await this.em.persistAndFlush(metadata);
   }
 
-  // @TaskParent(TaskType.VideoExtractScreenshots, {
+  // @QueueParent(TaskType.VideoExtractScreenshots, {
   //   concurrency: 3,
   //   fileFilter: {
   //     media: {
@@ -137,7 +130,7 @@ export class VideoTasks {
   //   };
   // }
 
-  // @TaskChild(TaskType.VideoGenerateClipVector, {
+  // @QueueChild(TaskType.VideoGenerateClipVector, {
   //   parentType: TaskType.VideoExtractScreenshots,
   //   concurrency: 1,
   //   filter: {
@@ -170,7 +163,7 @@ export class VideoTasks {
   //   await this.em.flush();
   // }
 
-  // @TaskChild(TaskType.VideoGenerateTimeline, {
+  // @QueueChild(TaskType.VideoGenerateTimeline, {
   //   parentType: TaskType.VideoExtractScreenshots,
   //   concurrency: 1,
   //   filter: {
@@ -244,7 +237,7 @@ export class VideoTasks {
   //   await this.em.persistAndFlush(timeline);
   // }
 
-  // @TaskChild(TaskType.VideoPickThumbnail, {
+  // @QueueChild(TaskType.VideoPickThumbnail, {
   //   parentType: TaskType.VideoExtractScreenshots,
   //   concurrency: 1,
   //   filter: {
@@ -284,7 +277,7 @@ export class VideoTasks {
   //   await this.em.persistAndFlush(thumbnail);
   // }
 
-  // @TaskChild(TaskType.VideoPickPoster, {
+  // @QueueChild(TaskType.VideoPickPoster, {
   //   parentType: TaskType.VideoExtractScreenshots,
   //   concurrency: 1,
   //   filter: {
@@ -344,7 +337,7 @@ export class VideoTasks {
   //   }
   // }
 
-  // @Task(TaskType.VideoGenerateThumbhash, {
+  // @Queue(TaskType.VideoGenerateThumbhash, {
   //   concurrency: 2,
   //   populate: ['media', 'media.poster'],
   //   fileFilter: {

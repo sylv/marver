@@ -3,6 +3,7 @@ import {
   Embedded,
   Entity,
   Formula,
+  Index,
   OneToMany,
   OneToOne,
   OptionalProps,
@@ -18,7 +19,7 @@ import { ulid } from 'ulid';
 import { config } from '../../../config.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';
 import { MediaEntity } from '../../media/entities/media.entity.js';
-import { TaskEntity } from '../../tasks/task.entity.js';
+import { JobStateEntity } from '../../queue/job-state.entity.js';
 import { FileInfoEmbeddable } from './file-info.embeddable.js';
 import { FileTagEntity } from './file-tag.entity.js';
 
@@ -57,8 +58,8 @@ export class FileEntity {
   @Field(() => MediaEntity, { nullable: true })
   media?: MediaEntity;
 
-  @OneToMany(() => TaskEntity, (task) => task.file)
-  tasks = new Collection<TaskEntity>(this);
+  @OneToMany(() => JobStateEntity, (task) => task.file)
+  tasks = new Collection<JobStateEntity>(this);
 
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
@@ -70,6 +71,7 @@ export class FileEntity {
 
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
+  @Index()
   get extension() {
     if (!this.path) return;
     return extname(this.path).slice(1) || null;

@@ -2,14 +2,18 @@ import type { FilterQuery } from '@mikro-orm/core';
 import { SetMetadata } from '@nestjs/common';
 import { recursive as mergeRecursive } from 'merge';
 import { type FileEntity } from '../file/entities/file.entity.js';
-import { type TaskType } from './task.enum.js';
 
-export const TASKS_KEY = Symbol('tasks');
-export type TasksKey = TaskOptions;
+export const QUEUE_KEY = Symbol('queue');
+export type QueueKeyValue = QueueOptions;
 
-export interface TaskOptions {
-  type: TaskType;
-  concurrency: number;
+export interface QueueOptions {
+  type: string;
+  targetConcurrency: number;
+  /**
+   * Whether this queue contacts external services.
+   * This has some minor effects, like starting with concurrency forced to 1 until the job succeeds to ensure the API is ready.
+   */
+  thirdPartyDependant: boolean;
   /** The filter that determines which files this task will run on. */
   fileFilter: FilterQuery<FileEntity>;
   /** The relations of the file to populate */
@@ -30,21 +34,21 @@ export interface TaskOptions {
   isParent?: boolean;
 }
 
-export const Task = (
-  type: TaskType,
-  options: Omit<TaskOptions, 'type' | 'isParent' | 'cleanupMethod'>,
+export const Queue = (
+  type: string,
+  options: Omit<QueueOptions, 'type' | 'isParent' | 'cleanupMethod'>,
 ) => {
   mergeRecursive(options.fileFilter, { info: { unavailable: false } });
-  return SetMetadata<symbol, TaskOptions>(TASKS_KEY, {
+  return SetMetadata<symbol, QueueOptions>(QUEUE_KEY, {
     ...options,
     type: type,
     isParent: false,
   });
 };
 
-export const TaskParent = (type: TaskType, options: Omit<TaskOptions, 'type' | 'isParent'>) => {
+export const ParentQueue = (type: string, options: Omit<QueueOptions, 'type' | 'isParent'>) => {
   mergeRecursive(options.fileFilter, { info: { unavailable: false } });
-  return SetMetadata<symbol, TaskOptions>(TASKS_KEY, {
+  return SetMetadata<symbol, QueueOptions>(QUEUE_KEY, {
     ...options,
     type: type,
     isParent: true,

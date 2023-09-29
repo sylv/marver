@@ -6,41 +6,41 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomInt } from 'crypto';
+import { stat } from 'fs/promises';
 import ms from 'ms';
 import PQueue from 'p-queue';
+import { setTimeout } from 'timers';
 import { setTimeout as sleep } from 'timers/promises';
 import { config } from '../../config.js';
-import { CorruptedFileError } from '../../errors/corrupted-file-error.js';
 import { FileEntity } from '../file/entities/file.entity.js';
-import { type TaskChildOptions } from './task-child.decorator.js';
-import { TASKS_KEY, type TaskOptions, type TasksKey } from './task.decorator.js';
-import { TaskEntity, TaskState } from './task.entity.js';
-import { TaskType } from './task.enum.js';
-import { setTimeout } from 'timers';
+import { isCorruptFileError, isNetworkError, isUnavailableFileError } from './error-utils.js';
+import { type QueueChildOptions } from './job-child.decorator.js';
+import { JobState, JobStateEntity } from './job-state.entity.js';
+import { QUEUE_KEY, type QueueKeyValue, type QueueOptions } from './queue.decorator.js';
 
 // todo: cleanupMethod is never used
-export interface LoadedTask {
+export interface LoadedQueue {
   method: (entity: FileEntity) => Promise<unknown>;
-  meta: TaskOptions;
-  children: LoadedChildTask[];
+  meta: QueueOptions;
+  children: LoadedChildQueue[];
   queue: PQueue;
-  queued: Set<string>;
+  queuedFileIds: Set<string>;
 }
 
-export interface LoadedChildTask {
+export interface LoadedChildQueue {
   method: (entity: FileEntity, parentResult: unknown) => Promise<void>;
-  meta: TaskChildOptions;
+  meta: QueueChildOptions;
   queue: PQueue;
-  queued: Set<string>;
+  queuedFileIds: Set<string>;
 }
 
 @Injectable()
-export class TaskService implements OnApplicationBootstrap {
-  @InjectRepository(TaskEntity) private taskRepo: EntityRepository<TaskEntity>;
+export class QueueService implements OnApplicationBootstrap {
+  @InjectRepository(JobStateEntity) private jobStateRepo: EntityRepository<JobStateEntity>;
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
 
-  private readonly taskHandlers = new Collection<TaskType, LoadedTask>();
-  private readonly log = new Logger(TaskService.name);
+  private readonly taskHandlers = new Collection<string, LoadedQueue>();
+  private readonly log = new Logger(QueueService.name);
   constructor(
     private discoveryService: DiscoveryService,
     private orm: MikroORM,
@@ -49,12 +49,14 @@ export class TaskService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     if (config.disable_tasks) return;
-    const methods = await this.discoveryService.providerMethodsWithMetaAtKey<TasksKey>(TASKS_KEY);
+    const methods =
+      await this.discoveryService.providerMethodsWithMetaAtKey<QueueKeyValue>(QUEUE_KEY);
     for (const method of methods) {
-      const withMethod: LoadedTask = {
+      const concurrency = method.meta.thirdPartyDependant ? 1 : method.meta.targetConcurrency;
+      const withMethod: LoadedQueue = {
         method: method.discoveredMethod.handler.bind(method.discoveredMethod.parentClass.instance),
-        queue: new PQueue({ concurrency: method.meta.concurrency }),
-        queued: new Set(),
+        queue: new PQueue({ concurrency: concurrency }),
+        queuedFileIds: new Set(),
         children: [],
         meta: method.meta,
       };
@@ -99,20 +101,16 @@ export class TaskService implements OnApplicationBootstrap {
     await this.cleanupTasks();
   }
 
-  private async scanForParentTasks(taskHandler: LoadedTask) {
+  private async scanForParentTasks(taskHandler: LoadedQueue) {
     // todo: clump tasks for the same file into the same time frame to avoid sporadic file reads
     // that will result in things like rclone caching to be more effective on slow network mounts,
     // because we'd read the same file 5 times in a row instead of over the course of a day.
     // it might even make sense to have a config option that operates on a single file at a time, waiting until
     // all tasks for that file are complete before moving to the next one. that could help in a lot of situations
-    const fetchCount = taskHandler.meta.concurrency * 4;
+    const fetchCount = taskHandler.meta.targetConcurrency * 4;
     await taskHandler.queue.onSizeLessThan(fetchCount / 2);
 
-    // todo: hash the @TaskHandler function and when it changes,
-    // retry failed tasks for that handler, even if they are over
-    // the retry count.
-
-    // todo: let @TaskHandlers have a "revision" property that is
+    // todo: let @QueueHandlers have a "revision" property that is
     // included on the result. if the task has run but errored out w/ max retries,
     // retry the task if the revision number has changed.
 
@@ -125,7 +123,7 @@ export class TaskService implements OnApplicationBootstrap {
           {
             // don't run a task if its already running/scheduled
             id: {
-              $nin: [...taskHandler.queued],
+              $nin: [...taskHandler.queuedFileIds],
             },
           },
           {
@@ -134,7 +132,7 @@ export class TaskService implements OnApplicationBootstrap {
             id: {
               // types are wrong, this totally works.
               // (until an update breaks it silently)
-              $nin: this.taskRepo
+              $nin: this.jobStateRepo
                 .createQueryBuilder()
                 .select('file_id')
                 .where({
@@ -155,11 +153,11 @@ export class TaskService implements OnApplicationBootstrap {
 
       const [files, filesTotal] = await this.fileRepo.findAndCount(query, {
         limit: fetchCount,
-        populate: taskHandler.meta.populate as any,
+        populate: ['tasks', ...((taskHandler.meta.populate ?? []) as any[])],
       });
 
       for (const file of files) {
-        taskHandler.queued.add(file.id);
+        taskHandler.queuedFileIds.add(file.id);
         void taskHandler.queue.add(() => this.runTask(taskHandler, file));
       }
 
@@ -169,7 +167,7 @@ export class TaskService implements OnApplicationBootstrap {
     if (!hasMore) {
       const sleepFor = randomInt(15000, 30000);
       this.log.debug(
-        `No more files to process for task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
+        `No more files to process for task ${taskHandler.meta.type}, sleeping for ${ms(
           sleepFor,
         )}...`,
       );
@@ -234,106 +232,121 @@ export class TaskService implements OnApplicationBootstrap {
   // }
 
   private async runTask(
-    taskHandler: LoadedTask | LoadedChildTask,
+    taskHandler: LoadedQueue | LoadedChildQueue,
     file: FileEntity,
     parentOutput?: unknown,
   ) {
-    const startedAt = new Date();
-    const start = performance.now();
-    this.log.debug(`Starting ${TaskType[taskHandler.meta.type]} on "${file.path}"...`);
-
     if (!file.path || !file.id) {
       throw new Error('File is not loaded correctly');
     }
 
-    try {
-      if ('children' in taskHandler) {
-        // handle running parent tasks, even though they may not have children
-        const result = await taskHandler.method(file);
-        const endedAt = new Date();
-        if (taskHandler.children[0] || taskHandler.meta.lockTask) {
-          const keepResult = !!taskHandler.children[0];
-          // if the task has children, we have to say we completed the task so they can run,
-          // especially if they have to access the return data.
-          const task = this.taskRepo.create({
-            file: file,
-            type: taskHandler.meta.type,
-            state: TaskState.Completed,
-            result: keepResult ? result : null,
-            startedAt: startedAt,
-            endedAt: endedAt,
-            retries: 0,
-          });
+    const start = performance.now();
+    this.log.debug(`Starting ${taskHandler.meta.type} on "${file.path}"...`);
 
-          // todo: if there are >100 task results for a task type, pause and wait for the
-          // children to catch up before doing more.
-          await this.em.persistAndFlush(task);
-        }
-      } else {
-        // handle running child tasks
-        if (!parentOutput) throw new Error('Parent output is required for child tasks');
-        await taskHandler.method(file, parentOutput);
+    let jobState = file.tasks.getItems().find((task) => task.type === taskHandler.meta.type);
+    if (!jobState) {
+      jobState = this.jobStateRepo.create(
+        {
+          file: file,
+          type: taskHandler.meta.type,
+          retries: 0,
+          executedAt: new Date(),
+        },
+        { persist: false },
+      );
+    } else {
+      jobState.retries++;
+    }
+
+    try {
+      const parentResult = 'children' in taskHandler ? null : parentOutput;
+      const result = await taskHandler.method(file, parentResult);
+      if (('children' in taskHandler && taskHandler.children[0]) || taskHandler.meta.lockTask) {
+        // we only have to store the result for tasks with children that depend on the output.
+        const keepResult = 'children' in taskHandler && !!taskHandler.children[0];
+
+        jobState.result = keepResult ? result : null;
+        jobState.state = JobState.Completed;
+        jobState.executedAt = new Date();
+
+        // todo: if there are >100 task results for a parent task type, pause and wait for the
+        // children to catch up before doing more.
+        await this.em.persistAndFlush(jobState);
+      }
+
+      if ('targetConcurrency' in taskHandler.meta) {
+        // the concurrency will be lowered at startup or after errors for some tasks,
+        // so we make sure to reset it after successful runs.
+        taskHandler.queue.concurrency = taskHandler.meta.targetConcurrency;
       }
 
       const duration = performance.now() - start;
       if (duration > 5000) {
+        const humanDuration = ms(duration);
         this.log.warn(
-          `Task ${TaskType[taskHandler.meta.type]} on "${file.path}" took ${ms(
-            duration,
-          )} to complete.`,
+          `Task ${taskHandler.meta.type} on "${file.path}" took ${humanDuration} to complete.`,
         );
       }
     } catch (error: any) {
-      const isCorrupted = error instanceof CorruptedFileError;
-      const isMissing =
-        ((error.code === 'ENOENT' || error.message.includes('No such file')) &&
-          // make sure the error is for our file and not eg some missing metadata
-          (error.path === file.path || error.message.includes(file.path))) ||
-        error.message === 'Invalid image format' ||
-        // todo: this one should be handled per task type because its based on
-        // support by external libraries, the file isnt actually corrupt.
-        error.message === 'Unsupported image type' ||
-        error.message === 'Exception calling application: unable to read file.' ||
-        error.message === 'Exception calling application: Image not found';
+      jobState.state = JobState.Failed;
 
-      if (isMissing || isCorrupted) {
-        // todo: this assumes entityId is the file id, which may not be true in the future.
-        // todo: having a file.createReadStream() method that automatically handles this
-        // might make a lot of sense, or else handling this everywhere is going to be a nightmare.
-        if (isCorrupted)
-          this.log.warn(`File ${file.id} (${file.path}) is corrupted, marking as such.`);
-        else
-          this.log.warn(
-            `File ${error.fileId} (${error.path}) no longer exists, marking as unavailable.`,
-          );
+      const isUnavailable = isUnavailableFileError(error);
+      const isNetwork = isNetworkError(error);
+      const isCorrupt = isCorruptFileError(error);
+      if (isUnavailable) {
+        // if the file exists on disk, its probably a task related error (eg, unsupported file type)
+        // so we mark this job as failed. if it does not exist, we mark as unavailable.
+        const exists = await stat(file.path).catch(() => false);
+        if (!exists) {
+          // todo: check if the source is unavailable entirely (ideally, detect the mount path and check that,
+          // but crawling up the path until we find a mount point that is mounted might not be awful) and if so,
+          // mark all files in that source as unavailable until it comes back. plex does something similar to gracefully handle
+          // unavailable network mounts or drives that are unplugged, etc.
+          file.info.unavailable = true;
+          await this.em.persistAndFlush(file);
+          return;
+        }
 
-        file.info.unavailable = true;
-        if (isCorrupted) file.info.corrupted = true;
-        await this.em.persistAndFlush(file);
+        // the job failed, so we just store that so it won't run again.
+        jobState.errorMessage = error.message;
+        await this.em.persistAndFlush(jobState);
+        return;
+      } else if (isCorrupt) {
+        file.info.corrupted = true;
+        jobState.errorMessage = `CORRUPT_FILE_ERROR: ${error.message}`;
+        await this.em.persistAndFlush([jobState, file]);
+        return;
+      } else if (isNetwork) {
+        // network errors are annoying, we have to pause the entire queue and wait a bit before we retry.
+        const sleepFor = randomInt(ms('1m'), ms('5m'));
 
+        jobState.errorMessage = `NETWORK_ERROR: ${error.message}`;
+        jobState.retryAfter = Date.now() + sleepFor;
+        await this.em.persistAndFlush([jobState, file]);
+
+        if (taskHandler.queue.isPaused) return;
+
+        taskHandler.queue.pause();
+        taskHandler.queue.concurrency = 1;
+
+        const sleepForHuman = ms(sleepFor);
+        this.log.warn(
+          `Task ${taskHandler.meta.type} on "${file.path}" errored with a network error, sleeping for ${sleepForHuman} then retrying...`,
+        );
+
+        setTimeout(() => {
+          taskHandler.queue.start();
+        }, sleepFor).unref();
         return;
       }
 
-      const endedAt = new Date();
-      const task = this.taskRepo.create({
-        file: file,
-        type: taskHandler.meta.type,
-        state: TaskState.Failed,
-        errorMessage: error.message,
-        result: null,
-        startedAt: startedAt,
-        endedAt: endedAt,
-        retries: 0,
-      });
-
-      await this.em.persistAndFlush(task);
       throw error;
     } finally {
-      taskHandler.queued.delete(file.id);
+      taskHandler.queuedFileIds.delete(file.id);
     }
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_MINUTE, { name: 'Cleanup old task data' })
   @UseRequestContext()
   protected async cleanupTasks() {
     // find all task entities that have no children wanting to run and delete them
@@ -342,7 +355,7 @@ export class TaskService implements OnApplicationBootstrap {
     const filter = {
       $or: tasksWithChildren.map((task) => ({
         type: task.meta.type,
-        state: TaskState.Completed,
+        state: JobState.Completed,
         $not: {
           file: {
             $or: task.children.map((child) => child.meta.filter),
@@ -352,7 +365,7 @@ export class TaskService implements OnApplicationBootstrap {
     };
 
     console.dir(filter, { depth: null });
-    const tasks = await this.taskRepo.find(filter);
+    const tasks = await this.jobStateRepo.find(filter);
     console.log({ tasks });
   }
 }
