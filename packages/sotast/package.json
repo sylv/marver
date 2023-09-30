@@ -14,7 +14,7 @@
     "@golevelup/nestjs-discovery": "^4.0.0",
     "@grpc/grpc-js": "^1.9.3",
     "@hapi/accept": "^6.0.2",
-    "@marver/vidhash": "workspace:^",
+    "@marver/ephyra": "workspace:^",
     "@mercuriusjs/gateway": "^2.0.0",
     "@mikro-orm/better-sqlite": "^5.8.2",
     "@mikro-orm/core": "^5.8.2",

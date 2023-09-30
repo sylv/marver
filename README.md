@@ -19,7 +19,7 @@ once marver is ready for deployment all these will be shipped in a single docker
 - [sotast](./packages/sotast/) - the backend that does most of what you see (typescript, nestjs)
 - [solomon](./packages/solomon/) - machine learning grpc microservice (python)
 - [squtil](./packages/squtil/) - sqlite extension that provides vector search and other utilities (rust)
-- [vidhash](./packages/vidhash/) - utilities for perceptual hashing of images and videos. (rust, ffmpeg. will give you nightmares.)
+- [native](./packages/native/) - native utilities written in rust for performance
 
 ## features
 
@@ -136,3 +136,6 @@ once marver is ready for deployment all these will be shipped in a single docker
   - iOS would will be hard
   - Would be totally cool though
   - This would make more sense once marver gets file upload capabilities
+- Fine-tune CLIP to better handle the images it is likely to encounter
+- Allow `+` and `-` in queries, for example `apple -device` would search for apples, not apple devices.
+- Completion service should have a way to wait before running highly similar metadata extraction requests. That way you can verify the first is accurate before it does 1,000+ more.

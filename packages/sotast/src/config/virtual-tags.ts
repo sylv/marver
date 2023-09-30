@@ -1,7 +1,7 @@
+import { type ObjectQuery } from '@mikro-orm/core';
 import bytes from 'bytes';
 import { type FileEntity } from '../modules/file/entities/file.entity.js';
 import { TagColorPresets } from '../modules/file/entities/tag.entity.js';
-import { type FilterQuery } from '@mikro-orm/core';
 
 export interface VirtualTag {
   name: string;
@@ -9,7 +9,7 @@ export interface VirtualTag {
   color?: TagColorPresets;
   check: (file: FileEntity) => boolean;
   set?: (file: FileEntity) => void;
-  filter: FilterQuery<FileEntity>;
+  filter: ObjectQuery<FileEntity>;
 }
 
 export const VIRTUAL_TAGS: VirtualTag[] = [

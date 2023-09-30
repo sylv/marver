@@ -1,4 +1,4 @@
-query GetMediaList($search: String, $after: String) {
+query MediaList($search: String, $after: String) {
   mediaList(search: $search, after: $after, first: 50) {
     totalCount
     pageInfo {
@@ -21,6 +21,7 @@ query GetMediaList($search: String, $after: String) {
 }
 
 fragment MinimalMedia on Media {
+  id
   previewBase64
   thumbnailUrl
   height

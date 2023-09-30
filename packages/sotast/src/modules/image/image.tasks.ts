@@ -6,7 +6,6 @@ import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
 import { FileEntity } from '../file/entities/file.entity.js';
-import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
 import { MediaTextEntity, MediaTextType } from '../media/entities/media-text.entity.js';
 import { Queue } from '../queue/queue.decorator.js';
 import { SolomonService } from '../solomon/solomon.service.js';
@@ -14,8 +13,6 @@ import { ImageService } from './image.service.js';
 
 @Injectable()
 export class ImageTasks {
-  @InjectRepository(MediaEmbeddingEntity)
-  private mediaEmbeddingRepo: EntityRepository<MediaEmbeddingEntity>;
   @InjectRepository(MediaTextEntity) private mediaTextRepo: EntityRepository<MediaTextEntity>;
 
   constructor(
@@ -76,9 +73,7 @@ export class ImageTasks {
     fileFilter: {
       media: {
         height: { $ne: null },
-        vectors: {
-          $exists: false,
-        },
+        embedding: null,
       },
       extension: {
         $in: [...IMAGE_EXTENSIONS],
@@ -88,18 +83,14 @@ export class ImageTasks {
       },
     },
   })
-  async generateClipVectors(file: FileEntity) {
+  async generateClipEmbeddings(file: FileEntity) {
     const media = file.media!;
     // todo: handle solomon being offline, if we throw an error
     // here the task will be retried at a later point which means
     // a delay when the service is probably just restarting or updating.
-    const vector = await this.solomonService.getFileVector(media.file);
-    const mediaVec = this.mediaEmbeddingRepo.create({
-      media: file.media!,
-      data: embeddingToBuffer(vector),
-    });
-
-    await this.em.persistAndFlush(mediaVec);
+    const embedding = await this.solomonService.getFileEmbedding(media.file);
+    media.embedding = embeddingToBuffer(embedding);
+    await this.em.persistAndFlush(media);
   }
 
   @Queue('IMAGE_EXTRACT_TEXT', {

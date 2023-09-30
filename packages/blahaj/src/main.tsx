@@ -14,7 +14,7 @@ const client = new ApolloClient({
       Query: {
         fields: {
           files: relayStylePagination(),
-          mediaList: relayStylePagination(),
+          mediaList: relayStylePagination(['search']),
         },
       },
       Media: {

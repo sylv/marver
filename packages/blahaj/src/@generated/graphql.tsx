@@ -155,6 +155,7 @@ export type Media = {
   /** Whether text coudl be found in the image or video */
   hasText?: Maybe<Scalars['Boolean']['output']>;
   height?: Maybe<Scalars['Float']['output']>;
+  id?: Maybe<Scalars['ID']['output']>;
   isAnimated?: Maybe<Scalars['Boolean']['output']>;
   /** Whether no subtitles could be generated from the audio on this video */
   nonVerbal?: Maybe<Scalars['Boolean']['output']>;
@@ -372,7 +373,7 @@ export type Task = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  nextRunAt: Scalars['DateTime']['output'];
+  nextRunAt: Scalars['Float']['output'];
   running?: Maybe<Scalars['Boolean']['output']>;
 };
 
@@ -399,15 +400,15 @@ export type RejectCompletionMutationVariables = Exact<{
 
 export type RejectCompletionMutation = { __typename?: 'Mutation', rejectCompletion: { __typename?: 'Completion', id: string, type: string, result?: any | null, data: any, state: CompletionState, alwaysInclude: boolean, examplesSimilarity?: number | null, examples: Array<{ __typename?: 'CompletionExample', similarity: number, example: { __typename?: 'Completion', id: string, data: any, result?: any | null } }> } };
 
-export type GetMediaListQueryVariables = Exact<{
+export type MediaListQueryVariables = Exact<{
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetMediaListQuery = { __typename?: 'Query', mediaList: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', diskCreatedAt: any, size: number, sizeFormatted: string } } } }> } };
+export type MediaListQuery = { __typename?: 'Query', mediaList: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', diskCreatedAt: any, size: number, sizeFormatted: string } } } }> } };
 
-export type MinimalMediaFragment = { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } };
+export type MinimalMediaFragment = { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } };
 
 export type GetMediaQueryVariables = Exact<{
   fileId: Scalars['String']['input'];
@@ -415,21 +416,21 @@ export type GetMediaQueryVariables = Exact<{
 }>;
 
 
-export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number }, person?: { __typename?: 'Person', id: string, name: string } | null }>, texts: Array<{ __typename?: 'MediaText', id: string, text: string, code?: string | null, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }>, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } } }> } } | null };
+export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number }, person?: { __typename?: 'Person', id: string, name: string } | null }>, texts: Array<{ __typename?: 'MediaText', id: string, text: string, code?: string | null, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }>, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } } }> } } | null };
 
 export type TasksQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type TasksQuery = { __typename?: 'Query', tasks: Array<{ __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: any }> };
+export type TasksQuery = { __typename?: 'Query', tasks: Array<{ __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: number }> };
 
 export type RunTaskMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type RunTaskMutation = { __typename?: 'Mutation', runTask: { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: any } };
+export type RunTaskMutation = { __typename?: 'Mutation', runTask: { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: number } };
 
-export type RegularTaskFragment = { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: any };
+export type RegularTaskFragment = { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: number };
 
 export const RegularCompletionFragmentDoc = gql`
     fragment RegularCompletion on Completion {
@@ -452,6 +453,7 @@ export const RegularCompletionFragmentDoc = gql`
     `;
 export const MinimalMediaFragmentDoc = gql`
     fragment MinimalMedia on Media {
+  id
   previewBase64
   thumbnailUrl
   height
@@ -586,8 +588,8 @@ export function useRejectCompletionMutation(baseOptions?: Apollo.MutationHookOpt
 export type RejectCompletionMutationHookResult = ReturnType<typeof useRejectCompletionMutation>;
 export type RejectCompletionMutationResult = Apollo.MutationResult<RejectCompletionMutation>;
 export type RejectCompletionMutationOptions = Apollo.BaseMutationOptions<RejectCompletionMutation, RejectCompletionMutationVariables>;
-export const GetMediaListDocument = gql`
-    query GetMediaList($search: String, $after: String) {
+export const MediaListDocument = gql`
+    query MediaList($search: String, $after: String) {
   mediaList(search: $search, after: $after, first: 50) {
     totalCount
     pageInfo {
@@ -611,33 +613,33 @@ export const GetMediaListDocument = gql`
     ${MinimalMediaFragmentDoc}`;
 
 /**
- * __useGetMediaListQuery__
+ * __useMediaListQuery__
  *
- * To run a query within a React component, call `useGetMediaListQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetMediaListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useMediaListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMediaListQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetMediaListQuery({
+ * const { data, loading, error } = useMediaListQuery({
  *   variables: {
  *      search: // value for 'search'
  *      after: // value for 'after'
  *   },
  * });
  */
-export function useGetMediaListQuery(baseOptions?: Apollo.QueryHookOptions<GetMediaListQuery, GetMediaListQueryVariables>) {
+export function useMediaListQuery(baseOptions?: Apollo.QueryHookOptions<MediaListQuery, MediaListQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetMediaListQuery, GetMediaListQueryVariables>(GetMediaListDocument, options);
+        return Apollo.useQuery<MediaListQuery, MediaListQueryVariables>(MediaListDocument, options);
       }
-export function useGetMediaListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetMediaListQuery, GetMediaListQueryVariables>) {
+export function useMediaListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MediaListQuery, MediaListQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetMediaListQuery, GetMediaListQueryVariables>(GetMediaListDocument, options);
+          return Apollo.useLazyQuery<MediaListQuery, MediaListQueryVariables>(MediaListDocument, options);
         }
-export type GetMediaListQueryHookResult = ReturnType<typeof useGetMediaListQuery>;
-export type GetMediaListLazyQueryHookResult = ReturnType<typeof useGetMediaListLazyQuery>;
-export type GetMediaListQueryResult = Apollo.QueryResult<GetMediaListQuery, GetMediaListQueryVariables>;
+export type MediaListQueryHookResult = ReturnType<typeof useMediaListQuery>;
+export type MediaListLazyQueryHookResult = ReturnType<typeof useMediaListLazyQuery>;
+export type MediaListQueryResult = Apollo.QueryResult<MediaListQuery, MediaListQueryVariables>;
 export const GetMediaDocument = gql`
     query GetMedia($fileId: String!, $filter: SimilarityType) {
   media(id: $fileId) {

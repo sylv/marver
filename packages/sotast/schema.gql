@@ -205,6 +205,7 @@ type Media {
   previewBase64: String
   similar(after: String, first: Float, before: String, last: Float, offset: Float, type: SimilarityType): MediaConnection!
   thumbnailUrl: String
+  id: ID
 }
 
 enum SimilarityType {

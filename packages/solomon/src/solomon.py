@@ -47,7 +47,7 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
 
         print("Loading OCR model")
         model = ocr_predictor(det_arch='db_resnet50',
-                              reco_arch='crnn_vgg16_bn', pretrained=True)
+                              reco_arch='crnn_mobilenet_v3_small', pretrained=True)
         print("OCR model loaded")
 
         return model, DocumentFile
@@ -85,9 +85,6 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
     def DetectFaces(self, request, context):
         image_path = request.file_path
         image = cv2.imread(image_path)
-        if image is None:
-            raise Exception("Image not found")
-
         faces = self.face_model.get(image)
         filtered = []
         for face in faces:
@@ -105,6 +102,16 @@ class SolomonService(solomon_pb2_grpc.SolomonServiceServicer):
             })
 
         return solomon_pb2.DetectFacesResponse(faces=filtered)
+    
+    def MergeEmbeddings(self, request, context):
+        embeddings = request.embeddings
+        merged = []
+        for embedding in embeddings:
+            merged.append(embedding.value)
+        merged = torch.tensor(merged).mean(dim=0).tolist()
+        return solomon_pb2.MergeEmbeddingsResponse(embedding={
+            "value": merged,
+        })
 
     def GetOCR(self, request, context):
         model, DocumentFile = self.ocr_model

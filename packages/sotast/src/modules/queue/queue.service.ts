@@ -1,10 +1,9 @@
 import { Collection } from '@discordjs/collection';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { MikroORM, RequestContext, UseRequestContext, type FilterQuery } from '@mikro-orm/core';
+import { MikroORM, RequestContext, type ObjectQuery } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomInt } from 'crypto';
 import { stat } from 'fs/promises';
 import ms from 'ms';
@@ -14,24 +13,17 @@ import { setTimeout as sleep } from 'timers/promises';
 import { config } from '../../config.js';
 import { FileEntity } from '../file/entities/file.entity.js';
 import { isCorruptFileError, isNetworkError, isUnavailableFileError } from './error-utils.js';
-import { type QueueChildOptions } from './job-child.decorator.js';
 import { JobState, JobStateEntity } from './job-state.entity.js';
 import { QUEUE_KEY, type QueueKeyValue, type QueueOptions } from './queue.decorator.js';
 
 // todo: cleanupMethod is never used
 export interface LoadedQueue {
-  method: (entity: FileEntity) => Promise<unknown>;
+  method: (entity: FileEntity, parentOutput?: unknown) => Promise<unknown>;
   meta: QueueOptions;
-  children: LoadedChildQueue[];
-  queue: PQueue;
-  queuedFileIds: Set<string>;
-}
-
-export interface LoadedChildQueue {
-  method: (entity: FileEntity, parentResult: unknown) => Promise<void>;
-  meta: QueueChildOptions;
-  queue: PQueue;
-  queuedFileIds: Set<string>;
+  limiter: PQueue;
+  pendingFileIds: Set<string>;
+  parent?: LoadedQueue;
+  children?: LoadedQueue[];
 }
 
 @Injectable()
@@ -39,7 +31,7 @@ export class QueueService implements OnApplicationBootstrap {
   @InjectRepository(JobStateEntity) private jobStateRepo: EntityRepository<JobStateEntity>;
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
 
-  private readonly taskHandlers = new Collection<string, LoadedQueue>();
+  private readonly queues = new Collection<string, LoadedQueue>();
   private readonly log = new Logger(QueueService.name);
   constructor(
     private discoveryService: DiscoveryService,
@@ -51,92 +43,76 @@ export class QueueService implements OnApplicationBootstrap {
     if (config.disable_tasks) return;
     const methods =
       await this.discoveryService.providerMethodsWithMetaAtKey<QueueKeyValue>(QUEUE_KEY);
+
+    // sort by parents first
+    methods.sort((a, b) => {
+      if (a.meta.parentType && !b.meta.parentType) return 1;
+      if (!a.meta.parentType && b.meta.parentType) return -1;
+      return 0;
+    });
+
     for (const method of methods) {
       const concurrency = method.meta.thirdPartyDependant ? 1 : method.meta.targetConcurrency;
       const withMethod: LoadedQueue = {
         method: method.discoveredMethod.handler.bind(method.discoveredMethod.parentClass.instance),
-        queue: new PQueue({ concurrency: concurrency }),
-        queuedFileIds: new Set(),
-        children: [],
+        limiter: new PQueue({ concurrency: concurrency }),
+        pendingFileIds: new Set(),
         meta: method.meta,
       };
 
-      this.taskHandlers.set(withMethod.meta.type, withMethod);
+      if (method.meta.parentType) {
+        const parent = this.queues.get(method.meta.parentType);
+        if (!parent) {
+          throw new Error(
+            `Parent queue "${method.meta.parentType}" not found for "${method.meta.type}"`,
+          );
+        }
 
-      const scanDelay = config.is_development ? 500 : 5000;
-      setTimeout(() => {
-        void this.scanForParentTasks(withMethod);
-      }, scanDelay);
+        if (!parent.children) parent.children = [];
+        parent.children.push(withMethod);
+        withMethod.parent = parent;
+      }
+
+      this.queues.set(withMethod.meta.type, withMethod);
     }
 
-    // const children = await this.discoveryService.providerMethodsWithMetaAtKey<TaskChildKey>(TASK_CHILD_KEY);
-    // for (const child of children) {
-    //   if (child.meta.parentType === undefined) {
-    //     throw new Error(`Task ${TaskType[child.meta.type]} is a child task but has no parentType`);
-    //   }
-
-    //   const parent = this.taskHandlers.get(child.meta.parentType);
-    //   if (!parent) {
-    //     throw new Error(
-    //       `Task ${TaskType[child.meta.type]} has parentType ${
-    //         TaskType[child.meta.parentType]
-    //       } but no parent task`,
-    //     );
-    //   }
-
-    //   const withMethod: LoadedChildTask = {
-    //     method: child.discoveredMethod.handler.bind(child.discoveredMethod.parentClass.instance),
-    //     queue: new PQueue({ concurrency: child.meta.concurrency }),
-    //     queued: new Set(),
-    //     meta: child.meta,
-    //   };
-
-    //   parent.children.push(withMethod);
-    //   // todo: re-enable
-    //   // process.nextTick(() => {
-    //   //   this.scanForChildTasks(withMethod);
-    //   // });
-    // }
-
-    await this.cleanupTasks();
+    for (const queueHandler of this.queues.values()) {
+      void this.scanQueue(queueHandler);
+    }
   }
 
-  private async scanForParentTasks(taskHandler: LoadedQueue) {
-    // todo: clump tasks for the same file into the same time frame to avoid sporadic file reads
+  private async scanQueue(queue: LoadedQueue) {
+    // todo: clump jobs for the same file into the same time frame to avoid sporadic file reads
     // that will result in things like rclone caching to be more effective on slow network mounts,
     // because we'd read the same file 5 times in a row instead of over the course of a day.
     // it might even make sense to have a config option that operates on a single file at a time, waiting until
-    // all tasks for that file are complete before moving to the next one. that could help in a lot of situations
-    const fetchCount = taskHandler.meta.targetConcurrency * 4;
-    await taskHandler.queue.onSizeLessThan(fetchCount / 2);
+    // all jobs for that file are complete before moving to the next one. that could help in a lot of situations
+    const fetchCount = queue.meta.targetConcurrency * 4;
+    await queue.limiter.onSizeLessThan(fetchCount / 2);
 
     // todo: let @QueueHandlers have a "revision" property that is
-    // included on the result. if the task has run but errored out w/ max retries,
-    // retry the task if the revision number has changed.
+    // included on the result. if the job has run but errored out w/ max retries,
+    // retry the job if the revision number has changed.
 
     let hasMore = null;
     const em = this.orm.em.fork();
     await RequestContext.createAsync(em, async () => {
-      const query: FilterQuery<FileEntity> = {
+      const query: ObjectQuery<FileEntity> = {
         $and: [
-          taskHandler.meta.fileFilter,
           {
-            // don't run a task if its already running/scheduled
+            // don't run a job if its already running/scheduled
             id: {
-              $nin: [...taskHandler.queuedFileIds],
+              $nin: [...queue.pendingFileIds],
             },
           },
           {
-            // don't run a task if it has already run for that file
-            // (for parent tasks, or for tasks with lockTask enabled)
+            // don't run a job if it has already run for that file
             id: {
-              // types are wrong, this totally works.
-              // (until an update breaks it silently)
               $nin: this.jobStateRepo
                 .createQueryBuilder()
                 .select('file_id')
                 .where({
-                  type: taskHandler.meta.type,
+                  type: queue.meta.type,
                 })
                 .getKnexQuery() as any,
             },
@@ -144,21 +120,69 @@ export class QueueService implements OnApplicationBootstrap {
         ],
       };
 
-      if (taskHandler.children[0]) {
-        // only run the parent task if one of the children wants to run
+      if (queue.meta.fileFilter) {
+        // don't run if the file filter doesn't match
+        query.$and!.push(queue.meta.fileFilter);
+      }
+
+      // todo: if there are >100 job results for a queue type, pause and wait for the
+      // children to catch up before doing more.
+
+      // todo: we should only run the parent if the children want to run on that file.
+      if (queue.parent) {
+        // only run if the parent has run successfully
         query.$and!.push({
-          $or: taskHandler.children.map((child) => child.meta.filter),
+          id: {
+            $in: this.jobStateRepo
+              .createQueryBuilder()
+              .select('file_id')
+              .where({
+                type: queue.parent.meta.type,
+                state: JobState.Completed,
+                result: { $ne: null },
+              })
+              .getKnexQuery() as any,
+          },
         });
       }
 
       const [files, filesTotal] = await this.fileRepo.findAndCount(query, {
         limit: fetchCount,
-        populate: ['tasks', ...((taskHandler.meta.populate ?? []) as any[])],
+        populate: ['jobStates', ...((queue.meta.populate ?? []) as any[])],
+        orderBy: { info: { size: 'ASC' } },
+        populateWhere: {
+          // only load the job state for this queue type and the parent (so we can get the job data)
+          jobStates: {
+            type: {
+              $in: queue.parent ? [queue.meta.type, queue.parent.meta.type] : [queue.meta.type],
+            },
+          },
+        },
       });
 
       for (const file of files) {
-        taskHandler.queuedFileIds.add(file.id);
-        void taskHandler.queue.add(() => this.runTask(taskHandler, file));
+        queue.pendingFileIds.add(file.id);
+        if (queue.parent) {
+          const parentJobState = file.jobStates.getItems().find((jobState) => {
+            return jobState.type === queue.parent!.meta.type;
+          });
+
+          if (!parentJobState) {
+            throw new Error(
+              `Parent queue "${queue.parent.meta.type}" not found for "${queue.meta.type}"`,
+            );
+          }
+
+          if (!parentJobState.result) {
+            throw new Error(
+              `Parent queue "${queue.parent.meta.type}" has no result for "${queue.meta.type}"`,
+            );
+          }
+
+          void queue.limiter.add(() => this.runJob(queue, file, parentJobState.result));
+        } else {
+          void queue.limiter.add(() => this.runJob(queue, file));
+        }
       }
 
       hasMore = filesTotal > files.length;
@@ -167,88 +191,33 @@ export class QueueService implements OnApplicationBootstrap {
     if (!hasMore) {
       const sleepFor = randomInt(15000, 30000);
       this.log.debug(
-        `No more files to process for task ${taskHandler.meta.type}, sleeping for ${ms(
-          sleepFor,
-        )}...`,
+        `No more files to process for queue ${queue.meta.type}, sleeping for ${ms(sleepFor)}...`,
       );
       await sleep(sleepFor);
     }
 
     process.nextTick(() => {
-      void this.scanForParentTasks(taskHandler);
+      void this.scanQueue(queue);
     });
   }
 
-  // private async scanForChildTasks(taskHandler: LoadedChildTask) {
-  //   const fetchCount = taskHandler.meta.concurrency * 4;
-  //   await taskHandler.queue.onSizeLessThan(fetchCount / 2);
-
-  //   let hasMore = null;
-  //   const em = this.orm.em.fork();
-  //   await RequestContext.createAsync(em, async () => {
-  //     const [tasks, tasksTotal] = await this.taskRepo.findAndCount(
-  //       {
-  //         state: TaskState.Completed,
-  //         type: taskHandler.meta.parentType,
-  //         file: {
-  //           $and: [
-  //             taskHandler.meta.filter,
-  //             {
-  //               id: {
-  //                 $nin: [...taskHandler.queued],
-  //               },
-  //             },
-  //           ],
-  //         },
-  //       },
-  //       {
-  //         limit: fetchCount,
-  //         populate: [
-  //           'file',
-  //           ...((taskHandler.meta.populate?.map((field) => `file.${String(field)}`) as any[]) || []),
-  //         ],
-  //       }
-  //     );
-
-  //     for (const task of tasks) {
-  //       const file = task.file.getEntity();
-  //       taskHandler.queued.add(task.file.id);
-  //       taskHandler.queue.add(() => this.runTask(taskHandler, file, task.result));
-  //     }
-  //     hasMore = tasksTotal > tasks.length;
-  //   });
-
-  //   if (!hasMore) {
-  //     const sleepFor = randomInt(15000, 30000);
-  //     this.log.debug(
-  //       `No more files to process for child task ${TaskType[taskHandler.meta.type]}, sleeping for ${ms(
-  //         sleepFor
-  //       )}...`
-  //     );
-  //     await sleep(sleepFor);
-  //   }
-
-  //   this.scanForChildTasks(taskHandler);
-  // }
-
-  private async runTask(
-    taskHandler: LoadedQueue | LoadedChildQueue,
-    file: FileEntity,
-    parentOutput?: unknown,
-  ) {
+  private async runJob(queueHandler: LoadedQueue, file: FileEntity, parentOutput?: unknown) {
     if (!file.path || !file.id) {
       throw new Error('File is not loaded correctly');
     }
 
     const start = performance.now();
-    this.log.debug(`Starting ${taskHandler.meta.type} on "${file.path}"...`);
+    this.log.debug(`Starting ${queueHandler.meta.type} on "${file.path}"...`);
 
-    let jobState = file.tasks.getItems().find((task) => task.type === taskHandler.meta.type);
+    let jobState = file.jobStates
+      .getItems()
+      .find((jobState) => jobState.type === queueHandler.meta.type);
+
     if (!jobState) {
       jobState = this.jobStateRepo.create(
         {
           file: file,
-          type: taskHandler.meta.type,
+          type: queueHandler.meta.type,
           retries: 0,
           executedAt: new Date(),
         },
@@ -259,32 +228,25 @@ export class QueueService implements OnApplicationBootstrap {
     }
 
     try {
-      const parentResult = 'children' in taskHandler ? null : parentOutput;
-      const result = await taskHandler.method(file, parentResult);
-      if (('children' in taskHandler && taskHandler.children[0]) || taskHandler.meta.lockTask) {
-        // we only have to store the result for tasks with children that depend on the output.
-        const keepResult = 'children' in taskHandler && !!taskHandler.children[0];
+      const result = await queueHandler.method(file, parentOutput);
+      const keepResult = !!queueHandler.children; // only parent queues need to store their result for children to consume
 
-        jobState.result = keepResult ? result : null;
-        jobState.state = JobState.Completed;
-        jobState.executedAt = new Date();
+      jobState.result = keepResult ? result : null;
+      jobState.state = JobState.Completed;
+      jobState.executedAt = new Date();
 
-        // todo: if there are >100 task results for a parent task type, pause and wait for the
-        // children to catch up before doing more.
-        await this.em.persistAndFlush(jobState);
-      }
+      await this.em.persistAndFlush(jobState);
 
-      if ('targetConcurrency' in taskHandler.meta) {
-        // the concurrency will be lowered at startup or after errors for some tasks,
-        // so we make sure to reset it after successful runs.
-        taskHandler.queue.concurrency = taskHandler.meta.targetConcurrency;
-      }
+      // the concurrency can be lowered during errors, or at startup as a warm-up period.
+      // we want to make sure a successful job will restore the concurrency to the target.
+      queueHandler.limiter.concurrency = queueHandler.meta.targetConcurrency;
 
+      // help diagnose slow jobs
       const duration = performance.now() - start;
       if (duration > 5000) {
         const humanDuration = ms(duration);
         this.log.warn(
-          `Task ${taskHandler.meta.type} on "${file.path}" took ${humanDuration} to complete.`,
+          `Job ${queueHandler.meta.type} on "${file.path}" took ${humanDuration} to complete.`,
         );
       }
     } catch (error: any) {
@@ -294,7 +256,7 @@ export class QueueService implements OnApplicationBootstrap {
       const isNetwork = isNetworkError(error);
       const isCorrupt = isCorruptFileError(error);
       if (isUnavailable) {
-        // if the file exists on disk, its probably a task related error (eg, unsupported file type)
+        // if the file exists on disk, its probably a queue related error (eg, unsupported file type)
         // so we mark this job as failed. if it does not exist, we mark as unavailable.
         const exists = await stat(file.path).catch(() => false);
         if (!exists) {
@@ -324,48 +286,27 @@ export class QueueService implements OnApplicationBootstrap {
         jobState.retryAfter = Date.now() + sleepFor;
         await this.em.persistAndFlush([jobState, file]);
 
-        if (taskHandler.queue.isPaused) return;
+        if (queueHandler.limiter.isPaused) return;
 
-        taskHandler.queue.pause();
-        taskHandler.queue.concurrency = 1;
+        queueHandler.limiter.pause();
+        queueHandler.limiter.concurrency = 1;
 
         const sleepForHuman = ms(sleepFor);
-        this.log.warn(
-          `Task ${taskHandler.meta.type} on "${file.path}" errored with a network error, sleeping for ${sleepForHuman} then retrying...`,
+        this.log.error(
+          `Job ${queueHandler.meta.type} on "${file.path}" errored with a network error, sleeping for ${sleepForHuman} then retrying...`,
         );
 
         setTimeout(() => {
-          taskHandler.queue.start();
+          queueHandler.limiter.start();
         }, sleepFor).unref();
         return;
+      } else {
+        this.log.error(error, error.stack);
+        jobState.errorMessage = error.message;
+        await this.em.persistAndFlush(jobState);
       }
-
-      throw error;
     } finally {
-      taskHandler.queuedFileIds.delete(file.id);
+      queueHandler.pendingFileIds.delete(file.id);
     }
-  }
-
-  @Cron(CronExpression.EVERY_MINUTE, { name: 'Cleanup old task data' })
-  @UseRequestContext()
-  protected async cleanupTasks() {
-    // find all task entities that have no children wanting to run and delete them
-    const tasksWithChildren = this.taskHandlers.filter((task) => task.children[0]);
-    if (tasksWithChildren.size === 0) return;
-    const filter = {
-      $or: tasksWithChildren.map((task) => ({
-        type: task.meta.type,
-        state: JobState.Completed,
-        $not: {
-          file: {
-            $or: task.children.map((child) => child.meta.filter),
-          },
-        },
-      })),
-    };
-
-    console.dir(filter, { depth: null });
-    const tasks = await this.jobStateRepo.find(filter);
-    console.log({ tasks });
   }
 }

@@ -2,7 +2,7 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
-var require_vidhash = __commonJS({
+var require_ephyra = __commonJS({
   "index.js"(exports, module) {
     const { existsSync, readFileSync } = require("fs");
     const { join } = require("path");
@@ -27,24 +27,24 @@ var require_vidhash = __commonJS({
       case "android":
         switch (arch) {
           case "arm64":
-            localFileExisted = existsSync(join(__dirname, "vidhash.android-arm64.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.android-arm64.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.android-arm64.node");
+                nativeBinding = require("./ephyra.android-arm64.node");
               } else {
-                nativeBinding = require("@marver/vidhash-android-arm64");
+                nativeBinding = require("@marver/ephyra-android-arm64");
               }
             } catch (e) {
               loadError = e;
             }
             break;
           case "arm":
-            localFileExisted = existsSync(join(__dirname, "vidhash.android-arm-eabi.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.android-arm-eabi.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.android-arm-eabi.node");
+                nativeBinding = require("./ephyra.android-arm-eabi.node");
               } else {
-                nativeBinding = require("@marver/vidhash-android-arm-eabi");
+                nativeBinding = require("@marver/ephyra-android-arm-eabi");
               }
             } catch (e) {
               loadError = e;
@@ -57,36 +57,36 @@ var require_vidhash = __commonJS({
       case "win32":
         switch (arch) {
           case "x64":
-            localFileExisted = existsSync(join(__dirname, "vidhash.win32-x64-msvc.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.win32-x64-msvc.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.win32-x64-msvc.node");
+                nativeBinding = require("./ephyra.win32-x64-msvc.node");
               } else {
-                nativeBinding = require("@marver/vidhash-win32-x64-msvc");
+                nativeBinding = require("@marver/ephyra-win32-x64-msvc");
               }
             } catch (e) {
               loadError = e;
             }
             break;
           case "ia32":
-            localFileExisted = existsSync(join(__dirname, "vidhash.win32-ia32-msvc.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.win32-ia32-msvc.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.win32-ia32-msvc.node");
+                nativeBinding = require("./ephyra.win32-ia32-msvc.node");
               } else {
-                nativeBinding = require("@marver/vidhash-win32-ia32-msvc");
+                nativeBinding = require("@marver/ephyra-win32-ia32-msvc");
               }
             } catch (e) {
               loadError = e;
             }
             break;
           case "arm64":
-            localFileExisted = existsSync(join(__dirname, "vidhash.win32-arm64-msvc.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.win32-arm64-msvc.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.win32-arm64-msvc.node");
+                nativeBinding = require("./ephyra.win32-arm64-msvc.node");
               } else {
-                nativeBinding = require("@marver/vidhash-win32-arm64-msvc");
+                nativeBinding = require("@marver/ephyra-win32-arm64-msvc");
               }
             } catch (e) {
               loadError = e;
@@ -97,36 +97,36 @@ var require_vidhash = __commonJS({
         }
         break;
       case "darwin":
-        localFileExisted = existsSync(join(__dirname, "vidhash.darwin-universal.node"));
+        localFileExisted = existsSync(join(__dirname, "ephyra.darwin-universal.node"));
         try {
           if (localFileExisted) {
-            nativeBinding = require("./vidhash.darwin-universal.node");
+            nativeBinding = require("./ephyra.darwin-universal.node");
           } else {
-            nativeBinding = require("@marver/vidhash-darwin-universal");
+            nativeBinding = require("@marver/ephyra-darwin-universal");
           }
           break;
-        } catch (e) {
+        } catch {
         }
         switch (arch) {
           case "x64":
-            localFileExisted = existsSync(join(__dirname, "vidhash.darwin-x64.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.darwin-x64.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.darwin-x64.node");
+                nativeBinding = require("./ephyra.darwin-x64.node");
               } else {
-                nativeBinding = require("@marver/vidhash-darwin-x64");
+                nativeBinding = require("@marver/ephyra-darwin-x64");
               }
             } catch (e) {
               loadError = e;
             }
             break;
           case "arm64":
-            localFileExisted = existsSync(join(__dirname, "vidhash.darwin-arm64.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.darwin-arm64.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.darwin-arm64.node");
+                nativeBinding = require("./ephyra.darwin-arm64.node");
               } else {
-                nativeBinding = require("@marver/vidhash-darwin-arm64");
+                nativeBinding = require("@marver/ephyra-darwin-arm64");
               }
             } catch (e) {
               loadError = e;
@@ -140,12 +140,12 @@ var require_vidhash = __commonJS({
         if (arch !== "x64") {
           throw new Error(`Unsupported architecture on FreeBSD: ${arch}`);
         }
-        localFileExisted = existsSync(join(__dirname, "vidhash.freebsd-x64.node"));
+        localFileExisted = existsSync(join(__dirname, "ephyra.freebsd-x64.node"));
         try {
           if (localFileExisted) {
-            nativeBinding = require("./vidhash.freebsd-x64.node");
+            nativeBinding = require("./ephyra.freebsd-x64.node");
           } else {
-            nativeBinding = require("@marver/vidhash-freebsd-x64");
+            nativeBinding = require("@marver/ephyra-freebsd-x64");
           }
         } catch (e) {
           loadError = e;
@@ -155,23 +155,23 @@ var require_vidhash = __commonJS({
         switch (arch) {
           case "x64":
             if (isMusl()) {
-              localFileExisted = existsSync(join(__dirname, "vidhash.linux-x64-musl.node"));
+              localFileExisted = existsSync(join(__dirname, "ephyra.linux-x64-musl.node"));
               try {
                 if (localFileExisted) {
-                  nativeBinding = require("./vidhash.linux-x64-musl.node");
+                  nativeBinding = require("./ephyra.linux-x64-musl.node");
                 } else {
-                  nativeBinding = require("@marver/vidhash-linux-x64-musl");
+                  nativeBinding = require("@marver/ephyra-linux-x64-musl");
                 }
               } catch (e) {
                 loadError = e;
               }
             } else {
-              localFileExisted = existsSync(join(__dirname, "vidhash.linux-x64-gnu.node"));
+              localFileExisted = existsSync(join(__dirname, "ephyra.linux-x64-gnu.node"));
               try {
                 if (localFileExisted) {
-                  nativeBinding = require("./vidhash.linux-x64-gnu.node");
+                  nativeBinding = require("./ephyra.linux-x64-gnu.node");
                 } else {
-                  nativeBinding = require("@marver/vidhash-linux-x64-gnu");
+                  nativeBinding = require("@marver/ephyra-linux-x64-gnu");
                 }
               } catch (e) {
                 loadError = e;
@@ -180,23 +180,23 @@ var require_vidhash = __commonJS({
             break;
           case "arm64":
             if (isMusl()) {
-              localFileExisted = existsSync(join(__dirname, "vidhash.linux-arm64-musl.node"));
+              localFileExisted = existsSync(join(__dirname, "ephyra.linux-arm64-musl.node"));
               try {
                 if (localFileExisted) {
-                  nativeBinding = require("./vidhash.linux-arm64-musl.node");
+                  nativeBinding = require("./ephyra.linux-arm64-musl.node");
                 } else {
-                  nativeBinding = require("@marver/vidhash-linux-arm64-musl");
+                  nativeBinding = require("@marver/ephyra-linux-arm64-musl");
                 }
               } catch (e) {
                 loadError = e;
               }
             } else {
-              localFileExisted = existsSync(join(__dirname, "vidhash.linux-arm64-gnu.node"));
+              localFileExisted = existsSync(join(__dirname, "ephyra.linux-arm64-gnu.node"));
               try {
                 if (localFileExisted) {
-                  nativeBinding = require("./vidhash.linux-arm64-gnu.node");
+                  nativeBinding = require("./ephyra.linux-arm64-gnu.node");
                 } else {
-                  nativeBinding = require("@marver/vidhash-linux-arm64-gnu");
+                  nativeBinding = require("@marver/ephyra-linux-arm64-gnu");
                 }
               } catch (e) {
                 loadError = e;
@@ -204,12 +204,12 @@ var require_vidhash = __commonJS({
             }
             break;
           case "arm":
-            localFileExisted = existsSync(join(__dirname, "vidhash.linux-arm-gnueabihf.node"));
+            localFileExisted = existsSync(join(__dirname, "ephyra.linux-arm-gnueabihf.node"));
             try {
               if (localFileExisted) {
-                nativeBinding = require("./vidhash.linux-arm-gnueabihf.node");
+                nativeBinding = require("./ephyra.linux-arm-gnueabihf.node");
               } else {
-                nativeBinding = require("@marver/vidhash-linux-arm-gnueabihf");
+                nativeBinding = require("@marver/ephyra-linux-arm-gnueabihf");
               }
             } catch (e) {
               loadError = e;
@@ -235,4 +235,4 @@ var require_vidhash = __commonJS({
     module.exports.getRecommendedDepthSecs = getRecommendedDepthSecs;
   }
 });
-export default require_vidhash();
+export default require_ephyra();

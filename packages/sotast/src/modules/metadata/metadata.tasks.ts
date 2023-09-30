@@ -6,9 +6,9 @@ import dedent from 'dedent';
 import type { z } from 'zod';
 import { normalizePath } from '../../helpers/normalize-path.js';
 import { FileEntity } from '../file/entities/file.entity.js';
+import { Queue } from '../queue/queue.decorator.js';
 import { Callback } from '../rehoboam/decorators/callback.decorator.js';
 import { RehoboamService } from '../rehoboam/rehoboam.service.js';
-import { Queue } from '../queue/queue.decorator.js';
 import {
   MetadataCategory,
   MetadataEntity,
@@ -35,20 +35,19 @@ export class MetadataTasks {
     private em: EntityManager,
   ) {}
 
-  @Queue('EXTRACT_METADATA', {
-    targetConcurrency: 1,
-    thirdPartyDependant: false,
-    lockTask: true,
-    fileFilter: {
-      media: {
-        metadata: null,
-      },
-    },
-  })
-  async extractMetadata(file: FileEntity) {
-    const data: PathMetadataData = { path: file.path };
-    await this.rehoboamService.queueCompletion(this.extractMetadataCallback, data);
-  }
+  // @Queue('EXTRACT_METADATA', {
+  //   targetConcurrency: 2,
+  //   thirdPartyDependant: false,
+  //   fileFilter: {
+  //     media: {
+  //       metadata: null,
+  //     },
+  //   },
+  // })
+  // async extractMetadata(file: FileEntity) {
+  //   const data: PathMetadataData = { path: file.path };
+  //   await this.rehoboamService.queueCompletion(this.extractMetadataCallback, data);
+  // }
 
   @Callback<PathMetadataData, typeof MetadataSchema>({
     type: 'path_metadata',

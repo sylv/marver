@@ -32,10 +32,18 @@ export class FileEntity {
 
   @Formula((alias) => `path_basename(${alias}.path)`)
   @Field()
+  @Index({
+    name: 'file_name_index',
+    expression: 'CREATE INDEX file_name_index ON file (path_basename(path))',
+  })
   name: string;
 
   @Formula((alias) => `path_dirname(${alias}.path)`)
   @Field()
+  @Index({
+    name: 'file_directory_index',
+    expression: 'CREATE INDEX file_directory_index ON file (path_dirname(path))',
+  })
   directory: string;
 
   @Property()
@@ -58,8 +66,8 @@ export class FileEntity {
   @Field(() => MediaEntity, { nullable: true })
   media?: MediaEntity;
 
-  @OneToMany(() => JobStateEntity, (task) => task.file)
-  tasks = new Collection<JobStateEntity>(this);
+  @OneToMany(() => JobStateEntity, (jobState) => jobState.file)
+  jobStates = new Collection<JobStateEntity>(this);
 
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })

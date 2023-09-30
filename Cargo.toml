@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/squtil", "packages/vidhash"]
+members = ["packages/squtil", "packages/ephyra"]
 
 [profile.release]
 lto = true

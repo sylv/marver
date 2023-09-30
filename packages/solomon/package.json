@@ -2,7 +2,7 @@
   "name": "@marver/solomon",
   "scripts": {
     "start": "python3 ./src/solomon.py",
-    "watch": "MARVER_MACHINE_LEARNING_DEVICE=cpu nodemon --exec python3 ./src/solomon.py",
+    "watch": "nodemon --exec python3 ./src/solomon.py",
     "generate": "python3 -m grpc_tools.protoc -I./src --python_out=./src --grpc_python_out=./src ./src/solomon.proto"
   },
   "devDependencies": {

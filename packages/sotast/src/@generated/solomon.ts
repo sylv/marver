@@ -14,6 +14,24 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 /**
+ * @generated from protobuf message me.sylver.marver.solomon.MergeEmbeddingsRequest
+ */
+export interface MergeEmbeddingsRequest {
+    /**
+     * @generated from protobuf field: repeated me.sylver.marver.solomon.Embedding embeddings = 1;
+     */
+    embeddings: Embedding[];
+}
+/**
+ * @generated from protobuf message me.sylver.marver.solomon.MergeEmbeddingsResponse
+ */
+export interface MergeEmbeddingsResponse {
+    /**
+     * @generated from protobuf field: me.sylver.marver.solomon.Embedding embedding = 1;
+     */
+    embedding?: Embedding;
+}
+/**
  * @generated from protobuf message me.sylver.marver.solomon.GetImageEmbeddingRequest
  */
 export interface GetImageEmbeddingRequest {
@@ -145,6 +163,100 @@ export interface OCR {
      */
     confidence: number;
 }
+// @generated message type with reflection information, may provide speed optimized methods
+class MergeEmbeddingsRequest$Type extends MessageType<MergeEmbeddingsRequest> {
+    constructor() {
+        super("me.sylver.marver.solomon.MergeEmbeddingsRequest", [
+            { no: 1, name: "embeddings", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Embedding }
+        ]);
+    }
+    create(value?: PartialMessage<MergeEmbeddingsRequest>): MergeEmbeddingsRequest {
+        const message = { embeddings: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<MergeEmbeddingsRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: MergeEmbeddingsRequest): MergeEmbeddingsRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated me.sylver.marver.solomon.Embedding embeddings */ 1:
+                    message.embeddings.push(Embedding.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: MergeEmbeddingsRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated me.sylver.marver.solomon.Embedding embeddings = 1; */
+        for (let i = 0; i < message.embeddings.length; i++)
+            Embedding.internalBinaryWrite(message.embeddings[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.solomon.MergeEmbeddingsRequest
+ */
+export const MergeEmbeddingsRequest = new MergeEmbeddingsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class MergeEmbeddingsResponse$Type extends MessageType<MergeEmbeddingsResponse> {
+    constructor() {
+        super("me.sylver.marver.solomon.MergeEmbeddingsResponse", [
+            { no: 1, name: "embedding", kind: "message", T: () => Embedding }
+        ]);
+    }
+    create(value?: PartialMessage<MergeEmbeddingsResponse>): MergeEmbeddingsResponse {
+        const message = {};
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<MergeEmbeddingsResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: MergeEmbeddingsResponse): MergeEmbeddingsResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* me.sylver.marver.solomon.Embedding embedding */ 1:
+                    message.embedding = Embedding.internalBinaryRead(reader, reader.uint32(), options, message.embedding);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: MergeEmbeddingsResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* me.sylver.marver.solomon.Embedding embedding = 1; */
+        if (message.embedding)
+            Embedding.internalBinaryWrite(message.embedding, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.solomon.MergeEmbeddingsResponse
+ */
+export const MergeEmbeddingsResponse = new MergeEmbeddingsResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetImageEmbeddingRequest$Type extends MessageType<GetImageEmbeddingRequest> {
     constructor() {
@@ -691,5 +803,6 @@ export const OCR = new OCR$Type();
 export const SolomonService = new ServiceType("me.sylver.marver.solomon.SolomonService", [
     { name: "GetImageEmbedding", options: {}, I: GetImageEmbeddingRequest, O: GetImageEmbeddingResponse },
     { name: "DetectFaces", options: {}, I: DetectFacesRequest, O: DetectFacesResponse },
-    { name: "GetOCR", options: {}, I: GetOCRRequest, O: GetOCRResponse }
+    { name: "GetOCR", options: {}, I: GetOCRRequest, O: GetOCRResponse },
+    { name: "MergeEmbeddings", options: {}, I: MergeEmbeddingsRequest, O: MergeEmbeddingsResponse }
 ]);

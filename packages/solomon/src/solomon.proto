@@ -5,6 +5,15 @@ service SolomonService {
     rpc GetImageEmbedding (GetImageEmbeddingRequest) returns (GetImageEmbeddingResponse) {}
     rpc DetectFaces (DetectFacesRequest) returns (DetectFacesResponse) {}
     rpc GetOCR (GetOCRRequest) returns (GetOCRResponse) {}
+    rpc MergeEmbeddings (MergeEmbeddingsRequest) returns (MergeEmbeddingsResponse) {}
+}
+
+message MergeEmbeddingsRequest {
+    repeated Embedding embeddings = 1;
+}
+
+message MergeEmbeddingsResponse {
+    Embedding embedding = 1;
 }
 
 message GetImageEmbeddingRequest {

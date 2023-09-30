@@ -1,5 +1,5 @@
 {
-  "name": "@marver/vidhash",
+  "name": "@marver/ephyra",
   "version": "0.1.0",
   "main": "index.js",
   "module": "index.mjs",
@@ -8,7 +8,7 @@
     "index.js"
   ],
   "napi": {
-    "name": "vidhash",
+    "name": "ephyra",
     "triples": {
       "defaults": true,
       "additional": [

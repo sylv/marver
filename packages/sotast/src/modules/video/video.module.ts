@@ -15,7 +15,6 @@ import { SubtitleController } from './subtitle.controller.js';
 import { SubtitleService } from './subtitle.service.js';
 import { VideoController } from './video.controller.js';
 import { VideoQueues } from './video.queues.js';
-import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
 
 @Module({
   providers: [VideoQueues, SubtitleService],
@@ -30,7 +29,6 @@ import { MediaEmbeddingEntity } from '../media/entities/media-embedding.js';
       FileInfoEmbeddable,
       MediaSubtitleEntity,
       MediaPerceptualHashEntity,
-      MediaEmbeddingEntity,
       MediaThumbnailEntity,
       MediaPosterEntity,
       MediaTimelineEntity,

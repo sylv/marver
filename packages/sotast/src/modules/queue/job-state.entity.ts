@@ -3,6 +3,7 @@ import {
   BeforeUpdate,
   Entity,
   Enum,
+  Index,
   ManyToOne,
   OptionalProps,
   Property,
@@ -36,9 +37,11 @@ export class JobStateEntity {
   file: Ref<FileEntity>;
 
   @Property({ primary: true, type: 'text' })
+  @Index()
   type: string;
 
   @Enum(() => JobState)
+  @Index()
   state: JobState;
 
   @Property({ type: 'jsonb', nullable: true })

@@ -5,6 +5,8 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { SolomonService } from "./solomon.js";
+import type { MergeEmbeddingsResponse } from "./solomon.js";
+import type { MergeEmbeddingsRequest } from "./solomon.js";
 import type { GetOCRResponse } from "./solomon.js";
 import type { GetOCRRequest } from "./solomon.js";
 import type { DetectFacesResponse } from "./solomon.js";
@@ -30,6 +32,10 @@ export interface ISolomonServiceClient {
      * @generated from protobuf rpc: GetOCR(me.sylver.marver.solomon.GetOCRRequest) returns (me.sylver.marver.solomon.GetOCRResponse);
      */
     getOCR(input: GetOCRRequest, options?: RpcOptions): UnaryCall<GetOCRRequest, GetOCRResponse>;
+    /**
+     * @generated from protobuf rpc: MergeEmbeddings(me.sylver.marver.solomon.MergeEmbeddingsRequest) returns (me.sylver.marver.solomon.MergeEmbeddingsResponse);
+     */
+    mergeEmbeddings(input: MergeEmbeddingsRequest, options?: RpcOptions): UnaryCall<MergeEmbeddingsRequest, MergeEmbeddingsResponse>;
 }
 /**
  * @generated from protobuf service me.sylver.marver.solomon.SolomonService
@@ -60,5 +66,12 @@ export class SolomonServiceClient implements ISolomonServiceClient, ServiceInfo 
     getOCR(input: GetOCRRequest, options?: RpcOptions): UnaryCall<GetOCRRequest, GetOCRResponse> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetOCRRequest, GetOCRResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: MergeEmbeddings(me.sylver.marver.solomon.MergeEmbeddingsRequest) returns (me.sylver.marver.solomon.MergeEmbeddingsResponse);
+     */
+    mergeEmbeddings(input: MergeEmbeddingsRequest, options?: RpcOptions): UnaryCall<MergeEmbeddingsRequest, MergeEmbeddingsResponse> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        return stackIntercept<MergeEmbeddingsRequest, MergeEmbeddingsResponse>("unary", this._transport, method, opt, input);
     }
 }

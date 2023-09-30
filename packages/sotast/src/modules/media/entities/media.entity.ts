@@ -18,7 +18,6 @@ import {
   type MetadataEntityUnion,
 } from '../../metadata/entities/metadata.entity.js';
 import { FaceEntity } from '../../people/entities/face.entity.js';
-import { MediaEmbeddingEntity } from './media-embedding.js';
 import { MediaExifDataEntity } from './media-exif.entity.js';
 import { MediaPerceptualHashEntity } from './media-perceptual-hash.entity.js';
 import { MediaPosterEntity } from './media-poster.entity.js';
@@ -107,8 +106,8 @@ export class MediaEntity extends MediaSortingProps {
   @Field({ nullable: true })
   isAnimated?: boolean;
 
-  @OneToMany(() => MediaEmbeddingEntity, (vector) => vector.media, { eager: true })
-  vectors = new Collection<MediaEmbeddingEntity>(this);
+  @Property({ nullable: true, type: 'blob' })
+  embedding?: Buffer;
 
   /** Thumbhash-computed preview */
   // todo: this should be lazy-loaded, only if graphql requests it.

@@ -2,7 +2,7 @@ import { ChannelCredentials } from '@grpc/grpc-js';
 import { Injectable } from '@nestjs/common';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
 import { SolomonServiceClient } from '../../@generated/solomon.client.js';
-import { type OCR } from '../../@generated/solomon.js';
+import { Embedding, type OCR } from '../../@generated/solomon.js';
 import { config } from '../../config.js';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class SolomonService {
     }),
   );
 
-  async getFileVector(file: { path: string }) {
+  async getFileEmbedding(file: { path: string }) {
     const { embedding } = await this.solomonService.getImageEmbedding({
       input: {
         oneofKind: 'file_path',
@@ -22,7 +22,7 @@ export class SolomonService {
       },
     }).response;
 
-    if (!embedding) throw new Error('No vector returned from Solomon');
+    if (!embedding) throw new Error('No embedding returned from Solomon');
     return embedding;
   }
 
@@ -34,7 +34,7 @@ export class SolomonService {
       },
     }).response;
 
-    if (!embedding) throw new Error('No vector returned from Solomon');
+    if (!embedding) throw new Error('No embedding returned from Solomon');
     return embedding;
   }
 
@@ -48,6 +48,15 @@ export class SolomonService {
       if (face.confidence < config.face_detection.min_face_score) continue;
       yield face;
     }
+  }
+
+  async mergeEmbeddings(embeddings: Embedding[]) {
+    const { embedding } = await this.solomonService.mergeEmbeddings({
+      embeddings,
+    }).response;
+
+    if (!embedding) throw new Error('No embedding returned from Solomon');
+    return embedding;
   }
 
   async getOCR(file: { path: string }) {

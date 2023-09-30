@@ -1,3 +1,4 @@
+use crate::structs::{Frame, ImageHashOptions, MergedFrame, VideoHashOptions};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::cmp::{max, min};
@@ -5,9 +6,6 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::iter::Iterator;
 use std::process::{Command, Stdio};
-use structs::{Frame, ImageHashOptions, MergedFrame, VideoHashOptions};
-
-mod structs;
 
 const JPEG_MAGIC_NUMBER: [u8; 3] = [0xFF, 0xD8, 0xFF];
 const DEFAULT_HASH_SIZE: u32 = 32;

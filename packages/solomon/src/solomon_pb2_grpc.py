@@ -29,6 +29,11 @@ class SolomonServiceStub(object):
                 request_serializer=solomon__pb2.GetOCRRequest.SerializeToString,
                 response_deserializer=solomon__pb2.GetOCRResponse.FromString,
                 )
+        self.MergeEmbeddings = channel.unary_unary(
+                '/me.sylver.marver.solomon.SolomonService/MergeEmbeddings',
+                request_serializer=solomon__pb2.MergeEmbeddingsRequest.SerializeToString,
+                response_deserializer=solomon__pb2.MergeEmbeddingsResponse.FromString,
+                )
 
 
 class SolomonServiceServicer(object):
@@ -52,6 +57,12 @@ class SolomonServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def MergeEmbeddings(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SolomonServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -69,6 +80,11 @@ def add_SolomonServiceServicer_to_server(servicer, server):
                     servicer.GetOCR,
                     request_deserializer=solomon__pb2.GetOCRRequest.FromString,
                     response_serializer=solomon__pb2.GetOCRResponse.SerializeToString,
+            ),
+            'MergeEmbeddings': grpc.unary_unary_rpc_method_handler(
+                    servicer.MergeEmbeddings,
+                    request_deserializer=solomon__pb2.MergeEmbeddingsRequest.FromString,
+                    response_serializer=solomon__pb2.MergeEmbeddingsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -128,5 +144,22 @@ class SolomonService(object):
         return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/GetOCR',
             solomon__pb2.GetOCRRequest.SerializeToString,
             solomon__pb2.GetOCRResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def MergeEmbeddings(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/me.sylver.marver.solomon.SolomonService/MergeEmbeddings',
+            solomon__pb2.MergeEmbeddingsRequest.SerializeToString,
+            solomon__pb2.MergeEmbeddingsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

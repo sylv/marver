@@ -15,6 +15,7 @@ export class FileInfoEmbeddable {
 
   @Field()
   @Property()
+  @Index()
   unavailable: boolean = false;
 
   @Field()
