@@ -166,4 +166,12 @@ export const SEARCH_MODIFIERS = [
         });
     },
   },
+  {
+    name: 'has_ocr',
+    add: (value: string, queryBuilder: QueryBuilder<MediaEntity>) => {
+      queryBuilder.andWhere({
+        hasText: true,
+      });
+    },
+  },
 ];
