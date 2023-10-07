@@ -81,6 +81,8 @@ export class VideoQueues {
     if (subtitleStream) {
       metadata.hasEmbeddedSubtitles = true;
       metadata.nonVerbal = false;
+    } else {
+      metadata.hasEmbeddedSubtitles = false;
     }
 
     if (!hasStream) {

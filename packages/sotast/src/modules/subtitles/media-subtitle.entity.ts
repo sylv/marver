@@ -1,7 +1,7 @@
 import { Entity, ManyToOne, OptionalProps, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import ISO6391 from 'iso-639-1';
-import { MediaEntity } from './media.entity.js';
+import { MediaEntity } from '../media/entities/media.entity.js';
 
 @Entity()
 @ObjectType('MediaSubtitle')

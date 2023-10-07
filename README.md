@@ -58,7 +58,7 @@ once marver is ready for deployment all these will be shipped in a single docker
   - Filtering options would be good, so for example only videos over 10gb in the `media/movies` folder would be cached.
 - Run OCR on images and videos
   - Index the text and use that for search
-  - Run translatelocally, libretranslate or even Vicuna-13b if we already have it to translate the text, and with Vicuna we can even use it to clean it up or provide context (especially if it can "see" the image with CLIP, but I doubt we're gonna get that advanced)
+  - Run translatelocally, libretranslate or even an LLM if we already have it to translate the text, and with an LLM we can even use it to clean it up or provide context (especially if it can "see" the image with CLIP, but I doubt we're gonna get that advanced)
   - Overlay the text invisibly with the same bounding box on the image so you can copy/paste it.
   - Running on videos would be useful, for example if a sign is shown in the video, or a logo shows up that could let you easily group all videos from that studio based on the logo. But, it would be expensive computationally and probably quite slow. Maybe using a faster but less accurate OCR model on videos would be better? If so, it would be good to run the big OCR model on maybe 2-5 screenshots because it might grab logos a weaker one cannot, then the rest can be done with a faster model.
 - Batch ffmpeg segments into a single command. This should be faster and let ffmpeg go wild with the CPU/GPU.
@@ -103,6 +103,7 @@ once marver is ready for deployment all these will be shipped in a single docker
 - Include JSON, SQLite, CSV and XML files in scans and pull metadata from them.
   - Lots of tools can write metadata to these files about downloads, but there is no standard format. So using an LLM to extract the metadata would be perfect.
 - Pressing the right arrow with a skip intro/credits button on screen should skip to the end of the intro, not the normal +30s
+- Check the file chapters for existing intro/credit chapters and if they exist, use those instead of trying to pull our own.
 - Jobs that use external services start out with a concurrency of 1, then scale to the configured amount when it the first job completes.
   - For solomon, this helps because it ensures models are loaded and in memory before bombarding it with requests.
   - For other external services, it ensures we have access and that they are available.

@@ -4,14 +4,14 @@ import { Controller, Get, Param, Res } from '@nestjs/common';
 import { type FastifyReply } from 'fastify';
 import { createReadStream } from 'fs';
 import parser from 'subtitle';
-import { MediaSubtitleEntity } from '../media/entities/media-subtitle.entity.js';
-import { SubtitleService } from './subtitle.service.js';
+import { MediaSubtitleEntity } from './media-subtitle.entity.js';
+import type { SubtitlesService } from './subtitles.service.js';
 
 @Controller()
-export class SubtitleController {
+export class SubtitlesController {
   @InjectRepository(MediaSubtitleEntity)
   private subtitleRepo: EntityRepository<MediaSubtitleEntity>;
-  constructor(private subtitleService: SubtitleService) {}
+  constructor(private subtitleService: SubtitlesService) {}
 
   @Get('/subtitles/:supportId')
   async videoProxySubtitles(@Param('supportId') subtitleId: number, @Res() reply: FastifyReply) {

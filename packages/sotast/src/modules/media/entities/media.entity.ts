@@ -21,7 +21,7 @@ import { FaceEntity } from '../../people/entities/face.entity.js';
 import { MediaExifDataEntity } from './media-exif.entity.js';
 import { MediaPerceptualHashEntity } from './media-perceptual-hash.entity.js';
 import { MediaPosterEntity } from './media-poster.entity.js';
-import { MediaSubtitleEntity } from './media-subtitle.entity.js';
+import { MediaSubtitleEntity } from '../../subtitles/media-subtitle.entity.js';
 import { MediaTextEntity } from './media-text.entity.js';
 import { MediaThumbnailEntity } from './media-thumbnail.entity.js';
 import { MediaTimelineEntity } from './media-timeline.entity.js';
