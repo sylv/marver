@@ -12,7 +12,7 @@ import torch
 from PIL import Image
 
 fr_model_name = os.getenv(
-    'MARVER_MACHINE_LEARNING_FACIAL_RECOGNITION_MODEL', 'buffalo_l')
+    'MARVER_MACHINE_LEARNING_FACIAL_RECOGNITION_MODEL', 'buffalo_sc')
 clip_model_name = os.getenv("MARVER_MACHINE_LEARNING_CLIP_MODEL", "ViT-L/14")
 device = os.getenv("MARVER_MACHINE_LEARNING_DEVICE",
                    "cuda" if torch.cuda.is_available() else "cpu")
