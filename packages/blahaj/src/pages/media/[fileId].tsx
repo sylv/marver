@@ -1,21 +1,47 @@
-import { useEffect, useState } from 'react';
 import { FiFile } from 'react-icons/fi';
 import { ImFileEmpty } from 'react-icons/im';
 import { IoIosTimer, IoIosVideocam, IoIosVolumeHigh } from 'react-icons/io';
 import { RxSize } from 'react-icons/rx';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useBackgroundColours } from '../../components/background';
+import { FileType, SimilarityType, useGetMediaQuery } from '../../@generated/graphql';
 import { ImageOverlay } from '../../components/image-overlay';
 import { Loading } from '../../components/loading';
 import { Player } from '../../components/player/player';
 import { SimilarMedia } from '../../components/similar-media';
-import { FileType, SimilarityType, useGetMediaQuery } from '../../@generated/graphql';
-import { thumbhashBase64ToDataUri } from '../../helpers/thumbhashBase64ToDataUri';
 import { setFilter, useMediaStore } from './media.store';
+import { ImageLoader } from '../../components/image-loader';
+import { Card } from '../../components/ui/card';
+import { Label } from '../../components/ui/label';
+import clsx from 'clsx';
+import { formatNumber } from '../../helpers/format-number';
 
 const splitTitleCase = (input: string) => {
   return input.replaceAll(/([A-Z]+)/g, ' $1').trim();
 };
+
+const TAG_COLOURS = [
+  'text-red-500',
+  'text-green-500',
+  'text-blue-500',
+  'text-yellow-500',
+  'text-purple-500',
+  'text-pink-500',
+  'text-indigo-500',
+  'text-red-400',
+];
+
+const TEMP_TAGS = [
+  'cute',
+  'animal',
+  'mammal',
+  'vertebrate',
+  'genre:comedy',
+  'genre:action',
+  'genre:adventure',
+  'genre:romance',
+  'genre:horror',
+  'artist:john_doe',
+];
 
 export default function File() {
   const { fileId } = useParams();
@@ -26,7 +52,6 @@ export default function File() {
   }
 
   const filter = useMediaStore((state) => state.filter);
-  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const { data, loading, error } = useGetMediaQuery({
     variables: {
       fileId: fileId,
@@ -34,132 +59,51 @@ export default function File() {
     },
   });
 
-  useEffect(() => {
-    if (!data?.media?.previewBase64) return;
-    const url = thumbhashBase64ToDataUri(data.media.previewBase64);
-    if (url) {
-      setBackgroundUrl(url);
-    }
-  }, [data?.media?.previewBase64]);
-
-  useBackgroundColours(backgroundUrl);
-
   if (error) return <div>Oh no... {error.message}</div>;
   if (loading || !data?.media) return <Loading />;
 
   return (
-    <div className="container mx-auto flex gap-3 mt-3">
-      <div className="w-full h-full flex flex-col gap-3">
-        <div className="relative h-[70vh] w-full flex items-center justify-center bg-gray-600/30 rounded-lg">
-          {data.media.file.type === FileType.Video && (
-            <Player
-              src={`/api/files/${fileId}/raw`}
-              hlsSrc={`/api/files/${fileId}/vidproxy/index.m3u8`}
-              className="w-auto rounded-lg h-full"
-              height={data.media?.height || undefined}
-              width={data.media?.width || undefined}
-              hasAudio={!!data.media?.audioCodec}
-              poster={data.media?.thumbnailUrl || undefined}
-            >
-              {data.media.subtitles.map((subtitle) => (
-                <track
-                  key={subtitle.id}
-                  src={`/api/subtitles/${subtitle.id}`}
-                  kind="subtitles"
-                  label={subtitle.displayName}
-                />
-              ))}
-            </Player>
-          )}
-          {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
-            <ImageOverlay
-              src={data.media.thumbnailUrl}
-              height={data.media?.height || undefined}
-              width={data.media?.width || undefined}
-              previewBase64={data.media.previewBase64}
-              className="h-[70vh] w-full object-contain"
-              overlays={[
-                ...data.media.faces.map((face) => ({
-                  boundingBox: face.boundingBox,
-                  content: face.id,
-                  className: 'border border-red-600 text-red-600 truncate font-mono bg-red-400/40',
-                })),
-                ...data.media.texts.map((text) => ({
-                  boundingBox: text.boundingBox,
-                  content: text.text,
-                  className:
-                    'opacity-40 hover:opacity-100 border border-blue-600 text-blue-600 bg-blue-400/40 hover:text-white hover:bg-blue-400',
-                })),
-              ]}
-            />
-          )}
-        </div>
-        <div className="rounded-lg p-3 bg-gray-600/30">
-          <h1 className="font-semibold text-lg" title={data.media.file.path}>
-            {data.media.file.name}
-          </h1>
-          <div className="flex gap-2 mt-1 text-xs text-gray-400">
-            <span className="flex gap-1 items-center">
-              <FiFile />
-              {data.media.file.info.sizeFormatted} {data.media.file.type?.toLowerCase()}
-            </span>
-            {data.media?.width && data.media?.height && (
-              <span className="flex gap-1 items-center">
-                <RxSize />
-                {data.media?.width}x{data.media?.height}
-              </span>
-            )}
-            {data.media?.durationFormatted && (
-              <span className="flex gap-1 items-center">
-                <IoIosTimer />
-                {data.media.durationFormatted}
-              </span>
-            )}
-            {data.media?.videoCodec && (
-              <span className="flex gap-1 items-center">
-                <IoIosVideocam />
-                {data.media.videoCodec}
-              </span>
-            )}
-            {data.media?.audioCodec && (
-              <span className="flex gap-1 items-center">
-                <IoIosVolumeHigh />
-                {data.media.audioCodec}
-              </span>
-            )}
-          </div>
-          <div id="tags" className="flex gap-2 mt-2">
-            <button className="bg-red-500/40 text-sm lowercase p-1 rounded">important tag</button>
-            <button className="bg-purple-500/40 text-sm lowercase p-1 rounded">
-              artist name idk
-            </button>
-            <button className="bg-dark-100/30 text-sm lowercase p-1 rounded">cool</button>
-            <button className="bg-dark-100/30 text-sm lowercase p-1 rounded">poggers tag</button>
-            <button className="bg-dark-100/30 text-sm lowercase p-1 rounded">balls</button>
-          </div>
-        </div>
-      </div>
-      <div className="w-[25em]">
-        <div className="grid grid-cols-3 mb-2 gap-1">
-          {Object.keys(SimilarityType).map((key) => (
+    <div className="container mx-auto mt-10 space-y-2">
+      <h1 className="text-xl font-semibold truncate">{data.media.file.name}</h1>
+      <div className="flex flex-wrap gap-1">
+        {TEMP_TAGS.map((tag, index) => {
+          const colour = TAG_COLOURS[index % TAG_COLOURS.length];
+          const fileCount = Math.floor(Math.random() * 10000);
+          return (
             <button
-              className="flex-grow bg-gray-600/30 rounded p-1 text-sm text-gray-400 hover:bg-gray-600/40 px-2 truncate"
-              key={key}
-              onClick={() => setFilter(SimilarityType[key as keyof typeof SimilarityType])}
+              key={tag}
+              className="bg-zinc-900 text-xs border rounded-full px-3 py-1 hover:bg-zinc-800 transition"
             >
-              {splitTitleCase(key)}
+              <span className={clsx(colour, 'font-semibold')}>{tag}</span>
+              <span className="text-muted-foreground ml-1 text-xs">{formatNumber(fileCount)}</span>
             </button>
-          ))}
+          );
+        })}
+      </div>
+      <div className="grid grid-cols-6 gap-2">
+        <div className="col-span-5">
+          <Card className="bg-zinc-900 overflow-hidden">
+            {data.media.file.type === FileType.Video && data.media.thumbnailUrl && (
+              <Player
+                src={data.media.thumbnailUrl}
+                height={data.media?.height || undefined}
+                width={data.media?.width || undefined}
+                hlsSrc={`/api/files/${fileId}/vidproxy/index.m3u8`}
+                durationSeconds={data.media.durationSeconds || undefined}
+                className="max-h-[60vh] h-full w-full object-contain"
+              />
+            )}
+            {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
+              <ImageLoader
+                src={data.media.thumbnailUrl}
+                height={data.media?.height || undefined}
+                width={data.media?.width || undefined}
+                previewBase64={data.media.previewBase64}
+                className="max-h-[60vh] h-full w-full object-contain"
+              />
+            )}
+          </Card>
         </div>
-        {data.media.similar.edges[0] && (
-          <SimilarMedia similarFiles={data.media.similar.edges.map((edge) => edge.node)} />
-        )}
-        {!data.media.similar.edges[0] && (
-          <div className="bg-gray-600/30 p-8 text-gray-400 text-center rounded-lg">
-            <ImFileEmpty className="text-gray-500 text-4xl mx-auto" />
-            <h1 className="text-sm mt-4">No similar files found</h1>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -1,0 +1,8 @@
+{
+  "name": "@marver/rehoboam",
+  "version": "0.0.1",
+  "scripts": {
+    "watch": "cargo watch -x run",
+    "build": "cargo build --release"
+  }
+}

@@ -1,6 +1,6 @@
 import { Embeddable, Property } from '@mikro-orm/core';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { type BoundingBox } from '../../../@generated/solomon.js';
+import type { BoundingBox } from '../../../@generated/core.js';
 
 @Embeddable()
 @ObjectType('BoundingBox')

@@ -1,4 +1,4 @@
-import { Embedding } from '../@generated/solomon.js';
+import { Embedding } from '../@generated/core.js';
 
 export function embeddingToBuffer(vector: Embedding) {
   const array = Embedding.toBinary(vector);

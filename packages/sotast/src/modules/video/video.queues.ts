@@ -155,8 +155,9 @@ export class VideoQueues {
       embeddings.push(embedding);
     }
 
-    const merged = await this.solomonService.mergeEmbeddings(embeddings);
-    media.embedding = embeddingToBuffer(merged);
+    // todo: figure out how to do this without huge quality loss
+    // const merged = await this.solomonService.mergeEmbeddings(embeddings);
+    media.embedding = embeddingToBuffer(embeddings[0]);
     await this.em.persistAndFlush(media);
   }
 

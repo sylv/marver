@@ -8,34 +8,31 @@ pub mod solomon {
 use prost::Message;
 use solomon::Embedding;
 
-pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f64 {
+pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f32 {
     if vec_a.is_empty() || vec_b.is_empty() {
         return 0.0;
     }
 
     // hash_a and hash_b are Vectors which we have to decode
-    let vec_a = Embedding::decode(vec_a).unwrap();
-    let vec_b = Embedding::decode(vec_b).unwrap();
+    let vec_a = Embedding::decode(vec_a)
+        .expect("could not decode vec_a")
+        .value;
+    let vec_b = Embedding::decode(vec_b)
+        .expect("could not decode vec_b")
+        .value;
 
-    let dot = vec_a
-        .value
-        .iter()
-        .zip(vec_b.value.iter())
-        .fold(0.0, |acc, (&a, &b)| acc + (a as f64) * (b as f64));
-    let mag_a = vec_a
-        .value
-        .iter()
-        .map(|&x| x as f64 * x as f64)
-        .sum::<f64>()
-        .sqrt();
-    let mag_b = vec_b
-        .value
-        .iter()
-        .map(|&x| x as f64 * x as f64)
-        .sum::<f64>()
-        .sqrt();
+    assert_eq!(vec_a.len(), vec_b.len(), "vectors must be of equal length");
 
-    dot / (mag_a * mag_b)
+    let mut dot_product = 0.0;
+    let mut a_norm = 0.0;
+    let mut b_norm = 0.0;
+    for i in 0..vec_a.len() {
+        dot_product += vec_a[i] * vec_b[i];
+        a_norm += vec_a[i] * vec_a[i];
+        b_norm += vec_b[i] * vec_b[i];
+    }
+
+    dot_product / (a_norm.sqrt() * b_norm.sqrt())
 }
 
 pub fn hamming_distance(hash_a: &[u8], hash_b: &[u8]) -> i64 {
@@ -57,7 +54,7 @@ pub fn sql_cosine_similarity(
     let a = a.to_vec();
     let b = b.to_vec();
     let result = cosine_similarity(&a, &b);
-    api::result_double(ctx, result);
+    api::result_double(ctx, result as f64);
     Ok(())
 }
 

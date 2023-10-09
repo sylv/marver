@@ -1,4 +1,4 @@
-import type { Embedding } from '../@generated/solomon.js';
+import type { Embedding } from '../@generated/core.js';
 
 export const cosineSimilarity = (vec1: Embedding, vec2: Embedding) => {
   let dot = 0.0;

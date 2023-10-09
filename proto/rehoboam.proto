@@ -1,0 +1,25 @@
+syntax = "proto3";
+package me.sylver.marver.rehoboam;
+
+import "core.proto";
+
+service RehoboamService {
+    rpc EncodeImage (EncodeImageRequest) returns (EncodeImageReply) {}
+    rpc EncodeText (EncodeTextRequest) returns (EncodeTextReply) {}
+}
+
+message EncodeImageRequest {
+    repeated bytes images = 1;
+}
+
+message EncodeImageReply {
+    repeated me.sylver.marver.core.Embedding embeddings = 1;
+}
+
+message EncodeTextRequest {
+    repeated string texts = 1;
+}
+
+message EncodeTextReply {
+    repeated me.sylver.marver.core.Embedding embeddings = 1;
+}

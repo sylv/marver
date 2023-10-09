@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
   useTransition,
+  useMemo,
 } from 'react';
 
 // https://github.com/video-dev/hls.js/issues/5146#issuecomment-1375070955
@@ -23,9 +24,17 @@ export interface VideoProps extends VideoHTMLAttributes<HTMLVideoElement> {
   hlsSrc: string;
   hasAudio?: boolean;
   children?: ReactNode;
+  durationSeconds?: number;
 }
 
-export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, ...rest }) => {
+export const Player: FC<VideoProps> = ({
+  src,
+  children,
+  hlsSrc,
+  hasAudio,
+  durationSeconds,
+  ...rest
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<HlsType>();
   const [useHLS, setUseHLS] = useState(false);
@@ -99,6 +108,12 @@ export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, ...res
     }
   };
 
+  const loop = useMemo(() => {
+    if (!durationSeconds) return true;
+    if (durationSeconds > 60) return false;
+    return true;
+  }, [durationSeconds]);
+
   return (
     <div className="relative">
       <video
@@ -107,7 +122,7 @@ export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, ...res
         muted
         src={useHLS ? undefined : src}
         autoPlay
-        loop
+        loop={loop}
         controls
         onCanPlayThrough={checkFailedLoad}
         onLoadStart={checkFailedLoad}

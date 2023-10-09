@@ -27,6 +27,7 @@ fragment MinimalMedia on Media {
   height
   width
   durationFormatted
+  durationSeconds
   framerate
   videoCodec
   audioCodec

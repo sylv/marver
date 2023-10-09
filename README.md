@@ -97,6 +97,7 @@ once marver is ready for deployment all these will be shipped in a single docker
 - When deduplicating images, detect images with "upscale" and etc in the name and don't deduplicate them. We don't want to delete the original in favour of an upscaled result.
 - Previews for STL/OBJ/3D files. A rendered interactive view would be fun.
 - Indexing non-IMDb series, for example downloaded YouTube videos that are part of a series, `S5#1` etc.
+- Encode the embedding source in the `Embedding` struct and throw errors when trying to compare one type to another. This guards against swapping CLIP models to one that doesn't have compatible embeddings, or other issues.
 - Run CLIP on generated file names and use that for search as well
   - I have no clue how you would search text and image vectors at the same time
   - This would let search take the metadata from the file name into account, for example a file named `Ryan at the Park.jpg` would take priority over `Tim at the Park.jpg` if you searched for just `ryan`. In theory anyway, in practice I'm not sure that's how it would work but it can't hurt. Probably.
@@ -114,3 +115,4 @@ once marver is ready for deployment all these will be shipped in a single docker
 - Fine-tune CLIP to better handle the images it is likely to encounter
 - Allow `+` and `-` in queries, for example `apple -device` would search for apples, not apple devices.
 - Completion service should have a way to wait before running highly similar metadata extraction requests. That way you can verify the first is accurate before it does 1,000+ more.
+- Generate thumbnails for large (5mb+) images

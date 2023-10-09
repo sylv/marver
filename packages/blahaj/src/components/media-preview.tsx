@@ -1,14 +1,7 @@
-import { useApolloClient } from '@apollo/client';
 import clsx from 'clsx';
-import { forwardRef, useRef, type HTMLAttributes } from 'react';
+import { forwardRef, type HTMLAttributes } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  GetMediaDocument,
-  type GetMediaQuery,
-  type GetMediaQueryVariables,
-  type MinimalMediaFragment,
-} from '../@generated/graphql';
-import { useMediaStore } from '../pages/media/media.store';
+import { type MinimalMediaFragment } from '../@generated/graphql';
 import { ImageLoader } from './image-loader';
 
 export interface MediaPreviewProps extends HTMLAttributes<HTMLAnchorElement> {
@@ -28,10 +21,6 @@ const scaleDownImage = (height: number, width: number) => {
 
 export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
   ({ media, height, width, ...rest }, ref) => {
-    const client = useApolloClient();
-    const preloadTimeoutRef = useRef<number | undefined>(undefined);
-    const filter = useMediaStore((state) => state.filter);
-
     if (!height && media?.height) height = media.height;
     if (!width && media?.width) width = media.width;
 
@@ -49,43 +38,11 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
     query.set('width', proxyWidth.toString());
     if (proxyHeight) query.set('height', proxyHeight.toString());
 
-    const onMouseEnter = () => {
-      // preload the media information on hover
-      // todo: this is actually pretty expensive to do,
-      // because finding similar media is expensive to calculate
-      if (preloadTimeoutRef.current) {
-        clearTimeout(preloadTimeoutRef.current);
-      }
-
-      preloadTimeoutRef.current = window.setTimeout(() => {
-        console.debug(`Preloading media ${media.file.id}`);
-        client
-          .query<GetMediaQuery, GetMediaQueryVariables>({
-            query: GetMediaDocument,
-            variables: {
-              fileId: media.file.id,
-              filter: filter,
-            },
-          })
-          .catch((error) => {
-            console.error('Error preloading media', error);
-          });
-      }, 100);
-    };
-
-    const onMouseExit = () => {
-      if (preloadTimeoutRef.current) {
-        clearTimeout(preloadTimeoutRef.current);
-      }
-    };
-
     return (
       <Link
         data-mediaid={media.file.id}
         to={`/media/${media.file.id}`}
         ref={ref}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseExit}
         {...rest}
         className={clsx('transition relative overflow-hidden rounded-lg group', rest.className)}
       >

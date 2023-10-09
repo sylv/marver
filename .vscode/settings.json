@@ -20,5 +20,8 @@
     // const class = 'value'
     // const selectedClass = 'value'
     ["const [a-zA-Z]+s = ['\"`]([^\"`'`]*)"]
-  ]
+  ],
+  "protoc": {
+    "options": ["--proto_path=proto"]
+  }
 }

@@ -1,0 +1,24 @@
+[package]
+name = "rehoboam"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ort = { version = "1.16.2" }
+anyhow = "1.0.75"
+futures-util = "0.3.28"
+image = "0.24.7"
+itertools = "0.11.0"
+md5 = "0.7.0"
+ndarray = "0.15.6"
+reqwest = { version = "0.11.22", features = ["stream"] }
+tokenizers = "0.14.1"
+tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tonic = "0.10"
+prost = "0.12"
+dirs = "5.0.1"
+
+[build-dependencies]
+prost-build = "0.12"
+tonic-build = "0.10"

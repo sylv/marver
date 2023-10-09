@@ -5,15 +5,11 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { SolomonService } from "./solomon.js";
-import type { MergeEmbeddingsResponse } from "./solomon.js";
-import type { MergeEmbeddingsRequest } from "./solomon.js";
-import type { GetOCRResponse } from "./solomon.js";
+import type { GetOCRReply } from "./solomon.js";
 import type { GetOCRRequest } from "./solomon.js";
-import type { DetectFacesResponse } from "./solomon.js";
-import type { DetectFacesRequest } from "./solomon.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { GetImageEmbeddingResponse } from "./solomon.js";
-import type { GetImageEmbeddingRequest } from "./solomon.js";
+import type { DetectFacesReply } from "./solomon.js";
+import type { DetectFacesRequest } from "./solomon.js";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
@@ -21,21 +17,13 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface ISolomonServiceClient {
     /**
-     * @generated from protobuf rpc: GetImageEmbedding(me.sylver.marver.solomon.GetImageEmbeddingRequest) returns (me.sylver.marver.solomon.GetImageEmbeddingResponse);
+     * @generated from protobuf rpc: DetectFaces(me.sylver.marver.solomon.DetectFacesRequest) returns (me.sylver.marver.solomon.DetectFacesReply);
      */
-    getImageEmbedding(input: GetImageEmbeddingRequest, options?: RpcOptions): UnaryCall<GetImageEmbeddingRequest, GetImageEmbeddingResponse>;
+    detectFaces(input: DetectFacesRequest, options?: RpcOptions): UnaryCall<DetectFacesRequest, DetectFacesReply>;
     /**
-     * @generated from protobuf rpc: DetectFaces(me.sylver.marver.solomon.DetectFacesRequest) returns (me.sylver.marver.solomon.DetectFacesResponse);
+     * @generated from protobuf rpc: GetOCR(me.sylver.marver.solomon.GetOCRRequest) returns (me.sylver.marver.solomon.GetOCRReply);
      */
-    detectFaces(input: DetectFacesRequest, options?: RpcOptions): UnaryCall<DetectFacesRequest, DetectFacesResponse>;
-    /**
-     * @generated from protobuf rpc: GetOCR(me.sylver.marver.solomon.GetOCRRequest) returns (me.sylver.marver.solomon.GetOCRResponse);
-     */
-    getOCR(input: GetOCRRequest, options?: RpcOptions): UnaryCall<GetOCRRequest, GetOCRResponse>;
-    /**
-     * @generated from protobuf rpc: MergeEmbeddings(me.sylver.marver.solomon.MergeEmbeddingsRequest) returns (me.sylver.marver.solomon.MergeEmbeddingsResponse);
-     */
-    mergeEmbeddings(input: MergeEmbeddingsRequest, options?: RpcOptions): UnaryCall<MergeEmbeddingsRequest, MergeEmbeddingsResponse>;
+    getOCR(input: GetOCRRequest, options?: RpcOptions): UnaryCall<GetOCRRequest, GetOCRReply>;
 }
 /**
  * @generated from protobuf service me.sylver.marver.solomon.SolomonService
@@ -47,31 +35,17 @@ export class SolomonServiceClient implements ISolomonServiceClient, ServiceInfo 
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: GetImageEmbedding(me.sylver.marver.solomon.GetImageEmbeddingRequest) returns (me.sylver.marver.solomon.GetImageEmbeddingResponse);
+     * @generated from protobuf rpc: DetectFaces(me.sylver.marver.solomon.DetectFacesRequest) returns (me.sylver.marver.solomon.DetectFacesReply);
      */
-    getImageEmbedding(input: GetImageEmbeddingRequest, options?: RpcOptions): UnaryCall<GetImageEmbeddingRequest, GetImageEmbeddingResponse> {
+    detectFaces(input: DetectFacesRequest, options?: RpcOptions): UnaryCall<DetectFacesRequest, DetectFacesReply> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetImageEmbeddingRequest, GetImageEmbeddingResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<DetectFacesRequest, DetectFacesReply>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: DetectFaces(me.sylver.marver.solomon.DetectFacesRequest) returns (me.sylver.marver.solomon.DetectFacesResponse);
+     * @generated from protobuf rpc: GetOCR(me.sylver.marver.solomon.GetOCRRequest) returns (me.sylver.marver.solomon.GetOCRReply);
      */
-    detectFaces(input: DetectFacesRequest, options?: RpcOptions): UnaryCall<DetectFacesRequest, DetectFacesResponse> {
+    getOCR(input: GetOCRRequest, options?: RpcOptions): UnaryCall<GetOCRRequest, GetOCRReply> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<DetectFacesRequest, DetectFacesResponse>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: GetOCR(me.sylver.marver.solomon.GetOCRRequest) returns (me.sylver.marver.solomon.GetOCRResponse);
-     */
-    getOCR(input: GetOCRRequest, options?: RpcOptions): UnaryCall<GetOCRRequest, GetOCRResponse> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetOCRRequest, GetOCRResponse>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: MergeEmbeddings(me.sylver.marver.solomon.MergeEmbeddingsRequest) returns (me.sylver.marver.solomon.MergeEmbeddingsResponse);
-     */
-    mergeEmbeddings(input: MergeEmbeddingsRequest, options?: RpcOptions): UnaryCall<MergeEmbeddingsRequest, MergeEmbeddingsResponse> {
-        const method = this.methods[3], opt = this._transport.mergeOptions(options);
-        return stackIntercept<MergeEmbeddingsRequest, MergeEmbeddingsResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetOCRRequest, GetOCRReply>("unary", this._transport, method, opt, input);
     }
 }

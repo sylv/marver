@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { writeFileSync } from 'fs';
 import { performance } from 'perf_hooks';
 import { Client } from 'undici';
-import { Embedding } from '../../../@generated/solomon.js';
 import { config } from '../../../config.js';
+import { Embedding } from '../../../@generated/core.js';
 
 interface LlamaOptions {
   temperature?: number;

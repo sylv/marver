@@ -1,0 +1,24 @@
+syntax = "proto3";
+package me.sylver.marver.core;
+
+message OCR {
+    string text = 1;
+    BoundingBox bounding_box = 2;
+    float confidence = 3;
+}
+message Face {
+    BoundingBox bounding_box = 1;
+    Embedding embedding = 2;
+    float confidence = 3;
+}
+
+message BoundingBox {
+    float x1 = 1;
+    float y1 = 2;
+    float x2 = 3;
+    float y2 = 4;
+}
+
+message Embedding {
+    repeated float value = 1;
+}

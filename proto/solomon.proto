@@ -1,0 +1,25 @@
+syntax = "proto3";
+package me.sylver.marver.solomon;
+
+import "core.proto";
+
+service SolomonService {
+    rpc DetectFaces (DetectFacesRequest) returns (DetectFacesReply) {}
+    rpc GetOCR (GetOCRRequest) returns (GetOCRReply) {}
+}
+
+message DetectFacesRequest {
+    string file_path = 1;
+}
+
+message DetectFacesReply {
+    repeated me.sylver.marver.core.Face faces = 1;
+}
+
+message GetOCRRequest {
+    string file_path = 1;
+}
+
+message GetOCRReply {
+    repeated me.sylver.marver.core.OCR results = 1;
+}

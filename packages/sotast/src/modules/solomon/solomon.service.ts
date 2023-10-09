@@ -1,8 +1,10 @@
 import { ChannelCredentials } from '@grpc/grpc-js';
 import { Injectable } from '@nestjs/common';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
+import { readFile } from 'fs/promises';
+import type { OCR } from '../../@generated/core.js';
+import { RehoboamServiceClient } from '../../@generated/rehoboam.client.js';
 import { SolomonServiceClient } from '../../@generated/solomon.client.js';
-import { Embedding, type OCR } from '../../@generated/solomon.js';
 import { config } from '../../config.js';
 
 @Injectable()
@@ -13,29 +15,34 @@ export class SolomonService {
       channelCredentials: ChannelCredentials.createInsecure(),
     }),
   );
+  private rehoboamService = new RehoboamServiceClient(
+    new GrpcTransport({
+      host: 'localhost:50033',
+      channelCredentials: ChannelCredentials.createInsecure(),
+    }),
+  );
 
   async getFileEmbedding(file: { path: string }) {
-    const { embedding } = await this.solomonService.getImageEmbedding({
-      input: {
-        oneofKind: 'file_path',
-        file_path: file.path,
-      },
+    // todo: use thumbnail of image if it exists
+    // todo: downscale image if no thumbnail and use that if the image is large
+    const bytes = await readFile(file.path);
+    // todo: batch multiple calls
+    const { embeddings } = await this.rehoboamService.encodeImage({
+      images: [bytes],
     }).response;
 
-    if (!embedding) throw new Error('No embedding returned from Solomon');
-    return embedding;
+    if (!embeddings || !embeddings[0]) throw new Error('No embedding returned');
+    return embeddings[0];
   }
 
   async getTextEmbedding(text: string) {
-    const { embedding } = await this.solomonService.getImageEmbedding({
-      input: {
-        oneofKind: 'text_input',
-        text_input: text,
-      },
+    // todo: batch multiple calls
+    const { embeddings } = await this.rehoboamService.encodeText({
+      texts: [text],
     }).response;
 
-    if (!embedding) throw new Error('No embedding returned from Solomon');
-    return embedding;
+    if (!embeddings || !embeddings[0]) throw new Error('No embedding returned');
+    return embeddings[0];
   }
 
   async *detectFaces(file: { path: string }) {
@@ -48,15 +55,6 @@ export class SolomonService {
       if (face.confidence < config.face_detection.min_face_score) continue;
       yield face;
     }
-  }
-
-  async mergeEmbeddings(embeddings: Embedding[]) {
-    const { embedding } = await this.solomonService.mergeEmbeddings({
-      embeddings,
-    }).response;
-
-    if (!embedding) throw new Error('No embedding returned from Solomon');
-    return embedding;
   }
 
   async getOCR(file: { path: string }) {

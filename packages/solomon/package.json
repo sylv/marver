@@ -3,7 +3,7 @@
   "scripts": {
     "start": "python3 ./src/solomon.py",
     "watch": "nodemon --exec python3 ./src/solomon.py",
-    "generate": "python3 -m grpc_tools.protoc -I./src --python_out=./src --grpc_python_out=./src ./src/solomon.proto"
+    "generate": "python3 -m grpc_tools.protoc -I../../proto --python_out=./src --grpc_python_out=./src ../../proto/solomon.proto"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
