@@ -11,17 +11,7 @@ marver takes your messy, unorganised media and turns it into your personal strea
 
 marver will index your media and make it as user-friendly as possible. Point marver at your nas and it will extract information as best it can based on the file name, file contents, supporting files (subtitles, json, etc) and whatever else it can get its grubby little hands on. marver will take all that information and make it searchable, filterable, and viewable. If it can't find enough metadata, you can help push it in the right direction - attach a YouTube ID, IMDb ID, etc to a file and it'll grab the view count, comments, plot, poster, etc and display it along side the file. It's like Plex but for more than just movies and tv shows, and with a stronger focus on extracting metadata. Have a load of family photos laying around on your NAS? Let marver index them and generate albums based on faces, locations, dates, etc.
 
-## pieces
-
-once marver is ready for deployment all these will be shipped in a single docker image.
-
-- [blahaj](./packages/blahaj/) - the frontend (typescript, react, vite, graphql)
-- [sotast](./packages/sotast/) - the backend that does most of what you see (typescript, nestjs)
-- [solomon](./packages/solomon/) - machine learning grpc microservice (python)
-- [squtil](./packages/squtil/) - sqlite extension that provides vector search and other utilities (rust)
-- [native](./packages/native/) - native utilities written in rust for performance
-
-## features
+## working-ish features
 
 - CLIP image and video search, "a pink sky at sunset" or "a picture of a dog wearing a clown costume"
 - CLIP-based related images and videos with filters
