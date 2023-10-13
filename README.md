@@ -5,7 +5,7 @@
 # marver
 
 > **Warning**
-> marver is not ready, there is no UI to even interact with the few things that are implemented.
+> marver is not ready, there is very little UI and there are no guarantees it won't photoshop all your family photos with clown hats on your uncle. Watch the repo for updates, or come back in a few months.
 
 marver takes your messy, unorganised media and turns it into your personal video player, photo viewer and media library.
 
