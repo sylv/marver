@@ -1,12 +1,13 @@
 use sqlite_loadable::prelude::*;
 use sqlite_loadable::{api, define_scalar_function, Result};
 
-pub mod solomon {
-    include!(concat!(env!("OUT_DIR"), "/me.sylver.marver.solomon.rs"));
+pub mod core {
+    use tonic::include_proto;
+    include_proto!("me.sylver.marver.core");
 }
 
+use core::Embedding;
 use prost::Message;
-use solomon::Embedding;
 
 pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f32 {
     if vec_a.is_empty() || vec_b.is_empty() {

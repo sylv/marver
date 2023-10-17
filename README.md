@@ -103,3 +103,5 @@ marver will index your media and make it as user-friendly as possible. Point mar
 - Store thumbnails for large (5mb+) images
 - Image proxy should have an option to strip EXIF metadata on images before sending them
 - TV show intros/credits can be detected more efficiently by detecting them on one episode, then checking the rest of the episodes for the same timestamps. If the frames match +- 5 seconds, the timestamps can be reused.
+- When a user queries a file directly, prioritize tasks for that file. With graphql subscriptions we can push additional metadata to the client as it becomes available.
+- Embeddings for sections of videos (30s chunks? or split by chapter markings?) that include subtitles so you could search for a part of a video from a description of the scene, without knowing the exact words used.

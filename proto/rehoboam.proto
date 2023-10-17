@@ -6,6 +6,7 @@ import "core.proto";
 service RehoboamService {
     rpc EncodeImage (EncodeImageRequest) returns (EncodeImageReply) {}
     rpc EncodeText (EncodeTextRequest) returns (EncodeTextReply) {}
+    rpc ExtractFaces (ExtractFacesRequest) returns (ExtractFacesReply) {}
 }
 
 message EncodeImageRequest {
@@ -22,4 +23,12 @@ message EncodeTextRequest {
 
 message EncodeTextReply {
     repeated me.sylver.marver.core.Embedding embeddings = 1;
+}
+
+message ExtractFacesRequest {
+    repeated bytes images = 1;
+}
+
+message ExtractFacesReply {
+    repeated me.sylver.marver.core.Face faces = 1;
 }

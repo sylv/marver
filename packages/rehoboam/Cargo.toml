@@ -18,6 +18,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 tonic = "0.10"
 prost = "0.12"
 dirs = "5.0.1"
+imageproc = "0.23.0"
+zip = "0.6.6"
 
 [build-dependencies]
 prost-build = "0.12"

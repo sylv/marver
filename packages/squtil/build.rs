@@ -1,6 +1,6 @@
 use std::io::Result;
 
 fn main() -> Result<()> {
-    prost_build::compile_protos(&["../solomon/src/solomon.proto"], &["../solomon/src"])?;
+    prost_build::compile_protos(&["../../proto/core.proto"], &["../../proto"])?;
     Ok(())
 }

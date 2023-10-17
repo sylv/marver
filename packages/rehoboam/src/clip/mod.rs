@@ -1,16 +1,13 @@
-use image::io::Reader as ImageReader;
 use image::{imageops::FilterType, GenericImageView};
 use itertools::Itertools;
 use ndarray::{Array2, Array4, CowArray, Dim};
 use ort::{Environment, Session, SessionBuilder, Value};
-use std::fs;
-use std::io::Cursor;
 use std::path::Path;
 use std::sync::Arc;
 use tokenizers::{PaddingParams, PaddingStrategy, Tokenizer, TruncationParams};
 
 use self::models::{ClipModel, CLIP_MODELS, CLIP_NORM_MEAN, CLIP_NORM_STD};
-use crate::download::ensure_file;
+use crate::util::ensure_file;
 
 mod models;
 
@@ -22,10 +19,9 @@ pub struct Clip {
 }
 
 impl Clip {
-    pub async fn init(environment: Arc<Environment>) -> Result<Self, anyhow::Error> {
+    pub async fn init(environment: Arc<Environment>) -> anyhow::Result<Self> {
         let model = &CLIP_MODELS[0]; // todo: should be configurable
         let cache_path = model.get_cache_dir();
-        fs::create_dir_all(&cache_path)?;
         let vision_size = model.visual_size;
 
         let tokenizer = Clip::init_tokenizer(&cache_path, model).await?;
@@ -44,7 +40,7 @@ impl Clip {
         cache_path: &Path,
         model: &ClipModel,
         environment: Arc<Environment>,
-    ) -> Result<Session, anyhow::Error> {
+    ) -> anyhow::Result<Session> {
         let textual_path = cache_path.join("textual.onnx");
 
         let model_url = models::BUCKET_URL.to_owned() + model.textual_model.0;
@@ -63,7 +59,7 @@ impl Clip {
         cache_path: &Path,
         model: &ClipModel,
         environment: &Arc<Environment>,
-    ) -> Result<Session, anyhow::Error> {
+    ) -> anyhow::Result<Session> {
         let visual_path = cache_path.join("visual.onnx");
 
         let model_url = models::BUCKET_URL.to_owned() + model.visual_model.0;
@@ -73,10 +69,7 @@ impl Clip {
         Ok(visual_session)
     }
 
-    async fn init_tokenizer(
-        cache_path: &Path,
-        model: &ClipModel,
-    ) -> Result<Tokenizer, anyhow::Error> {
+    async fn init_tokenizer(cache_path: &Path, model: &ClipModel) -> anyhow::Result<Tokenizer> {
         let tokenizer_path = cache_path.join("tokenizer.json");
 
         ensure_file(model.tokenizer_url, &tokenizer_path, None).await?;
@@ -95,7 +88,7 @@ impl Clip {
         Ok(tokenizer)
     }
 
-    pub fn encode_text(&self, text: &Vec<&str>) -> Result<Vec<Vec<f32>>, anyhow::Error> {
+    pub fn encode_text(&self, text: &Vec<&str>) -> anyhow::Result<Vec<Vec<f32>>> {
         let preprocessed = self
             .tokenizer
             .encode_batch(text.clone(), true)
@@ -141,7 +134,7 @@ impl Clip {
             .collect())
     }
 
-    pub fn encode_image(&self, image_bytes: &Vec<Vec<u8>>) -> Result<Vec<Vec<f32>>, anyhow::Error> {
+    pub fn encode_image(&self, image_bytes: &Vec<Vec<u8>>) -> anyhow::Result<Vec<Vec<f32>>> {
         let mut pixels = CowArray::from(Array4::<f32>::zeros(Dim([
             image_bytes.len(),
             3,
@@ -150,9 +143,7 @@ impl Clip {
         ])));
 
         for (index, image_bytes) in image_bytes.iter().enumerate() {
-            let image = ImageReader::new(Cursor::new(image_bytes))
-                .with_guessed_format()?
-                .decode()?;
+            let image = image::load_from_memory(image_bytes)?;
             let image = image.resize_exact(
                 self.vision_size as u32,
                 self.vision_size as u32,

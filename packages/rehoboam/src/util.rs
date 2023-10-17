@@ -5,6 +5,7 @@ use reqwest::Client;
 use std::fs;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
+use zip::ZipArchive;
 
 use std::fs::File;
 use std::io::BufReader;
@@ -27,11 +28,10 @@ async fn check_hash(path: &PathBuf, md5sum: &str) -> Result<bool, anyhow::Error>
     Ok(format!("{:x}", digest) == md5sum)
 }
 
-pub async fn ensure_file(
-    url: &str,
-    path: &PathBuf,
-    md5sum: Option<&str>,
-) -> Result<(), anyhow::Error> {
+/// Ensure a file exists on disk:
+/// - if it does not, download it to the given path and validate its checksum.
+/// - if it does, do nothing.
+pub async fn ensure_file(url: &str, path: &PathBuf, md5sum: Option<&str>) -> anyhow::Result<()> {
     // If path exists on disk, check md5sum, if matches return
     if path.exists() {
         println!("File {} already exists, skipping download", path.display());
@@ -43,6 +43,7 @@ pub async fn ensure_file(
     let tmp_path: PathBuf = tmp_path.into();
 
     // Create or open a file
+    fs::create_dir_all(path.parent().unwrap())?;
     let mut file = fs::OpenOptions::new()
         .write(true)
         .create(true)
@@ -109,4 +110,71 @@ pub async fn ensure_file(
     // Rename tmp file to target path
     fs::rename(tmp_path, path)?;
     Ok(())
+}
+
+/// Ensure a zip file exists on disk and is unzipped in the given directory.
+/// Returns a list of unzipped files.
+/// `file_filter` can be used to filter which files are unzipped if only a subset is needed.
+pub async fn ensure_zip(
+    url: &str,
+    dir: &PathBuf,
+    md5sum: Option<&str>,
+    file_filter: fn(&PathBuf) -> bool,
+) -> anyhow::Result<Vec<PathBuf>> {
+    // If path exists on disk, check md5sum, if matches return
+    if dir.exists() {
+        // ensure the directory has all files in file_filter
+        let files = fs::read_dir(dir)?
+            .filter_map(|f| f.ok())
+            .map(|f| f.path())
+            .collect::<Vec<_>>();
+
+        println!(
+            "Directory {} already exists, skipping download",
+            dir.display()
+        );
+        return Ok(files);
+    }
+
+    let mut tmp_path = dir.clone().into_os_string();
+    tmp_path.push(".zippart");
+    let tmp_path: PathBuf = tmp_path.into();
+    ensure_file(url, &tmp_path, md5sum).await?;
+
+    // unzip
+    println!("Unzipping {} to {}", tmp_path.display(), dir.display());
+    let file = File::open(&tmp_path)?;
+    let mut archive = ZipArchive::new(file)?;
+    fs::create_dir_all(dir)?;
+
+    let mut files = vec![];
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+
+        let mut path = dir.clone();
+        path.push(file.name());
+
+        let keep = file_filter(&path);
+        if !keep {
+            continue;
+        }
+
+        let mut outfile = fs::File::create(&path)?;
+        std::io::copy(&mut file, &mut outfile)?;
+
+        files.push(path);
+    }
+
+    // delete temp file
+    fs::remove_file(&tmp_path)?;
+
+    Ok(files)
+}
+
+pub fn get_models_dir() -> PathBuf {
+    // todo: this should be configurable, especially in docker
+    let mut path = dirs::home_dir().unwrap();
+    path.push(".rehoboam");
+    path.push("models");
+    path
 }

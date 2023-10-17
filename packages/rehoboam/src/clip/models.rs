@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use crate::util::get_models_dir;
+
 pub struct ClipModel {
     pub name: &'static str,
     pub visual_model: (&'static str, &'static str),
@@ -57,13 +59,9 @@ pub static CLIP_MODELS: [ClipModel; 4] = [
 
 impl ClipModel {
     pub fn get_cache_dir(&self) -> PathBuf {
-        // root is ~/.rehoboam/models
-        // todo: this should be configurable, especially in docker
-        let mut path = dirs::home_dir().unwrap();
-        path.push(".rehoboam");
-        path.push("models");
-        path.push("clip");
-        path.push(self.name.replace('/', "-"));
-        path
+        let mut base = get_models_dir();
+        base.push("clip");
+        base.push(self.name.replace('/', "-"));
+        base
     }
 }
