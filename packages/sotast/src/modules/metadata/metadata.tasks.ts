@@ -1,24 +1,18 @@
-import type { EntityRepository } from '@mikro-orm/better-sqlite';
-import { EntityManager, ref, type ObjectQuery } from '@mikro-orm/core';
+import { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityManager, type ObjectQuery } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
-import dedent from 'dedent';
 import type { z } from 'zod';
-import { normalizePath } from '../../helpers/normalize-path.js';
 import { FileEntity } from '../file/entities/file.entity.js';
-import { Queue } from '../queue/queue.decorator.js';
-import { Callback } from '../rehoboam/decorators/callback.decorator.js';
-import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 import {
   MetadataCategory,
   MetadataEntity,
-  MetadataEntityTVShow,
+  type MetadataEntityTVShow,
   type MetadataEntityUnion,
 } from './entities/metadata.entity.js';
 import { PersonEntity } from './entities/person.entity.js';
 import { SourceEntity } from './entities/source.entity.js';
-import { METADATA_EXAMPLES } from './metadata.examples.js';
-import { MetadataSchema, MetadataSeriesSchema } from './metadata.schema.js';
+import { type MetadataSchema, type MetadataSeriesSchema } from './metadata.schema.js';
 
 export interface PathMetadataData {
   path: string;
@@ -26,14 +20,10 @@ export interface PathMetadataData {
 
 @Injectable()
 export class MetadataTasks {
-  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
   @InjectRepository(PersonEntity) private personRepo: EntityRepository<PersonEntity>;
   @InjectRepository(SourceEntity) private sourceRepo: EntityRepository<SourceEntity>;
   @InjectRepository(MetadataEntity) private metadataRepo: EntityRepository<MetadataEntityUnion>;
-  constructor(
-    private rehoboamService: RehoboamService,
-    private em: EntityManager,
-  ) {}
+  constructor(protected em: EntityManager) {}
 
   // @Queue('EXTRACT_METADATA', {
   //   targetConcurrency: 2,
@@ -49,42 +39,42 @@ export class MetadataTasks {
   //   await this.rehoboamService.queueCompletion(this.extractMetadataCallback, data);
   // }
 
-  @Callback<PathMetadataData, typeof MetadataSchema>({
-    type: 'path_metadata',
-    schema: MetadataSchema,
-    defaultExamples: METADATA_EXAMPLES,
-    prompt: {
-      // some basic tests showed this was pretty optimal for semi-accurate matching
-      // more testing is required, but idk it seems to help.
-      embedding: (data) => `file_path: "${normalizePath(data.path).replaceAll(/_|\./g, ' ')}"`,
-      instruction: (data) => normalizePath(data.path),
-      system: dedent`
-            You are a powerful labelling assistant. Users will give you paths and you will extract metadata from them.
-            DO NOT guess data. If something is ambiguous, use null or undefined.
-            Return an object matching the following schema:
-            \`\`\`ts
-            {schema}
-            \`\`\`
-        `,
-    },
-  })
-  async extractMetadataCallback(data: PathMetadataData, metadata: z.infer<typeof MetadataSchema>) {
-    // todo: using an LLM for every file is unbelievably wasteful.
-    // it would be better if we could do some basic matching for simpler files -
-    // files with an IMDb ID can just have that extracted and the rest pulled fro imdb,
-    // using embeddings we could have a "simple" and "complex" diff, and if simple
-    // use something like apollo with a shit load of regex. that would be a lot better,
-    // reserving LLM parsing for complex use cases.
-    const file = await this.fileRepo.findOneOrFail({ path: data.path });
-    if (!file.media) throw new Error('File has no media entity.');
-    const metadataEntity = await this.schemaToEntity(metadata);
-    file.media.metadata = ref(metadataEntity);
-    await this.em.persistAndFlush(file);
-  }
+  // @Callback<PathMetadataData, typeof MetadataSchema>({
+  //   type: 'path_metadata',
+  //   schema: MetadataSchema,
+  //   defaultExamples: METADATA_EXAMPLES,
+  //   prompt: {
+  //     // some basic tests showed this was pretty optimal for semi-accurate matching
+  //     // more testing is required, but idk it seems to help.
+  //     embedding: (data) => `file_path: "${normalizePath(data.path).replaceAll(/_|\./g, ' ')}"`,
+  //     instruction: (data) => normalizePath(data.path),
+  //     system: dedent`
+  //           You are a powerful labelling assistant. Users will give you paths and you will extract metadata from them.
+  //           DO NOT guess data. If something is ambiguous, use null or undefined.
+  //           Return an object matching the following schema:
+  //           \`\`\`ts
+  //           {schema}
+  //           \`\`\`
+  //       `,
+  //   },
+  // })
+  // async extractMetadataCallback(data: PathMetadataData, metadata: z.infer<typeof MetadataSchema>) {
+  //   // todo: using an LLM for every file is unbelievably wasteful.
+  //   // it would be better if we could do some basic matching for simpler files -
+  //   // files with an IMDb ID can just have that extracted and the rest pulled fro imdb,
+  //   // using embeddings we could have a "simple" and "complex" diff, and if simple
+  //   // use something like apollo with a shit load of regex. that would be a lot better,
+  //   // reserving LLM parsing for complex use cases.
+  //   const file = await this.fileRepo.findOneOrFail({ path: data.path });
+  //   if (!file.media) throw new Error('File has no media entity.');
+  //   const metadataEntity = await this.schemaToEntity(metadata);
+  //   file.media.metadata = ref(metadataEntity);
+  //   await this.em.persistAndFlush(file);
+  // }
 
   private async schemaToEntity(schema: z.infer<typeof MetadataSchema>) {
     switch (schema.category) {
-      case MetadataCategory.Generic:
+      case MetadataCategory.Generic: {
         const artists = schema.artists ? await this.resolvePersons(schema.artists) : [];
         const sources = schema.sources ? await this.resolveSources(schema.sources) : [];
         return this.metadataRepo.create({
@@ -97,6 +87,7 @@ export class MetadataTasks {
           artists: artists,
           sources: sources,
         });
+      }
       case MetadataCategory.Movie: {
         return this.metadataRepo.create({
           category: MetadataCategory.Movie,

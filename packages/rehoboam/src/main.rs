@@ -6,11 +6,13 @@ use ort::{Environment, ExecutionProvider};
 use service::proto::rehoboam_service_server::RehoboamServiceServer;
 use service::Service;
 use tonic::transport::Server;
+use whisper::Whisper;
 
 mod clip;
 mod facerec;
 mod service;
 mod util;
+mod whisper;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -27,7 +29,12 @@ async fn main() -> anyhow::Result<()> {
     let arcface = ArcFace::init(environment.clone(), rec_model).await?;
 
     let clip = Clip::init(environment).await.expect("Failed to load CLIP");
-    let server = Service::new(clip, retinaface, arcface);
+
+    let whisper = Whisper::init().await.expect("Failed to load Whisper");
+
+    let server = Service::new(clip, retinaface, arcface, whisper);
+
+    println!("Starting server");
 
     Server::builder()
         .add_service(RehoboamServiceServer::new(server))

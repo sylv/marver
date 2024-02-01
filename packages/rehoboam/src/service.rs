@@ -4,13 +4,14 @@ use tonic::{Request, Response, Status};
 use crate::{
     clip::Clip,
     facerec::{arcface::ArcFace, retinaface::RetinaFace},
+    whisper::Whisper,
 };
 
 use self::{
-    core::{BoundingBox, Embedding, Face, Landmark},
+    core::{BoundingBox, Embedding, Face, Landmark, Subtitle},
     proto::{
         EncodeImageReply, EncodeImageRequest, EncodeTextReply, EncodeTextRequest,
-        ExtractFacesReply, ExtractFacesRequest,
+        ExtractFacesReply, ExtractFacesRequest, ExtractSubtitlesReply, ExtractSubtitlesRequest,
     },
 };
 
@@ -28,20 +29,44 @@ pub struct Service {
     clip: Clip,
     retinaface: RetinaFace,
     arcface: ArcFace,
+    whisper: Whisper,
 }
 
 impl Service {
-    pub fn new(clip: Clip, retinaface: RetinaFace, arcface: ArcFace) -> Self {
+    pub fn new(clip: Clip, retinaface: RetinaFace, arcface: ArcFace, whisper: Whisper) -> Self {
         Self {
             clip,
             retinaface,
             arcface,
+            whisper,
         }
     }
 }
 
 #[tonic::async_trait]
 impl RehoboamService for Service {
+    async fn extract_subtitles(
+        &self,
+        request: Request<ExtractSubtitlesRequest>,
+    ) -> Result<Response<ExtractSubtitlesReply>, Status> {
+        let audio = request.into_inner().audio;
+        let subtitles = self.whisper.predict(audio);
+
+        return match subtitles {
+            Err(e) => Err(Status::internal(e.to_string())),
+            Ok(subtitles) => Ok(Response::new(ExtractSubtitlesReply {
+                subtitles: subtitles
+                    .into_iter()
+                    .map(|subtitle| Subtitle {
+                        text: subtitle.text,
+                        start: subtitle.start as i32,
+                        end: subtitle.end as i32,
+                    })
+                    .collect(),
+            })),
+        };
+    }
+
     async fn encode_text(
         &self,
         request: Request<EncodeTextRequest>,

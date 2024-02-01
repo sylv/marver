@@ -7,15 +7,14 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { MercuriusDriver, type MercuriusDriverConfig } from '@nestjs/mercurius';
 import { ImageModule } from './modules/image/image.module.js';
 import { QueueModule } from './modules/queue/queue.module.js';
-import { SolomonModule } from './modules/solomon/solomon.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { PersonModule } from './modules/people/person.module.js';
 import { config } from './config.js';
-import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
 import { MetadataModule } from './modules/metadata/metadata.module.js';
 import { TaskModule } from './modules/task/task.module.js';
+import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
@@ -49,11 +48,10 @@ const GQL_LOGGER = new Logger('GraphQL');
     PersonModule,
     ImageModule,
     QueueModule,
-    SolomonModule,
     VideoModule,
     FfmpegModule,
-    MediaModule,
     RehoboamModule,
+    MediaModule,
     MetadataModule,
     TaskModule,
   ],

@@ -15,13 +15,13 @@ import {
 } from '@nestjs/graphql';
 import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { createConnection } from 'nest-graphql-utils';
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
 import { PaginationArgs } from '../../pagination.js';
 import { ImageService } from '../image/image.service.js';
-import { SolomonService } from '../solomon/solomon.service.js';
+import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 import { MediaConnection, MediaEntity } from './entities/media.entity.js';
 import { MediaService } from './media.service.js';
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
 
 enum SimilarityType {
   Related,
@@ -41,6 +41,21 @@ class SimilarFilter extends PaginationArgs {
 
 registerEnumType(SimilarityType, { name: 'SimilarityType' });
 
+enum MediaSort {
+  DiskCreated,
+  Size,
+  Name,
+  Path,
+}
+
+enum MediaSortDirection {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
+
+registerEnumType(MediaSort, { name: 'MediaSort' });
+registerEnumType(MediaSortDirection, { name: 'MediaSortDirection' });
+
 @ArgsType()
 class MediaFilter extends PaginationArgs {
   @IsString()
@@ -48,6 +63,16 @@ class MediaFilter extends PaginationArgs {
   @IsOptional()
   @Field({ nullable: true })
   search?: string;
+
+  @Field(() => MediaSort, { nullable: true })
+  @IsEnum(MediaSort)
+  @IsOptional()
+  sort?: MediaSort;
+
+  @Field(() => MediaSortDirection, { nullable: true })
+  @IsEnum(MediaSortDirection)
+  @IsOptional()
+  direction: MediaSortDirection = MediaSortDirection.DESC;
 
   @IsDateString()
   @IsOptional()
@@ -67,7 +92,7 @@ export class MediaResolver {
   constructor(
     private imageService: ImageService,
     private fileService: MediaService,
-    private solomonService: SolomonService,
+    private rehoboamService: RehoboamService,
   ) {}
 
   @Query(() => MediaEntity, { nullable: true })
@@ -107,10 +132,14 @@ export class MediaResolver {
         if (filter.beforeDate)
           queryBuilder.andWhere({ file: { info: { createdAt: { $lte: filter.beforeDate } } } });
 
+        // we have to do this before the search query or else mikroorm can't
+        // count the files properly. it's a bug in mikroorm.
+        const count = await queryBuilder.getCount();
+
         if (filter.search) {
           const parsedQuery = this.fileService.parseSearchQuery(filter.search, queryBuilder);
           if (parsedQuery) {
-            const embedding = await this.solomonService.getTextEmbedding(filter.search);
+            const embedding = await this.rehoboamService.encodeText(filter.search);
             const serialized = embeddingToBuffer(embedding);
             queryBuilder
               .addSelect(
@@ -119,25 +148,32 @@ export class MediaResolver {
                 }),
               )
               .orderBy({
-                similarity: 'DESC',
+                similarity: filter.direction,
               });
           }
         } else {
-          queryBuilder.orderBy({
-            file: {
-              info: {
-                diskCreatedAt: 'DESC',
-              },
-            },
-          });
+          switch (filter.sort) {
+            case MediaSort.Size: {
+              queryBuilder.orderBy({ file: { info: { size: filter.direction } } });
+              break;
+            }
+            case MediaSort.Name: {
+              queryBuilder.orderBy({ file: { name: filter.direction } });
+              break;
+            }
+            case MediaSort.Path: {
+              queryBuilder.orderBy({ file: { path: filter.direction } });
+              break;
+            }
+            case MediaSort.DiskCreated:
+            default: {
+              queryBuilder.orderBy({ file: { info: { diskCreatedAt: filter.direction } } });
+            }
+          }
         }
 
-        // return queryBuilder.getResultAndCount();
-        queryBuilder.addSelect(`COUNT(*) OVER() as total`);
-        const results = await queryBuilder.execute();
-        const total = (results[0] as any)?.total ?? 0;
-        const mapped = results.map((raw) => this.mediaRepo.map(raw));
-        return [mapped, total];
+        const results = await queryBuilder.getResultList();
+        return [results, count];
       },
     });
   }

@@ -19,7 +19,7 @@ import { MediaTimelineEntity } from '../media/entities/media-timeline.entity.js'
 import { MediaEntity } from '../media/entities/media.entity.js';
 import { JobError } from '../queue/job.error.js';
 import { Queue } from '../queue/queue.decorator.js';
-import { SolomonService } from '../solomon/solomon.service.js';
+import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 
 @Injectable()
 export class VideoQueues {
@@ -32,7 +32,7 @@ export class VideoQueues {
 
   constructor(
     private ffmpegService: FfmpegService,
-    private solomonService: SolomonService,
+    private rehoboamService: RehoboamService,
     private imageService: ImageService,
     private em: EntityManager,
   ) {}
@@ -151,7 +151,7 @@ export class VideoQueues {
     const embeddings = [];
     for (const frame of frames) {
       if (!frame.path) continue;
-      const embedding = await this.solomonService.getFileEmbedding({ path: frame.path });
+      const embedding = await this.rehoboamService.encodeImage({ path: frame.path });
       embeddings.push(embedding);
     }
 

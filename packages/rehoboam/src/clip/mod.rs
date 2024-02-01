@@ -43,8 +43,12 @@ impl Clip {
     ) -> anyhow::Result<Session> {
         let textual_path = cache_path.join("textual.onnx");
 
-        let model_url = models::BUCKET_URL.to_owned() + model.textual_model.0;
-        ensure_file(&model_url, &textual_path, Some(model.textual_model.1)).await?;
+        ensure_file(
+            model.textual_model.0,
+            &textual_path,
+            Some(model.textual_model.1),
+        )
+        .await?;
 
         // todo: from what ive seen, with_parallel_execution has little effect on performance,
         // and sometimes makes it worse. but that might be setup-specific, something to look
@@ -62,8 +66,12 @@ impl Clip {
     ) -> anyhow::Result<Session> {
         let visual_path = cache_path.join("visual.onnx");
 
-        let model_url = models::BUCKET_URL.to_owned() + model.visual_model.0;
-        ensure_file(&model_url, &visual_path, Some(model.visual_model.1)).await?;
+        ensure_file(
+            model.visual_model.0,
+            &visual_path,
+            Some(model.visual_model.1),
+        )
+        .await?;
 
         let visual_session = SessionBuilder::new(environment)?.with_model_from_file(visual_path)?;
         Ok(visual_session)

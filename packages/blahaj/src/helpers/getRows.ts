@@ -12,6 +12,7 @@ export interface RowOptions {
   rowHeight: number;
   margin: number;
   maxPerRow?: number;
+  skipLastRow?: boolean;
 }
 
 export interface RowifiedImage<T> {
@@ -57,10 +58,16 @@ const getRow = <T>(images: ImageLike<T>[], options: RowOptions): RowifiedImage<T
 
 export const getRows = <T>(images: ImageLike<T>[], options: RowOptions): RowifiedImage<T>[] => {
   const rows = [];
+  let lastRowLength = 0;
   while (images.length > 0) {
     const row = getRow(images, options);
     rows.push(...row);
+    lastRowLength = row.length;
     images = images.slice(row.length);
+  }
+
+  if (options.skipLastRow) {
+    rows.splice(rows.length - lastRowLength, lastRowLength);
   }
 
   return rows;
@@ -68,7 +75,7 @@ export const getRows = <T>(images: ImageLike<T>[], options: RowOptions): Rowifie
 
 export const useMediaListRows = (
   mediaList: MinimalMediaFragment[] | undefined | null,
-  options: Omit<RowOptions, 'containerWidth'> & { containerRef: RefObject<HTMLDivElement> }
+  options: Omit<RowOptions, 'containerWidth'> & { containerRef: RefObject<HTMLDivElement> },
 ): RowifiedImage<MinimalMediaFragment>[] => {
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
 

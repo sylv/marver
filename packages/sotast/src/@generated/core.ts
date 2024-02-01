@@ -45,6 +45,27 @@ export interface Face {
      * @generated from protobuf field: float confidence = 3;
      */
     confidence: number;
+    /**
+     * @generated from protobuf field: repeated me.sylver.marver.core.Landmark landmarks = 4;
+     */
+    landmarks: Landmark[];
+}
+/**
+ * @generated from protobuf message me.sylver.marver.core.Landmark
+ */
+export interface Landmark {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: float x = 2;
+     */
+    x: number;
+    /**
+     * @generated from protobuf field: float y = 3;
+     */
+    y: number;
 }
 /**
  * @generated from protobuf message me.sylver.marver.core.BoundingBox
@@ -75,6 +96,23 @@ export interface Embedding {
      * @generated from protobuf field: repeated float value = 1;
      */
     value: number[];
+}
+/**
+ * @generated from protobuf message me.sylver.marver.core.Subtitle
+ */
+export interface Subtitle {
+    /**
+     * @generated from protobuf field: string text = 1;
+     */
+    text: string;
+    /**
+     * @generated from protobuf field: int32 start = 2;
+     */
+    start: number;
+    /**
+     * @generated from protobuf field: int32 end = 3;
+     */
+    end: number;
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class OCR$Type extends MessageType<OCR> {
@@ -143,11 +181,12 @@ class Face$Type extends MessageType<Face> {
         super("me.sylver.marver.core.Face", [
             { no: 1, name: "bounding_box", kind: "message", localName: "bounding_box", T: () => BoundingBox },
             { no: 2, name: "embedding", kind: "message", T: () => Embedding },
-            { no: 3, name: "confidence", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ }
+            { no: 3, name: "confidence", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 4, name: "landmarks", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Landmark }
         ]);
     }
     create(value?: PartialMessage<Face>): Face {
-        const message = { confidence: 0 };
+        const message = { confidence: 0, landmarks: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Face>(this, message, value);
@@ -166,6 +205,9 @@ class Face$Type extends MessageType<Face> {
                     break;
                 case /* float confidence */ 3:
                     message.confidence = reader.float();
+                    break;
+                case /* repeated me.sylver.marver.core.Landmark landmarks */ 4:
+                    message.landmarks.push(Landmark.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -188,6 +230,9 @@ class Face$Type extends MessageType<Face> {
         /* float confidence = 3; */
         if (message.confidence !== 0)
             writer.tag(3, WireType.Bit32).float(message.confidence);
+        /* repeated me.sylver.marver.core.Landmark landmarks = 4; */
+        for (let i = 0; i < message.landmarks.length; i++)
+            Landmark.internalBinaryWrite(message.landmarks[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -198,6 +243,67 @@ class Face$Type extends MessageType<Face> {
  * @generated MessageType for protobuf message me.sylver.marver.core.Face
  */
 export const Face = new Face$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Landmark$Type extends MessageType<Landmark> {
+    constructor() {
+        super("me.sylver.marver.core.Landmark", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "x", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 3, name: "y", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Landmark>): Landmark {
+        const message = { name: "", x: 0, y: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Landmark>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Landmark): Landmark {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* float x */ 2:
+                    message.x = reader.float();
+                    break;
+                case /* float y */ 3:
+                    message.y = reader.float();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Landmark, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* float x = 2; */
+        if (message.x !== 0)
+            writer.tag(2, WireType.Bit32).float(message.x);
+        /* float y = 3; */
+        if (message.y !== 0)
+            writer.tag(3, WireType.Bit32).float(message.y);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.core.Landmark
+ */
+export const Landmark = new Landmark$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class BoundingBox$Type extends MessageType<BoundingBox> {
     constructor() {
@@ -321,3 +427,64 @@ class Embedding$Type extends MessageType<Embedding> {
  * @generated MessageType for protobuf message me.sylver.marver.core.Embedding
  */
 export const Embedding = new Embedding$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Subtitle$Type extends MessageType<Subtitle> {
+    constructor() {
+        super("me.sylver.marver.core.Subtitle", [
+            { no: 1, name: "text", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "start", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "end", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Subtitle>): Subtitle {
+        const message = { text: "", start: 0, end: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Subtitle>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Subtitle): Subtitle {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string text */ 1:
+                    message.text = reader.string();
+                    break;
+                case /* int32 start */ 2:
+                    message.start = reader.int32();
+                    break;
+                case /* int32 end */ 3:
+                    message.end = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Subtitle, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string text = 1; */
+        if (message.text !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.text);
+        /* int32 start = 2; */
+        if (message.start !== 0)
+            writer.tag(2, WireType.Varint).int32(message.start);
+        /* int32 end = 3; */
+        if (message.end !== 0)
+            writer.tag(3, WireType.Varint).int32(message.end);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.core.Subtitle
+ */
+export const Subtitle = new Subtitle$Type();

@@ -13,7 +13,27 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { Face } from "./core.js";
 import { Embedding } from "./core.js";
+import { Subtitle } from "./core.js";
+/**
+ * @generated from protobuf message me.sylver.marver.rehoboam.ExtractSubtitlesRequest
+ */
+export interface ExtractSubtitlesRequest {
+    /**
+     * @generated from protobuf field: bytes audio = 1;
+     */
+    audio: Uint8Array;
+}
+/**
+ * @generated from protobuf message me.sylver.marver.rehoboam.ExtractSubtitlesReply
+ */
+export interface ExtractSubtitlesReply {
+    /**
+     * @generated from protobuf field: repeated me.sylver.marver.core.Subtitle subtitles = 1;
+     */
+    subtitles: Subtitle[];
+}
 /**
  * @generated from protobuf message me.sylver.marver.rehoboam.EncodeImageRequest
  */
@@ -50,6 +70,118 @@ export interface EncodeTextReply {
      */
     embeddings: Embedding[];
 }
+/**
+ * @generated from protobuf message me.sylver.marver.rehoboam.ExtractFacesRequest
+ */
+export interface ExtractFacesRequest {
+    /**
+     * @generated from protobuf field: repeated bytes images = 1;
+     */
+    images: Uint8Array[];
+}
+/**
+ * @generated from protobuf message me.sylver.marver.rehoboam.ExtractFacesReply
+ */
+export interface ExtractFacesReply {
+    /**
+     * @generated from protobuf field: repeated me.sylver.marver.core.Face faces = 1;
+     */
+    faces: Face[];
+}
+// @generated message type with reflection information, may provide speed optimized methods
+class ExtractSubtitlesRequest$Type extends MessageType<ExtractSubtitlesRequest> {
+    constructor() {
+        super("me.sylver.marver.rehoboam.ExtractSubtitlesRequest", [
+            { no: 1, name: "audio", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ExtractSubtitlesRequest>): ExtractSubtitlesRequest {
+        const message = { audio: new Uint8Array(0) };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ExtractSubtitlesRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ExtractSubtitlesRequest): ExtractSubtitlesRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bytes audio */ 1:
+                    message.audio = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ExtractSubtitlesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bytes audio = 1; */
+        if (message.audio.length)
+            writer.tag(1, WireType.LengthDelimited).bytes(message.audio);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.rehoboam.ExtractSubtitlesRequest
+ */
+export const ExtractSubtitlesRequest = new ExtractSubtitlesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExtractSubtitlesReply$Type extends MessageType<ExtractSubtitlesReply> {
+    constructor() {
+        super("me.sylver.marver.rehoboam.ExtractSubtitlesReply", [
+            { no: 1, name: "subtitles", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Subtitle }
+        ]);
+    }
+    create(value?: PartialMessage<ExtractSubtitlesReply>): ExtractSubtitlesReply {
+        const message = { subtitles: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ExtractSubtitlesReply>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ExtractSubtitlesReply): ExtractSubtitlesReply {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated me.sylver.marver.core.Subtitle subtitles */ 1:
+                    message.subtitles.push(Subtitle.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ExtractSubtitlesReply, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated me.sylver.marver.core.Subtitle subtitles = 1; */
+        for (let i = 0; i < message.subtitles.length; i++)
+            Subtitle.internalBinaryWrite(message.subtitles[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.rehoboam.ExtractSubtitlesReply
+ */
+export const ExtractSubtitlesReply = new ExtractSubtitlesReply$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class EncodeImageRequest$Type extends MessageType<EncodeImageRequest> {
     constructor() {
@@ -238,10 +370,106 @@ class EncodeTextReply$Type extends MessageType<EncodeTextReply> {
  * @generated MessageType for protobuf message me.sylver.marver.rehoboam.EncodeTextReply
  */
 export const EncodeTextReply = new EncodeTextReply$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExtractFacesRequest$Type extends MessageType<ExtractFacesRequest> {
+    constructor() {
+        super("me.sylver.marver.rehoboam.ExtractFacesRequest", [
+            { no: 1, name: "images", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ExtractFacesRequest>): ExtractFacesRequest {
+        const message = { images: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ExtractFacesRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ExtractFacesRequest): ExtractFacesRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated bytes images */ 1:
+                    message.images.push(reader.bytes());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ExtractFacesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated bytes images = 1; */
+        for (let i = 0; i < message.images.length; i++)
+            writer.tag(1, WireType.LengthDelimited).bytes(message.images[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.rehoboam.ExtractFacesRequest
+ */
+export const ExtractFacesRequest = new ExtractFacesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ExtractFacesReply$Type extends MessageType<ExtractFacesReply> {
+    constructor() {
+        super("me.sylver.marver.rehoboam.ExtractFacesReply", [
+            { no: 1, name: "faces", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Face }
+        ]);
+    }
+    create(value?: PartialMessage<ExtractFacesReply>): ExtractFacesReply {
+        const message = { faces: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<ExtractFacesReply>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ExtractFacesReply): ExtractFacesReply {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated me.sylver.marver.core.Face faces */ 1:
+                    message.faces.push(Face.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ExtractFacesReply, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated me.sylver.marver.core.Face faces = 1; */
+        for (let i = 0; i < message.faces.length; i++)
+            Face.internalBinaryWrite(message.faces[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message me.sylver.marver.rehoboam.ExtractFacesReply
+ */
+export const ExtractFacesReply = new ExtractFacesReply$Type();
 /**
  * @generated ServiceType for protobuf service me.sylver.marver.rehoboam.RehoboamService
  */
 export const RehoboamService = new ServiceType("me.sylver.marver.rehoboam.RehoboamService", [
     { name: "EncodeImage", options: {}, I: EncodeImageRequest, O: EncodeImageReply },
-    { name: "EncodeText", options: {}, I: EncodeTextRequest, O: EncodeTextReply }
+    { name: "EncodeText", options: {}, I: EncodeTextRequest, O: EncodeTextReply },
+    { name: "ExtractFaces", options: {}, I: ExtractFacesRequest, O: ExtractFacesReply },
+    { name: "ExtractSubtitles", options: {}, I: ExtractSubtitlesRequest, O: ExtractSubtitlesReply }
 ]);

@@ -9,7 +9,7 @@ import { useDebounced } from '../hooks/useDebounced';
 import { useMediaListRows } from '../helpers/getRows';
 
 export default function HomePage() {
-  const [tab, setTab] = useQueryState<string>('tab', 'gallery');
+  const [tab, setTab] = useQueryState<string>('tab', 'all');
   const [search, setSearch] = useQueryState<string>('search', '');
   const loaderRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +42,11 @@ export default function HomePage() {
     margin: 4,
     rowHeight: 300,
     maxPerRow: 6,
+    // if we render the last row and get additional images later,
+    // that row will likely be adjusted to fit some of those new images.
+    // that causes the UI to jump around, so we just hide the last row
+    // until there are no more images to load.
+    skipLastRow: !!data?.mediaList.pageInfo.hasNextPage,
   });
 
   return (
@@ -49,30 +54,32 @@ export default function HomePage() {
       <Tabs value={tab} onValueChange={(value) => setTab(value)}>
         <div className="flex items-center gap-2">
           <TabsList>
-            <TabsTrigger value="gallery">Gallery</TabsTrigger>
-            <TabsTrigger value="tv_shows">TV Shows</TabsTrigger>
-            <TabsTrigger value="movies">Movies</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="by_year">By Year</TabsTrigger>
           </TabsList>
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" />
         </div>
-        <TabsContent value="gallery">
-          <div className="flex flex-wrap" ref={containerRef}>
-            {grid.map((cell) => (
-              <MediaPreview
-                media={cell.data}
-                key={cell.data.file.id}
-                style={{
-                  height: cell.scaledHeight,
-                  width: cell.scaledWidth,
-                  margin: 4,
-                }}
-              />
-            ))}
+        <TabsContent value="all">
+          <div className="relative">
+            <div className="flex flex-wrap " ref={containerRef}>
+              {grid.map((cell) => (
+                <MediaPreview
+                  media={cell.data}
+                  key={cell.data.file.id}
+                  style={{
+                    height: cell.scaledHeight,
+                    width: cell.scaledWidth,
+                    margin: 4,
+                  }}
+                />
+              ))}
+            </div>
+            <div
+              ref={loaderRef}
+              className="absolute left-0 right-0 bottom-[100vh] z-10 h-10 pointer-events-none"
+            />
           </div>
         </TabsContent>
-        {data?.mediaList.pageInfo.hasNextPage && (
-          <div ref={loaderRef} className="h-10 w-full bg-black" />
-        )}
       </Tabs>
     </div>
   );

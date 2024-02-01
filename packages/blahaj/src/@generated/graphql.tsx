@@ -17,8 +17,6 @@ export type Scalars = {
   Float: { input: number; output: number; }
   /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: any; output: any; }
-  /** The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSONObject: { input: any; output: any; }
 };
 
 export type BoundingBox = {
@@ -28,55 +26,6 @@ export type BoundingBox = {
   y1: Scalars['Float']['output'];
   y2: Scalars['Float']['output'];
 };
-
-export type Completion = {
-  __typename?: 'Completion';
-  alwaysInclude: Scalars['Boolean']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  data: Scalars['JSONObject']['output'];
-  errorMessage?: Maybe<Scalars['String']['output']>;
-  /** Examples used for this completion */
-  examples: Array<CompletionExample>;
-  examplesSimilarity?: Maybe<Scalars['Float']['output']>;
-  id: Scalars['ID']['output'];
-  result?: Maybe<Scalars['JSONObject']['output']>;
-  state: CompletionState;
-  type: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-};
-
-export type CompletionConnection = {
-  __typename?: 'CompletionConnection';
-  edges: Array<CompletionEdge>;
-  pageInfo: PageInfo;
-  /** Total number of CompletionEntity items */
-  totalCount: Scalars['Int']['output'];
-};
-
-/** Provides CompletionEntity item and a cursor to its position */
-export type CompletionEdge = {
-  __typename?: 'CompletionEdge';
-  /** The position of this CompletionEntity item */
-  cursor: Scalars['String']['output'];
-  node: Completion;
-};
-
-export type CompletionExample = {
-  __typename?: 'CompletionExample';
-  completion: Completion;
-  example: Completion;
-  similarity: Scalars['Float']['output'];
-};
-
-export enum CompletionState {
-  BuiltIn = 'BuiltIn',
-  Error = 'Error',
-  PendingCompletion = 'PendingCompletion',
-  PendingVerification = 'PendingVerification',
-  VerifiedAuto = 'VerifiedAuto',
-  VerifiedHybrid = 'VerifiedHybrid',
-  VerifiedManual = 'VerifiedManual'
-}
 
 export type Face = {
   __typename?: 'Face';
@@ -220,6 +169,18 @@ export type MediaPoster = {
   width: Scalars['Float']['output'];
 };
 
+export enum MediaSort {
+  DiskCreated = 'DiskCreated',
+  Name = 'Name',
+  Path = 'Path',
+  Size = 'Size'
+}
+
+export enum MediaSortDirection {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
 export type MediaSubtitle = {
   __typename?: 'MediaSubtitle';
   displayName: Scalars['String']['output'];
@@ -260,23 +221,11 @@ export type MediaTimeline = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  rejectCompletion: Completion;
   runTask: Task;
-  verifyCompletion: Completion;
-};
-
-
-export type MutationRejectCompletionArgs = {
-  id: Scalars['ID']['input'];
 };
 
 
 export type MutationRunTaskArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type MutationVerifyCompletionArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -304,22 +253,11 @@ export type Person = {
 
 export type Query = {
   __typename?: 'Query';
-  completions: CompletionConnection;
   file?: Maybe<File>;
   files: FileConnection;
   media?: Maybe<Media>;
   mediaList: MediaConnection;
   tasks: Array<Task>;
-};
-
-
-export type QueryCompletionsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Float']['input']>;
-  last?: InputMaybe<Scalars['Float']['input']>;
-  offset?: InputMaybe<Scalars['Float']['input']>;
-  state?: InputMaybe<CompletionState>;
 };
 
 
@@ -348,10 +286,12 @@ export type QueryMediaListArgs = {
   afterDate?: InputMaybe<Scalars['DateTime']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   beforeDate?: InputMaybe<Scalars['DateTime']['input']>;
+  direction?: InputMaybe<MediaSortDirection>;
   first?: InputMaybe<Scalars['Float']['input']>;
   last?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<MediaSort>;
 };
 
 export enum SimilarityType {
@@ -377,38 +317,17 @@ export type Task = {
   running?: Maybe<Scalars['Boolean']['output']>;
 };
 
-export type CompletionsQueryVariables = Exact<{
-  state: CompletionState;
-}>;
-
-
-export type CompletionsQuery = { __typename?: 'Query', completions: { __typename?: 'CompletionConnection', totalCount: number, edges: Array<{ __typename?: 'CompletionEdge', node: { __typename?: 'Completion', id: string, type: string, result?: any | null, data: any, state: CompletionState, alwaysInclude: boolean, examplesSimilarity?: number | null, examples: Array<{ __typename?: 'CompletionExample', similarity: number, example: { __typename?: 'Completion', id: string, data: any, result?: any | null } }> } }> } };
-
-export type RegularCompletionFragment = { __typename?: 'Completion', id: string, type: string, result?: any | null, data: any, state: CompletionState, alwaysInclude: boolean, examplesSimilarity?: number | null, examples: Array<{ __typename?: 'CompletionExample', similarity: number, example: { __typename?: 'Completion', id: string, data: any, result?: any | null } }> };
-
-export type VerifyCompletionMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type VerifyCompletionMutation = { __typename?: 'Mutation', verifyCompletion: { __typename?: 'Completion', id: string, type: string, result?: any | null, data: any, state: CompletionState, alwaysInclude: boolean, examplesSimilarity?: number | null, examples: Array<{ __typename?: 'CompletionExample', similarity: number, example: { __typename?: 'Completion', id: string, data: any, result?: any | null } }> } };
-
-export type RejectCompletionMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type RejectCompletionMutation = { __typename?: 'Mutation', rejectCompletion: { __typename?: 'Completion', id: string, type: string, result?: any | null, data: any, state: CompletionState, alwaysInclude: boolean, examplesSimilarity?: number | null, examples: Array<{ __typename?: 'CompletionExample', similarity: number, example: { __typename?: 'Completion', id: string, data: any, result?: any | null } }> } };
-
 export type MediaListQueryVariables = Exact<{
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type MediaListQuery = { __typename?: 'Query', mediaList: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', diskCreatedAt: any, size: number, sizeFormatted: string } } } }> } };
+export type MediaListQuery = { __typename?: 'Query', mediaList: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', diskCreatedAt: any, size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }> } }> } };
 
-export type MinimalMediaFragment = { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } };
+export type MinimalMediaFragment = { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }> };
+
+export type BoundingBoxFragment = { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number };
 
 export type GetMediaQueryVariables = Exact<{
   fileId: Scalars['String']['input'];
@@ -416,7 +335,7 @@ export type GetMediaQueryVariables = Exact<{
 }>;
 
 
-export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number }, person?: { __typename?: 'Person', id: string, name: string } | null }>, texts: Array<{ __typename?: 'MediaText', id: string, text: string, code?: string | null, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }>, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } } } }> } } | null };
+export type GetMediaQuery = { __typename?: 'Query', media?: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, subtitles: Array<{ __typename?: 'MediaSubtitle', id: string, displayName: string, forced: boolean, hearingImpaired: boolean, generated: boolean }>, file: { __typename?: 'File', type?: FileType | null, id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number }, person?: { __typename?: 'Person', id: string, name: string } | null }>, texts: Array<{ __typename?: 'MediaText', id: string, text: string, code?: string | null, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }>, similar: { __typename?: 'MediaConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ __typename?: 'MediaEdge', node: { __typename?: 'Media', id?: string | null, previewBase64?: string | null, thumbnailUrl?: string | null, height?: number | null, width?: number | null, durationFormatted?: string | null, durationSeconds?: number | null, framerate?: number | null, videoCodec?: string | null, audioCodec?: string | null, file: { __typename?: 'File', id: string, path: string, name: string, info: { __typename?: 'FileInfoEmbeddable', size: number, sizeFormatted: string } }, faces: Array<{ __typename?: 'Face', id: string, boundingBox: { __typename?: 'BoundingBox', x1: number, y1: number, x2: number, y2: number } }> } }> } } | null };
 
 export type TasksQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -432,23 +351,12 @@ export type RunTaskMutation = { __typename?: 'Mutation', runTask: { __typename?:
 
 export type RegularTaskFragment = { __typename?: 'Task', id: string, name: string, description?: string | null, running?: boolean | null, nextRunAt: number };
 
-export const RegularCompletionFragmentDoc = gql`
-    fragment RegularCompletion on Completion {
-  id
-  type
-  result
-  data
-  state
-  alwaysInclude
-  examplesSimilarity
-  examples {
-    similarity
-    example {
-      id
-      data
-      result
-    }
-  }
+export const BoundingBoxFragmentDoc = gql`
+    fragment BoundingBox on BoundingBox {
+  x1
+  y1
+  x2
+  y2
 }
     `;
 export const MinimalMediaFragmentDoc = gql`
@@ -472,8 +380,14 @@ export const MinimalMediaFragmentDoc = gql`
       sizeFormatted
     }
   }
+  faces {
+    id
+    boundingBox {
+      ...BoundingBox
+    }
+  }
 }
-    `;
+    ${BoundingBoxFragmentDoc}`;
 export const RegularTaskFragmentDoc = gql`
     fragment RegularTask on Task {
   id
@@ -483,112 +397,6 @@ export const RegularTaskFragmentDoc = gql`
   nextRunAt
 }
     `;
-export const CompletionsDocument = gql`
-    query Completions($state: CompletionState!) {
-  completions(first: 25, state: $state) {
-    totalCount
-    edges {
-      node {
-        ...RegularCompletion
-      }
-    }
-  }
-}
-    ${RegularCompletionFragmentDoc}`;
-
-/**
- * __useCompletionsQuery__
- *
- * To run a query within a React component, call `useCompletionsQuery` and pass it any options that fit your needs.
- * When your component renders, `useCompletionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useCompletionsQuery({
- *   variables: {
- *      state: // value for 'state'
- *   },
- * });
- */
-export function useCompletionsQuery(baseOptions: Apollo.QueryHookOptions<CompletionsQuery, CompletionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CompletionsQuery, CompletionsQueryVariables>(CompletionsDocument, options);
-      }
-export function useCompletionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CompletionsQuery, CompletionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CompletionsQuery, CompletionsQueryVariables>(CompletionsDocument, options);
-        }
-export type CompletionsQueryHookResult = ReturnType<typeof useCompletionsQuery>;
-export type CompletionsLazyQueryHookResult = ReturnType<typeof useCompletionsLazyQuery>;
-export type CompletionsQueryResult = Apollo.QueryResult<CompletionsQuery, CompletionsQueryVariables>;
-export const VerifyCompletionDocument = gql`
-    mutation VerifyCompletion($id: ID!) {
-  verifyCompletion(id: $id) {
-    ...RegularCompletion
-  }
-}
-    ${RegularCompletionFragmentDoc}`;
-export type VerifyCompletionMutationFn = Apollo.MutationFunction<VerifyCompletionMutation, VerifyCompletionMutationVariables>;
-
-/**
- * __useVerifyCompletionMutation__
- *
- * To run a mutation, you first call `useVerifyCompletionMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useVerifyCompletionMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [verifyCompletionMutation, { data, loading, error }] = useVerifyCompletionMutation({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useVerifyCompletionMutation(baseOptions?: Apollo.MutationHookOptions<VerifyCompletionMutation, VerifyCompletionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<VerifyCompletionMutation, VerifyCompletionMutationVariables>(VerifyCompletionDocument, options);
-      }
-export type VerifyCompletionMutationHookResult = ReturnType<typeof useVerifyCompletionMutation>;
-export type VerifyCompletionMutationResult = Apollo.MutationResult<VerifyCompletionMutation>;
-export type VerifyCompletionMutationOptions = Apollo.BaseMutationOptions<VerifyCompletionMutation, VerifyCompletionMutationVariables>;
-export const RejectCompletionDocument = gql`
-    mutation RejectCompletion($id: ID!) {
-  rejectCompletion(id: $id) {
-    ...RegularCompletion
-  }
-}
-    ${RegularCompletionFragmentDoc}`;
-export type RejectCompletionMutationFn = Apollo.MutationFunction<RejectCompletionMutation, RejectCompletionMutationVariables>;
-
-/**
- * __useRejectCompletionMutation__
- *
- * To run a mutation, you first call `useRejectCompletionMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useRejectCompletionMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [rejectCompletionMutation, { data, loading, error }] = useRejectCompletionMutation({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useRejectCompletionMutation(baseOptions?: Apollo.MutationHookOptions<RejectCompletionMutation, RejectCompletionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RejectCompletionMutation, RejectCompletionMutationVariables>(RejectCompletionDocument, options);
-      }
-export type RejectCompletionMutationHookResult = ReturnType<typeof useRejectCompletionMutation>;
-export type RejectCompletionMutationResult = Apollo.MutationResult<RejectCompletionMutation>;
-export type RejectCompletionMutationOptions = Apollo.BaseMutationOptions<RejectCompletionMutation, RejectCompletionMutationVariables>;
 export const MediaListDocument = gql`
     query MediaList($search: String, $after: String) {
   mediaList(search: $search, after: $after, first: 50) {

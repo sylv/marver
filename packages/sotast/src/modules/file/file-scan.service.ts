@@ -123,7 +123,10 @@ export class FileScanService {
     });
 
     // there is no point in tracking files that we don't know how to handle
-    if (!file.isKnownType) return;
+    if (!file.isKnownType) {
+      this.log.debug(`Skipping unknown file type: ${path}`);
+      return;
+    }
 
     this.em.persist(file);
     this.staged++;

@@ -1,4 +1,12 @@
-import React, { type FC, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  type FC,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  Fragment,
+} from 'react';
 import { type BoundingBox } from '../@generated/graphql';
 import { ImageLoader, type ImageLoaderProps } from './image-loader';
 
@@ -8,18 +16,9 @@ export interface ImageOverlayProps extends ImageLoaderProps {
 
 interface ImageOverlayItem {
   boundingBox: BoundingBox;
-  content: ReactNode;
+  content: string;
   className?: string;
   onClick?: () => void;
-}
-
-function adjustBoundingBox(boundingBox: BoundingBox, scaleX: number, scaleY: number): BoundingBox {
-  return {
-    x1: boundingBox.x1 * scaleX,
-    x2: boundingBox.x2 * scaleX,
-    y1: boundingBox.y1 * scaleY,
-    y2: boundingBox.y2 * scaleY,
-  };
 }
 
 export const ImageOverlay: FC<ImageOverlayProps> = ({ overlays, ...rest }) => {
@@ -53,27 +52,28 @@ export const ImageOverlay: FC<ImageOverlayProps> = ({ overlays, ...rest }) => {
   }, [calculateScale]);
 
   return (
-    <div className="relative">
+    <Fragment>
       <ImageLoader {...rest} ref={imageRef} onLoad={calculateScale} onError={calculateScale} />
       <div className="absolute inset-0 pointer-events-none">
         {scaleX !== null &&
           scaleY !== null &&
           overlays?.map((overlay, index) => {
             const As = overlay.onClick ? 'button' : 'div';
-            const adjustedBoundingBox = adjustBoundingBox(overlay.boundingBox, scaleX, scaleY);
+
+            // bounding box is relative to the image, 0-1
             return (
               <As
                 className={overlay.className}
                 onClick={overlay.onClick}
-                key={`${adjustedBoundingBox.x1}-${adjustedBoundingBox.y1}.${index}`}
+                key={`${overlay.boundingBox.x1}-${overlay.boundingBox.y1}.${index}`}
                 title={overlay.content || undefined}
                 style={{
                   position: 'absolute',
                   pointerEvents: 'auto',
-                  left: `${adjustedBoundingBox.x1}px`,
-                  top: `${adjustedBoundingBox.y1}px`,
-                  width: `${adjustedBoundingBox.x2 - adjustedBoundingBox.x1}px`,
-                  height: `${adjustedBoundingBox.y2 - adjustedBoundingBox.y1}px`,
+                  left: `${overlay.boundingBox.x1 * 100}%`,
+                  top: `${overlay.boundingBox.y1 * 100}%`,
+                  width: `${(overlay.boundingBox.x2 - overlay.boundingBox.x1) * 100}%`,
+                  height: `${(overlay.boundingBox.y2 - overlay.boundingBox.y1) * 100}%`,
                 }}
               >
                 {overlay.content}
@@ -81,6 +81,6 @@ export const ImageOverlay: FC<ImageOverlayProps> = ({ overlays, ...rest }) => {
             );
           })}
       </div>
-    </div>
+    </Fragment>
   );
 };

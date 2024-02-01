@@ -94,7 +94,7 @@ export default function File() {
               />
             )}
             {data.media.file.type === FileType.Image && data.media.thumbnailUrl && (
-              <ImageLoader
+              <ImageOverlay
                 src={data.media.thumbnailUrl}
                 height={data.media?.height || undefined}
                 width={data.media?.width || undefined}

@@ -7,32 +7,22 @@
 > **Warning**
 > marver is not ready, there is very little UI and there are no guarantees it won't photoshop all your family photos with clown hats on your uncle. Watch the repo for updates, or come back in a few months.
 
-marver takes your messy, unorganised media and turns it into your personal video player, photo viewer and media library.
-
-marver will index your media and make it as user-friendly as possible. Point marver at your nas and it will extract information as best it can based on the file name, file contents, supporting files (subtitles, json, etc) and whatever else it can get its grubby little hands on. marver will take all that information and make it searchable, filterable, and viewable. If it can't find enough metadata, you can help push it in the right direction - attach a YouTube ID, IMDb ID, etc to a file and it'll grab the view count, comments, plot, poster, etc and display it along side the file. It's like Plex but for more than just movies and tv shows, and with a stronger focus on extracting metadata. Have a load of family photos laying around on your NAS? Let marver index them and generate albums based on faces, locations, dates, etc.
+marver scours your files and makes them all pretty and viewable, pulling as much information as possible.
 
 ## working-ish features
 
-- CLIP image and video search, "a pink sky at sunset" or "a picture of a dog wearing a clown costume"
-- CLIP-based related images and videos with filters
+- Image and video search, "a pink sky at sunset" or "a picture of a dog wearing a clown costume"
 - Transcoding unsupported videos on demand<sup>1</sup>
-- Converting unsupported images on demand
-- Blurred loading placeholders using [thumbhash](https://evanw.github.io/thumbhash/)
+- Related images and videos
 - EXIF extraction
-- Subtitle extraction and cleanup, removing advertisements and other junk
-- Skip intro and credits detection using perceptual hashes of frames<sup>2</sup>
-- Face recognition<sup>2</sup>
 
 <sup>1. with some video files, there are audio glitches that occur between segments. chrome supports h265 now and if the browser supports the video it'll play the original so this is less of an issue.</sup>
-
-<sup>2. perceptual hashes for videos are generated, but detecting overlaps and intros is not implemented yet.</sup>
-
-<sup>3. Faces are extracted and stored, but you cannot tie a name to a face yet. You can search for similar faces using `face:face_id` which will order by similarity. I'm not sure how to go about assigning a name to a face and matching other face matches to a name just yet.</sup>
 
 ### ideas
 
 - LLM integrations
   - Completely gimmicky but it would be an easy way to get a lot of powerful features in, then come back and train dedicated models for them later.
+  - A tiny model + LoRA may make some this doable even on weak systems/cpu only.
   - Extract metadata from file names and other sources extremely easily.
   - Convert metadata files that live along side files to usable data, no matter the metadata format.
     - It would also be cool if it could look at .sqlite files on disk and see if they are relevant, and if they are, generating SQL to query them and extract information. Some tools like `gallery-dl` will dump a load of metadata into an sqlite file, but that data is pretty much inaccessible without specialized tooling.
@@ -105,3 +95,5 @@ marver will index your media and make it as user-friendly as possible. Point mar
 - TV show intros/credits can be detected more efficiently by detecting them on one episode, then checking the rest of the episodes for the same timestamps. If the frames match +- 5 seconds, the timestamps can be reused.
 - When a user queries a file directly, prioritize tasks for that file. With graphql subscriptions we can push additional metadata to the client as it becomes available.
 - Embeddings for sections of videos (30s chunks? or split by chapter markings?) that include subtitles so you could search for a part of a video from a description of the scene, without knowing the exact words used.
+- Names for faces can be auto-guessed by looking for images with a single instance of a face and grabbing names from the path. A file named `ryan soccer 2002.jpg` with a single face is a pretty good indicator that the persons name is "Ryan", though it would still need a few more images to be sure.
+  - This could also work with images that have multiple faces. With two images, `dave ryan.jpg` and `ellie ryan.jpg` we know that only one face is in both photos, so we can assume that the name "Ryan" is for the face that is in both photos.

@@ -1,12 +1,37 @@
-import type { CallbackExample } from '../rehoboam/decorators/callback.decorator.js';
 import { MetadataCategory } from './entities/metadata.entity.js';
-import type { MetadataSchema } from './metadata.schema.js';
-import type { PathMetadataData } from './metadata.tasks.js';
 
 // todo: i think either all of these should start with a directory, or none should.
 // none might help embeddings match better, but all of them including a directory might "teach"
 // the LLM better, given that it will be closer to the others it gets.
-export const METADATA_EXAMPLES: CallbackExample<PathMetadataData, typeof MetadataSchema>[] = [
+export const METADATA_EXAMPLES = [
+  {
+    data: {
+      path: 'Avatar - The Last Airbender/Book 3; Fire/301 - The Awakening.mp4',
+    },
+    result: {
+      category: MetadataCategory.TVEpisode,
+      episodeName: 'The Awakening',
+      seasonNumber: 3,
+      episodeNumbers: [1],
+      series: {
+        title: 'Avatar - The Last Airbender',
+      },
+    },
+  },
+  {
+    data: {
+      path: 'avatar_the_last_airbender/Book 3; Fire/314 - The Boiling Rock, Part 1.mp4',
+    },
+    result: {
+      category: MetadataCategory.TVEpisode,
+      episodeName: 'The Boiling Rock, Part 1',
+      seasonNumber: 3,
+      episodeNumbers: [14],
+      series: {
+        title: 'avatar_the_last_airbender',
+      },
+    },
+  },
   {
     data: {
       path: '/media/tv/Mr. Robot (2015) {imdb-tt4158110}/Season 1/Mr. Robot (2015) - S01E08 - eps1.7_wh1ter0se.m4v [Bluray-1080p][AAC 5.1][x265].mkv',

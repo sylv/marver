@@ -5,10 +5,10 @@ import { FileModule } from '../file/file.module.js';
 import { ImageModule } from '../image/image.module.js';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { MediaEntity } from './entities/media.entity.js';
-import { SolomonModule } from '../solomon/solomon.module.js';
+import { RehoboamModule } from '../rehoboam/rehoboam.module.js';
 
 @Module({
-  imports: [FileModule, ImageModule, SolomonModule, MikroOrmModule.forFeature([MediaEntity])],
+  imports: [FileModule, ImageModule, RehoboamModule, MikroOrmModule.forFeature([MediaEntity])],
   providers: [MediaResolver, MediaService],
 })
 export class MediaModule {}

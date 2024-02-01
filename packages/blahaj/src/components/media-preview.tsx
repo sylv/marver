@@ -46,9 +46,8 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
         {...rest}
         className={clsx('transition relative overflow-hidden rounded-lg group', rest.className)}
       >
-        <div className="transition opacity-0 pointer-events-none absolute inset-0 z-10 group-hover:opacity-100 bg-gradient-to-t from-purple-600/90 to-transparent">
+        <div className="transition opacity-0 pointer-events-none absolute inset-0 z-10 group-hover:opacity-100 bg-gradient-to-t from-black/90 via-transparent to-transparent">
           <div className="p-3 flex justify-end items-start h-full flex-col">
-            <span className="text-xs text-gray-400">{media.file.info.sizeFormatted}</span>
             <h3 className="max-w-full truncate">{media.file.name}</h3>
           </div>
         </div>

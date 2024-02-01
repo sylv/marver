@@ -5,6 +5,10 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { RehoboamService } from "./rehoboam.js";
+import type { ExtractSubtitlesReply } from "./rehoboam.js";
+import type { ExtractSubtitlesRequest } from "./rehoboam.js";
+import type { ExtractFacesReply } from "./rehoboam.js";
+import type { ExtractFacesRequest } from "./rehoboam.js";
 import type { EncodeTextReply } from "./rehoboam.js";
 import type { EncodeTextRequest } from "./rehoboam.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
@@ -24,6 +28,14 @@ export interface IRehoboamServiceClient {
      * @generated from protobuf rpc: EncodeText(me.sylver.marver.rehoboam.EncodeTextRequest) returns (me.sylver.marver.rehoboam.EncodeTextReply);
      */
     encodeText(input: EncodeTextRequest, options?: RpcOptions): UnaryCall<EncodeTextRequest, EncodeTextReply>;
+    /**
+     * @generated from protobuf rpc: ExtractFaces(me.sylver.marver.rehoboam.ExtractFacesRequest) returns (me.sylver.marver.rehoboam.ExtractFacesReply);
+     */
+    extractFaces(input: ExtractFacesRequest, options?: RpcOptions): UnaryCall<ExtractFacesRequest, ExtractFacesReply>;
+    /**
+     * @generated from protobuf rpc: ExtractSubtitles(me.sylver.marver.rehoboam.ExtractSubtitlesRequest) returns (me.sylver.marver.rehoboam.ExtractSubtitlesReply);
+     */
+    extractSubtitles(input: ExtractSubtitlesRequest, options?: RpcOptions): UnaryCall<ExtractSubtitlesRequest, ExtractSubtitlesReply>;
 }
 /**
  * @generated from protobuf service me.sylver.marver.rehoboam.RehoboamService
@@ -47,5 +59,19 @@ export class RehoboamServiceClient implements IRehoboamServiceClient, ServiceInf
     encodeText(input: EncodeTextRequest, options?: RpcOptions): UnaryCall<EncodeTextRequest, EncodeTextReply> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<EncodeTextRequest, EncodeTextReply>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ExtractFaces(me.sylver.marver.rehoboam.ExtractFacesRequest) returns (me.sylver.marver.rehoboam.ExtractFacesReply);
+     */
+    extractFaces(input: ExtractFacesRequest, options?: RpcOptions): UnaryCall<ExtractFacesRequest, ExtractFacesReply> {
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ExtractFacesRequest, ExtractFacesReply>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ExtractSubtitles(me.sylver.marver.rehoboam.ExtractSubtitlesRequest) returns (me.sylver.marver.rehoboam.ExtractSubtitlesReply);
+     */
+    extractSubtitles(input: ExtractSubtitlesRequest, options?: RpcOptions): UnaryCall<ExtractSubtitlesRequest, ExtractSubtitlesReply> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ExtractSubtitlesRequest, ExtractSubtitlesReply>("unary", this._transport, method, opt, input);
     }
 }

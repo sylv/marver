@@ -9,16 +9,16 @@ import { MediaPosterEntity } from '../media/entities/media-poster.entity.js';
 import { MediaThumbnailEntity } from '../media/entities/media-thumbnail.entity.js';
 import { MediaTimelineEntity } from '../media/entities/media-timeline.entity.js';
 import { MediaEntity } from '../media/entities/media.entity.js';
-import { SolomonModule } from '../solomon/solomon.module.js';
 import { VideoController } from './video.controller.js';
 import { VideoQueues } from './video.queues.js';
+import { RehoboamModule } from '../rehoboam/rehoboam.module.js';
 
 @Module({
   providers: [VideoQueues],
   controllers: [VideoController],
   imports: [
     FfmpegModule,
-    SolomonModule,
+    RehoboamModule,
     ImageModule,
     MikroOrmModule.forFeature([
       FileEntity,

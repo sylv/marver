@@ -82,7 +82,7 @@ export class FileEntity {
   @Index()
   get extension() {
     if (!this.path) return;
-    return extname(this.path).slice(1) || null;
+    return extname(this.path).slice(1).toLowerCase() || null;
   }
 
   /**

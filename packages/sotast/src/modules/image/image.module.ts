@@ -6,10 +6,10 @@ import { FileModule } from '../file/file.module.js';
 import { MediaExifDataEntity } from '../media/entities/media-exif.entity.js';
 import { MediaTextEntity } from '../media/entities/media-text.entity.js';
 import { MediaEntity } from '../media/entities/media.entity.js';
-import { SolomonModule } from '../solomon/solomon.module.js';
 import { ImageController } from './image.controller.js';
 import { ImageService } from './image.service.js';
 import { ImageTasks } from './image.tasks.js';
+import { RehoboamModule } from '../rehoboam/rehoboam.module.js';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { ImageTasks } from './image.tasks.js';
       MediaEntity,
       MediaTextEntity,
     ]),
-    SolomonModule,
+    RehoboamModule,
     forwardRef(() => FileModule),
   ],
   controllers: [ImageController],

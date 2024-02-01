@@ -155,7 +155,8 @@ export class MediaEntity extends MediaSortingProps {
   @Field(() => String, { nullable: true })
   get durationFormatted() {
     if (!this.durationSeconds) return null;
-    return ms(this.durationSeconds * 1000);
+    if (this.durationSeconds < 1) return '1s';
+    return ms(Math.round(this.durationSeconds * 1000));
   }
 
   [PrimaryKeyProp]: 'file';

@@ -1,4 +1,4 @@
-import type { EntityRepository } from '@mikro-orm/better-sqlite';
+import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {
   BadRequestException,

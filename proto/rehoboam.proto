@@ -7,6 +7,15 @@ service RehoboamService {
     rpc EncodeImage (EncodeImageRequest) returns (EncodeImageReply) {}
     rpc EncodeText (EncodeTextRequest) returns (EncodeTextReply) {}
     rpc ExtractFaces (ExtractFacesRequest) returns (ExtractFacesReply) {}
+    rpc ExtractSubtitles (ExtractSubtitlesRequest) returns (ExtractSubtitlesReply) {}
+}
+
+message ExtractSubtitlesRequest {
+    bytes audio = 1;
+}
+
+message ExtractSubtitlesReply {
+    repeated me.sylver.marver.core.Subtitle subtitles = 1;
 }
 
 message EncodeImageRequest {

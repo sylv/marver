@@ -31,7 +31,7 @@ pub fn hard_nms(
 ) -> Vec<FacePrediction> {
     let mut picked: Vec<FacePrediction> = Vec::new();
 
-    let mut faces = faces.clone().to_vec();
+    let mut faces = faces.to_vec();
     faces.sort_by(|a, b| a.score.partial_cmp(&b.score).unwrap().reverse());
 
     while !faces.is_empty() {
