@@ -41,7 +41,7 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
     return (
       <Link
         data-mediaid={media.id}
-        to={`/media/${media.id}`}
+        to={`/file/${media.id}`}
         ref={ref}
         {...rest}
         className={clsx('transition relative overflow-hidden rounded-lg group', rest.className)}

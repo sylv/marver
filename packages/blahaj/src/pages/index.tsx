@@ -68,7 +68,7 @@ export default function HomePage() {
               {grid.map((cell) => (
                 <MediaPreview
                   media={cell.data}
-                  key={cell.data.file.id}
+                  key={cell.data.id}
                   style={{
                     height: cell.scaledHeight,
                     width: cell.scaledWidth,

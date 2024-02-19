@@ -2,7 +2,7 @@ import { Entity, Index, OneToOne, Property, type Ref } from '@mikro-orm/better-s
 import { Field, ObjectType } from '@nestjs/graphql';
 import { FileEntity } from './file.entity.js';
 
-@Entity()
+@Entity({ tableName: 'file_exif_data' })
 @ObjectType('FileExifData')
 export class FileExifDataEntity {
   @OneToOne(() => FileEntity, { primary: true, ref: true })

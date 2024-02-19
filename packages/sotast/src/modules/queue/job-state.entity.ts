@@ -31,7 +31,7 @@ const RETRY_DELAYS = [
   ms('5d'),
 ];
 
-@Entity()
+@Entity({ tableName: 'job_states' })
 export class JobStateEntity {
   @ManyToOne(() => FileEntity, { primary: true, ref: true })
   file: Ref<FileEntity>;
@@ -66,6 +66,7 @@ export class JobStateEntity {
   @BeforeCreate()
   @BeforeUpdate()
   computeRetryAfter() {
+    console.log(this);
     if (this.retries == null || this.state == null) {
       throw new Error('"retries" and "state" must be present');
     }

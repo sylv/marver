@@ -5,7 +5,7 @@ import { join } from 'path';
 import { FileAssetEntity } from './file-asset.entity.js';
 import { FileEntity } from '../file.entity.js';
 
-@Entity()
+@Entity({ tableName: 'file_timelines' })
 @ObjectType('FileTimeline')
 export class FileTimelineEntity extends FileAssetEntity {
   @Property({ persist: false })

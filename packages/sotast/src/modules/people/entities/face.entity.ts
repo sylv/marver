@@ -11,7 +11,7 @@ import { BoundingBoxEmbeddable } from './bounding-box.embeddable.js';
 import { FileEntity } from '../../file/entities/file.entity.js';
 import { PersonEntity } from './person.entity.js';
 
-@Entity()
+@Entity({ tableName: 'faces' })
 @ObjectType('Face')
 export class FaceEntity {
   @PrimaryKey({ autoincrement: true })

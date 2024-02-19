@@ -4,7 +4,7 @@ import {
   CreateRequestContext,
   type Loaded,
 } from '@mikro-orm/better-sqlite';
-import { MikroORM } from '@mikro-orm/core';
+import { MikroORM, raw } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
@@ -56,7 +56,7 @@ export class FileScanService {
         unavailable: true,
       })
       .where({
-        ['path_dirname(path)']: config.source_dirs,
+        [raw('path_dirname(path)')]: config.source_dirs,
         info: {
           checkedAt: { $lt: lastCheckedAt },
         },

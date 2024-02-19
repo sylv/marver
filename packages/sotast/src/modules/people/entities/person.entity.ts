@@ -25,7 +25,7 @@ import { FaceEntity } from './face.entity.js';
  * - Producers
  * - Musicians
  */
-@Entity()
+@Entity({ tableName: 'people' })
 @ObjectType('Person')
 export class PersonEntity {
   @PrimaryKey({ autoincrement: true })

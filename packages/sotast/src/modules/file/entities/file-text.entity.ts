@@ -20,7 +20,7 @@ export enum FileTextType {
 
 registerEnumType(FileTextType, { name: 'FileTextType' });
 
-@Entity()
+@Entity({ tableName: 'file_text' })
 @ObjectType('FileText')
 export class FileTextEntity {
   @PrimaryKey({ autoincrement: true })

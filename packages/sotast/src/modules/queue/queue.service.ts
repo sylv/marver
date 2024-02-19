@@ -222,6 +222,7 @@ export class QueueService implements OnApplicationBootstrap {
           file: file,
           type: queueHandler.meta.type,
           retries: 0,
+          state: JobState.Completed,
           executedAt: new Date(),
         },
         { persist: false },
