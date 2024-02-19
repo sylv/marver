@@ -1,12 +1,12 @@
-import { Fragment, useEffect, useRef } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { useQueryState } from '../hooks/useQueryState';
-import { useMediaListQuery } from '../@generated/graphql';
-import { Loading } from '../components/loading';
+import { useQuery } from '@apollo/client';
+import { useEffect, useRef } from 'react';
+import { FilesDocument } from '../@generated/graphql';
 import { MediaPreview } from '../components/media-preview';
 import { Input } from '../components/ui/input';
-import { useDebounced } from '../hooks/useDebounced';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useMediaListRows } from '../helpers/getRows';
+import { useDebounced } from '../hooks/useDebounced';
+import { useQueryState } from '../hooks/useQueryState';
 
 export default function HomePage() {
   const [tab, setTab] = useQueryState<string>('tab', 'all');
@@ -14,7 +14,7 @@ export default function HomePage() {
   const loaderRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debouncedSearch = useDebounced(search, 500);
-  const { error, loading, data, fetchMore } = useMediaListQuery({
+  const { loading, data, fetchMore } = useQuery(FilesDocument, {
     variables: {
       search: debouncedSearch.trim() || undefined,
     },
@@ -25,9 +25,9 @@ export default function HomePage() {
     const observer = new IntersectionObserver((entries) => {
       if (!data || loading) return;
       if (entries[0].isIntersecting) {
-        fetchMore({
+        void fetchMore({
           variables: {
-            after: data?.mediaList.pageInfo.endCursor,
+            after: data?.files.pageInfo.endCursor,
           },
         });
       }
@@ -37,17 +37,20 @@ export default function HomePage() {
     return () => observer.disconnect();
   }, [loaderRef.current, data, loading]);
 
-  const grid = useMediaListRows(data?.mediaList.edges?.map((edge) => edge.node), {
-    containerRef: containerRef,
-    margin: 4,
-    rowHeight: 300,
-    maxPerRow: 6,
-    // if we render the last row and get additional images later,
-    // that row will likely be adjusted to fit some of those new images.
-    // that causes the UI to jump around, so we just hide the last row
-    // until there are no more images to load.
-    skipLastRow: !!data?.mediaList.pageInfo.hasNextPage,
-  });
+  const grid = useMediaListRows(
+    data?.files.edges?.map((edge) => edge.node),
+    {
+      containerRef: containerRef,
+      margin: 4,
+      rowHeight: 300,
+      maxPerRow: 6,
+      // if we render the last row and get additional images later,
+      // that row will likely be adjusted to fit some of those new images.
+      // that causes the UI to jump around, so we just hide the last row
+      // until there are no more images to load.
+      skipLastRow: !!data?.files.pageInfo.hasNextPage,
+    },
+  );
 
   return (
     <div className="container mx-auto mt-20">

@@ -6,9 +6,8 @@ import ExifReader from 'exifreader';
 import { pack, unpack } from 'msgpackr';
 import sharp from 'sharp';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
+import { FileExifDataEntity } from '../file/entities/file-exif.entity.js';
 import { type FileEntity } from '../file/entities/file.entity.js';
-import { MediaExifDataEntity } from '../media/entities/media-exif.entity.js';
-import { MediaEntity } from '../media/entities/media.entity.js';
 
 export class ProxyableImage {
   @IsString()
@@ -39,8 +38,7 @@ export class ProxyableImage {
 @Injectable()
 export class ImageService {
   private static readonly EXIF_DATE_FORMAT = /(?<year>\d{4}):(?<month>\d{2}):(?<day>\d{2})/;
-  @InjectRepository(MediaExifDataEntity) private exifRepo: EntityRepository<MediaExifDataEntity>;
-  @InjectRepository(MediaEntity) private mediaRepo: EntityRepository<MediaEntity>;
+  @InjectRepository(FileExifDataEntity) private exifRepo: EntityRepository<FileExifDataEntity>;
   private log = new Logger(ImageService.name);
 
   parseImageProxyPayload(payload: string): ProxyableImage {
@@ -52,24 +50,24 @@ export class ImageService {
     return `/api/files/${fileId}/imgproxy/${payload.toString('base64url')}`;
   }
 
-  createMediaProxyUrl(media: MediaEntity) {
-    if (media.file.info.unavailable) return null;
-    if (media.file.extension && IMAGE_EXTENSIONS.has(media.file.extension)) {
-      return this.createImageProxyUrl(media.file.id, {
-        fileName: media.file.name,
-        mimeType: media.file.mimeType,
-        path: media.file.path,
-        size: media.file.info.size,
-        height: media.height,
-        width: media.width,
-        isAnimated: media.isAnimated || media.file.mimeType === 'image/gif',
+  createMediaProxyUrl(file: FileEntity) {
+    if (file.unavailable) return null;
+    if (file.extension && IMAGE_EXTENSIONS.has(file.extension)) {
+      return this.createImageProxyUrl(file.id, {
+        fileName: file.name,
+        mimeType: file.mimeType,
+        path: file.path,
+        size: file.size,
+        height: file.info.height,
+        width: file.info.width,
+        isAnimated: file.info.isAnimated || file.mimeType === 'image/gif',
       });
     }
 
-    if (media.poster) {
-      const poster = media.poster.getEntity();
-      return this.createImageProxyUrl(media.file.id, {
-        fileName: `${media.file.name}_poster`,
+    if (file.poster) {
+      const poster = file.poster.getEntity();
+      return this.createImageProxyUrl(file.id, {
+        fileName: `${file.name}_poster`,
         path: poster?.path,
         size: null,
         height: poster?.height,
@@ -79,10 +77,10 @@ export class ImageService {
       });
     }
 
-    if (media.thumbnail) {
-      const thumbnail = media.thumbnail.getEntity();
-      return this.createImageProxyUrl(media.file.id, {
-        fileName: `${media.file.name}_thumbnail`,
+    if (file.thumbnail) {
+      const thumbnail = file.thumbnail.getEntity();
+      return this.createImageProxyUrl(file.id, {
+        fileName: `${file.name}_thumbnail`,
         path: thumbnail?.path,
         size: null,
         height: thumbnail?.height,
@@ -122,39 +120,10 @@ export class ImageService {
     };
   }
 
-  createMediaFromSharpMetadata(data: sharp.Metadata, file: FileEntity) {
-    const isAnimated = data.pages ? data.pages > 0 : !!data.delay;
-    const meta = this.mediaRepo.create({
-      height: data.height,
-      width: data.width,
-      file: file,
-      isAnimated: isAnimated,
-    });
-
-    if (Array.isArray(data.delay)) {
-      const durationSeconds = data.delay.reduce((acc, delay) => {
-        // most browsers have a minimum delay of 0.05s-ish
-        // we have to account for that to have accurate times
-        // source: https://stackoverflow.com/questions/21791012
-        const delaySeconds = delay / 1000;
-        if (delaySeconds < 0.05) return acc + 0.1;
-        return acc + delaySeconds;
-      }, 0);
-
-      meta.durationSeconds = durationSeconds;
-      meta.framerate = data.delay.length / durationSeconds;
-    } else if (data.delay && data.pages) {
-      meta.durationSeconds = (data.delay * data.pages) / 1000;
-      meta.framerate = data.pages / meta.durationSeconds;
-    }
-
-    return meta;
-  }
-
-  async createExifFromFile(media: MediaEntity) {
-    const exif = this.exifRepo.create({ media });
+  async createExifFromFile(file: FileEntity) {
+    const exif = this.exifRepo.create({ file });
     try {
-      const exifData = await ExifReader.load(media.file.path);
+      const exifData = await ExifReader.load(file.path);
 
       if (exifData.LensMake) exif.lensMake = exifData.LensMake.description;
       if (exifData.LensModel) exif.lensModel = exifData.LensModel.description;

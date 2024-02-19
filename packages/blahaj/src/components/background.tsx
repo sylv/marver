@@ -1,7 +1,7 @@
-import React, { type FC, Fragment, memo, useEffect, useState } from 'react';
-import { create } from 'zustand';
 import { AnimatePresence, motion } from 'framer-motion';
 import { produce } from 'immer';
+import { Fragment, memo, useEffect, useState, type FC } from 'react';
+import { create } from 'zustand';
 import noise from '../assets/noise.svg';
 
 const useStore = create(() => ({

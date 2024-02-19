@@ -1,12 +1,4 @@
-import React, {
-  type FC,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  Fragment,
-} from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState, type FC } from 'react';
 import { type BoundingBox } from '../@generated/graphql';
 import { ImageLoader, type ImageLoaderProps } from './image-loader';
 

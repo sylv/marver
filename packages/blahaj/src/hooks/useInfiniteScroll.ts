@@ -17,8 +17,8 @@ export const useInfiniteScroll = (options: UseInfiniteScrollOptions) => {
       },
       {
         rootMargin: '0px',
-        threshold: 1.0,
-      }
+        threshold: 1,
+      },
     );
 
     observer.observe(options.ref.current);

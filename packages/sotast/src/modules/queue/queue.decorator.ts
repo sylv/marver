@@ -1,4 +1,4 @@
-import type { ObjectQuery } from '@mikro-orm/core';
+import type { ObjectQuery } from '@mikro-orm/better-sqlite';
 import { SetMetadata } from '@nestjs/common';
 import { recursive as mergeRecursive } from 'merge';
 import { type FileEntity } from '../file/entities/file.entity.js';
@@ -28,7 +28,7 @@ export interface QueueOptions {
 }
 
 export const Queue = (type: string, options: Omit<QueueOptions, 'type'>) => {
-  mergeRecursive(options.fileFilter, { info: { unavailable: false } });
+  mergeRecursive(options.fileFilter, { unavailable: false });
   return SetMetadata<symbol, QueueOptions>(QUEUE_KEY, {
     ...options,
     type: type,

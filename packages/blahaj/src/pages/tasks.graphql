@@ -1,16 +1,16 @@
 query Tasks {
   tasks {
-    ...RegularTask
+    ...TaskParts
   }
 }
 
 mutation RunTask($id: ID!) {
   runTask(id: $id) {
-    ...RegularTask
+    ...TaskParts
   }
 }
 
-fragment RegularTask on Task {
+fragment TaskParts on Task {
   id
   name
   description

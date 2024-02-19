@@ -1,5 +1,10 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { MikroORM, UseRequestContext } from '@mikro-orm/core';
+import {
+  EntityManager,
+  EntityRepository,
+  CreateRequestContext,
+  type Loaded,
+} from '@mikro-orm/better-sqlite';
+import { MikroORM } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
@@ -31,7 +36,7 @@ export class FileScanService {
     name: 'Scan Files',
     description: 'Index new files and mark missing files as unavailable',
   })
-  @UseRequestContext()
+  @CreateRequestContext()
   async scan() {
     const start = performance.now();
     const lastCheckedAt = new Date();
@@ -48,14 +53,12 @@ export class FileScanService {
     await this.fileRepo
       .createQueryBuilder()
       .update({
-        info: {
-          unavailable: true,
-        },
+        unavailable: true,
       })
       .where({
         ['path_dirname(path)']: config.source_dirs,
         info: {
-          serverCheckedAt: { $lt: lastCheckedAt },
+          checkedAt: { $lt: lastCheckedAt },
         },
       });
 
@@ -75,7 +78,7 @@ export class FileScanService {
     const existingFiles = await this.fileRepo.find(
       { directory },
       {
-        fields: ['id', 'path', 'info'],
+        fields: ['id', 'path', 'info', 'unavailable', 'checkedAt'],
         filters: false,
       },
     );
@@ -95,11 +98,18 @@ export class FileScanService {
     this.log.debug(`Read files in "${directory}" in ${duration}ms`);
   }
 
-  private async scanFile(path: string, existingFiles: FileEntity[]) {
+  private async scanFile(
+    path: string,
+    existingFiles: Loaded<
+      FileEntity,
+      never,
+      'id' | 'path' | 'info' | 'unavailable' | 'checkedAt'
+    >[],
+  ) {
     const existing = existingFiles.find((file) => file.path === path);
     if (existing) {
-      existing.info.serverCheckedAt = new Date();
-      existing.info.unavailable = false;
+      existing.checkedAt = new Date();
+      existing.unavailable = false;
       this.staged++;
       if (this.shouldPersist) {
         await this.persist();
@@ -113,17 +123,14 @@ export class FileScanService {
     const birthtime = info.birthtimeMs === 0 ? info.mtime : info.birthtime;
     const file = this.fileRepo.create({
       path: path,
-      info: {
-        size: info.size,
-        serverCheckedAt: new Date(),
-        serverCreatedAt: new Date(),
-        diskModifiedAt: info.mtime,
-        diskCreatedAt: birthtime,
-      },
+      size: info.size,
+      modifiedAt: info.mtime,
+      createdAt: birthtime,
+      info: {},
     });
 
     // there is no point in tracking files that we don't know how to handle
-    if (!file.isKnownType) {
+    if (!file.isSupportedMimeType) {
       this.log.debug(`Skipping unknown file type: ${path}`);
       return;
     }

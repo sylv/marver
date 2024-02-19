@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/alt-text */
 import clsx from 'clsx';
-import React, { type ImgHTMLAttributes, forwardRef, memo, useEffect, useMemo } from 'react';
+import { forwardRef, memo, useEffect, useMemo, type ImgHTMLAttributes } from 'react';
 import { thumbhashBase64ToDataUri } from '../helpers/thumbhashBase64ToDataUri';
 import useCurrentState from '../hooks/useCurrentState';
 

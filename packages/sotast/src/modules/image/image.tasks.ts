@@ -1,20 +1,16 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityManager } from '@mikro-orm/better-sqlite';
 import { Injectable } from '@nestjs/common';
 import bytes from 'bytes';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
 import { FileEntity } from '../file/entities/file.entity.js';
-import { MediaTextEntity } from '../media/entities/media-text.entity.js';
 import { Queue } from '../queue/queue.decorator.js';
 import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 import { ImageService } from './image.service.js';
 
 @Injectable()
 export class ImageTasks {
-  @InjectRepository(MediaTextEntity) private mediaTextRepo: EntityRepository<MediaTextEntity>;
-
   constructor(
     private imageService: ImageService,
     private rehoboamService: RehoboamService,
@@ -25,23 +21,20 @@ export class ImageTasks {
     targetConcurrency: 4,
     thirdPartyDependant: false,
     fileFilter: {
-      media: {
+      exifData: null,
+      info: {
         height: { $ne: null },
-        exifData: null,
       },
       extension: {
         $in: ['jog', 'tif', 'png', 'webp'],
       },
-      info: {
-        size: {
-          $lte: bytes('50mb'), // very large images can be fucky to process
-        },
+      size: {
+        $lte: bytes('50mb'), // very large images can be fucky to process
       },
     },
   })
   async extractExif(file: FileEntity) {
-    const media = file.media!;
-    const exif = await this.imageService.createExifFromFile(media);
+    const exif = await this.imageService.createExifFromFile(file);
     await this.em.persistAndFlush(exif);
   }
 
@@ -50,9 +43,11 @@ export class ImageTasks {
     thirdPartyDependant: false,
     fileFilter: {
       extension: { $in: [...IMAGE_EXTENSIONS] },
-      media: null,
+      size: { $lte: bytes('100mb') },
       info: {
-        size: { $lte: bytes('100mb') },
+        height: null,
+        width: null,
+        isAnimated: null,
       },
     },
   })
@@ -61,36 +56,54 @@ export class ImageTasks {
       file.path,
     );
 
-    const media = this.imageService.createMediaFromSharpMetadata(originalMeta, file);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
-    media.preview = Buffer.from(hash);
-    await this.em.persistAndFlush(media);
+    file.preview = Buffer.from(hash);
+    file.info.height = originalMeta.height;
+    file.info.width = originalMeta.width;
+
+    const isAnimated = originalMeta.pages ? originalMeta.pages > 0 : !!originalMeta.delay;
+    file.info.isAnimated = isAnimated;
+    if (Array.isArray(originalMeta.delay)) {
+      const durationSeconds = originalMeta.delay.reduce((acc, delay) => {
+        // most browsers have a minimum delay of 0.05s-ish
+        // we have to account for that to have accurate times
+        // source: https://stackoverflow.com/questions/21791012
+        const delaySeconds = delay / 1000;
+        if (delaySeconds < 0.05) return acc + 0.1;
+        return acc + delaySeconds;
+      }, 0);
+
+      file.info.durationSeconds = durationSeconds;
+      file.info.framerate = originalMeta.delay.length / durationSeconds;
+    } else if (originalMeta.delay && originalMeta.pages) {
+      file.info.durationSeconds = (originalMeta.delay * originalMeta.pages) / 1000;
+      file.info.framerate = originalMeta.pages / file.info.durationSeconds;
+    }
+
+    await this.em.persistAndFlush(file);
   }
 
   @Queue('IMAGE_GENERATE_CLIP_EMBEDDING', {
     targetConcurrency: 1,
     thirdPartyDependant: true,
     fileFilter: {
-      media: {
+      embedding: null,
+      info: {
         height: { $ne: null },
-        embedding: null,
       },
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
-      info: {
-        size: { $lte: bytes('10mb') },
-      },
+      size: { $lte: bytes('10mb') },
     },
   })
   async generateClipEmbeddings(file: FileEntity) {
-    const media = file.media!;
     // todo: handle solomon being offline, if we throw an error
     // here the task will be retried at a later point which means
     // a delay when the service is probably just restarting or updating.
-    const embedding = await this.rehoboamService.encodeImage(media.file);
-    media.embedding = embeddingToBuffer(embedding);
-    await this.em.persistAndFlush(media);
+    const embedding = await this.rehoboamService.encodeImage(file);
+    file.embedding = embeddingToBuffer(embedding);
+    await this.em.persistAndFlush(file);
   }
 
   // @Queue('IMAGE_EXTRACT_TEXT', {

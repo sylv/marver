@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
 import { SpinnerCenter } from './components/spinner';

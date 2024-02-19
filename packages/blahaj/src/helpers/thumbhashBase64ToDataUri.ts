@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-code-point */
 import { thumbHashToDataURL } from 'thumbhash';
 
 export const thumbhashBase64ToDataUri = (previewBase64: string | undefined | null) => {

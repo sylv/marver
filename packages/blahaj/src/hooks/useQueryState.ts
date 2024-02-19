@@ -7,7 +7,7 @@ export const useQueryState = <T extends string | number>(key: string, initialVal
     if (!query) return initialValue;
     if (typeof initialValue === 'number') {
       const parsed = +query;
-      if (isNaN(parsed)) return initialValue;
+      if (Number.isNaN(parsed)) return initialValue;
       return parsed as T;
     }
 
@@ -27,7 +27,7 @@ export const useQueryState = <T extends string | number>(key: string, initialVal
         window.removeEventListener('pushstate', listener);
       };
     },
-    () => getValue()
+    () => getValue(),
   );
 
   const setValue = (updated: T) => {

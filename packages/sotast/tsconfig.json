@@ -30,6 +30,6 @@
     "experimentalDecorators": true,
     "lib": ["es2021", "dom"],
     "baseUrl": ".",
-    "types": ["vitest/importMeta"]
-  }
+    "types": ["vitest/importMeta"],
+  },
 }

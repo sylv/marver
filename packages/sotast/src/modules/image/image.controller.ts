@@ -1,5 +1,13 @@
 import Accept from '@hapi/accept';
-import { BadRequestException, Controller, Get, Param, Query, Request, Response } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Query,
+  Request,
+  Response,
+} from '@nestjs/common';
 import bytes from 'bytes';
 import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 import { type FastifyReply, type FastifyRequest } from 'fastify';
@@ -98,9 +106,9 @@ export class ImageController {
         'Cache-Control': 'public, max-age=31536000',
         'Content-Type': formatMime,
         'Content-Disposition': contentDisposition,
-        'X-Marver-Processed': shouldProcess,
-        'X-Marver-Original-Size': image.size,
-        'X-Marver-Original-Format': image.mimeType,
+        'X-Marver-Processed': shouldProcess.toString(),
+        'X-Marver-Original-Size': image.size?.toString(),
+        'X-Marver-Original-Format': image.mimeType?.toString(),
         'X-Marver-Original-Name': encodeURIComponent(image.fileName),
         'X-Marver-Path': encodeURIComponent(image.path),
       })
@@ -111,7 +119,11 @@ export class ImageController {
    * Finds the ideal mime type for the image based on the "Accept" header the browser sends
    * @example the browser doesn't support webp, but does support avif, this will return "avif"
    */
-  private async detectBestMimeType(query: ImageProxyQuery, file: ProxyableImage, req: FastifyRequest) {
+  private async detectBestMimeType(
+    query: ImageProxyQuery,
+    file: ProxyableImage,
+    req: FastifyRequest,
+  ) {
     if (!file.mimeType) throw new BadRequestException('File is not an image');
     if (query.format) {
       return {
@@ -162,7 +174,9 @@ export class ImageController {
     }
 
     // if we can't find a format that the browser supports and we support, we're out of luck
-    throw new BadRequestException('Your browser does not support any of the image formats we support');
+    throw new BadRequestException(
+      'Your browser does not support any of the image formats we support',
+    );
   }
 
   /**

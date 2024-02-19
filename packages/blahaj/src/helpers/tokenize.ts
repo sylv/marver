@@ -10,7 +10,7 @@ const COLOURS = ['bg-fuchsia-700/50', 'bg-violet-700/50', 'bg-blue-700/50', 'bg-
 
 const numberToPattern = (key: string, input: number) => {
   const number = escapeStringRegexp(input.toString());
-  return `(?<= |_|\.|\\b|^|/)(?<${key}>(0?)+${number}\\b)`;
+  return `(?<= |_|\\.|\\b|^|/)(?<${key}>(0?)+${number}\\b)`;
 };
 
 const stringToPattern = (key: string, input: string) => {
@@ -38,7 +38,7 @@ export function* tokenizeStringFromObject(
   object: Record<string, any>,
 ): Generator<Token> {
   const keys = Object.keys(object).sort();
-  let patternParts = [];
+  const patternParts = [];
   for (const key of keys) {
     const value = object[key];
     if (Array.isArray(value)) {

@@ -1,5 +1,5 @@
-query MediaList($search: String, $after: String) {
-  mediaList(search: $search, after: $after, first: 50) {
+query Files($search: String, $after: String) {
+  files(search: $search, after: $after, first: 50) {
     totalCount
     pageInfo {
       hasNextPage
@@ -9,35 +9,28 @@ query MediaList($search: String, $after: String) {
     }
     edges {
       node {
-        ...MinimalMedia
-        file {
-          info {
-            diskCreatedAt
-          }
-        }
+        ...FileParts
+        createdAt
       }
     }
   }
 }
 
-fragment MinimalMedia on Media {
+fragment FileParts on File {
   id
   previewBase64
   thumbnailUrl
-  height
-  width
-  durationFormatted
-  durationSeconds
-  framerate
-  videoCodec
-  audioCodec
-  file {
-    id
-    path
-    name
-    info {
-      size
-      sizeFormatted
-    }
+  path
+  name
+  size
+  sizeFormatted
+  info {
+    height
+    width
+    durationFormatted
+    durationSeconds
+    framerate
+    videoCodec
+    audioCodec
   }
 }

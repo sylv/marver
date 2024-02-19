@@ -7,7 +7,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { isObject } from 'class-validator';
-import { wrap } from '@mikro-orm/core';
+import { wrap } from '@mikro-orm/better-sqlite';
 import { map, type Observable } from 'rxjs';
 
 @Injectable()

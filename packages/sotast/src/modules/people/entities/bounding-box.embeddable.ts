@@ -1,4 +1,4 @@
-import { Embeddable, Property } from '@mikro-orm/core';
+import { Embeddable, Property } from '@mikro-orm/better-sqlite';
 import { Field, ObjectType } from '@nestjs/graphql';
 import type { BoundingBox } from '../../../@generated/core.js';
 

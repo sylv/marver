@@ -1,5 +1,5 @@
 import { type RefObject, useEffect, useMemo, useState } from 'react';
-import { type MinimalMediaFragment } from '../@generated/graphql';
+import { type FilePartsFragment } from '../@generated/graphql';
 
 export interface ImageLike<T> {
   height: number;
@@ -74,9 +74,9 @@ export const getRows = <T>(images: ImageLike<T>[], options: RowOptions): Rowifie
 };
 
 export const useMediaListRows = (
-  mediaList: MinimalMediaFragment[] | undefined | null,
+  mediaList: FilePartsFragment[] | undefined | null,
   options: Omit<RowOptions, 'containerWidth'> & { containerRef: RefObject<HTMLDivElement> },
-): RowifiedImage<MinimalMediaFragment>[] => {
+): RowifiedImage<FilePartsFragment>[] => {
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -97,8 +97,8 @@ export const useMediaListRows = (
     if (!mediaList) return [];
     if (!containerWidth) return [];
     const formattedMediaList = mediaList.map((media) => ({
-      height: media.height ?? 400,
-      width: media.width ?? 400,
+      height: media.info.height ?? 400,
+      width: media.info.width ?? 400,
       data: media,
     }));
 

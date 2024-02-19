@@ -1,13 +1,13 @@
 import { EntityManager, type QueryBuilder } from '@mikro-orm/better-sqlite';
 import { Injectable } from '@nestjs/common';
 import { SEARCH_MODIFIERS } from '../../config/search-modifiers.js';
-import { type MediaEntity } from './entities/media.entity.js';
+import { type FileEntity } from './entities/file.entity.js';
 
 @Injectable()
-export class MediaService {
+export class FileService {
   constructor(private em: EntityManager) {}
 
-  parseSearchQuery(query: string, queryBuilder: QueryBuilder<MediaEntity>) {
+  parseSearchQuery(query: string, queryBuilder: QueryBuilder<FileEntity>) {
     const clipSearchParts = [];
     for (const part of query.split(/(?<=")[^"]+(?=")|(?<=')[^']+(?=')|\s+/)) {
       if (part.startsWith('"') && part.endsWith('"')) {

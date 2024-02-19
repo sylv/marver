@@ -1,16 +1,7 @@
-query GetMedia($fileId: String!, $filter: SimilarityType) {
-  media(id: $fileId) {
-    ...MinimalMedia
-    subtitles {
-      id
-      displayName
-      forced
-      hearingImpaired
-      generated
-    }
-    file {
-      type
-    }
+query File($fileId: String!, $filter: SimilarityType) {
+  file(id: $fileId) {
+    ...FileParts
+    type
     faces {
       id
       boundingBox {
@@ -45,7 +36,7 @@ query GetMedia($fileId: String!, $filter: SimilarityType) {
       }
       edges {
         node {
-          ...MinimalMedia
+          ...FileParts
         }
       }
     }

@@ -11,7 +11,7 @@ import {
 } from '@mikro-orm/core';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { TagEntity } from '../../file/entities/tag.entity.js';
-import { FaceEntity } from '../../people/entities/face.entity.js';
+import { FaceEntity } from './face.entity.js';
 
 /**
  * This entity represents people.

@@ -1,13 +1,14 @@
+import { useMutation, useQuery } from '@apollo/client';
 import { FiChevronDown } from 'react-icons/fi';
-import { useRunTaskMutation, useTasksQuery } from '../@generated/graphql';
+import { RunTaskDocument, TasksDocument } from '../@generated/graphql';
 import { Loading } from '../components/loading';
 import { Spinner, SpinnerSize } from '../components/spinner';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 
 export default function Tasks() {
-  const [runTask, runningTask] = useRunTaskMutation();
-  const { loading, error, data } = useTasksQuery({
+  const [runTask, runningTask] = useMutation(RunTaskDocument);
+  const { loading, error, data } = useQuery(TasksDocument, {
     pollInterval: 1000,
   });
 

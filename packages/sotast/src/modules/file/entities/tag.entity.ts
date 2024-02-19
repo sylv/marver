@@ -4,19 +4,19 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  OptionalProps,
   PrimaryKey,
+  PrimaryKeyProp,
   Property,
   type Ref,
-} from '@mikro-orm/core';
+} from '@mikro-orm/better-sqlite';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { PersonEntity } from '../../people/entities/person.entity.js';
 import { FileTagEntity } from './file-tag.entity.js';
-import { PersonEntity } from '../../metadata/entities/person.entity.js';
 
-@Entity()
+@Entity({ tableName: 'tags' })
 @ObjectType('Tag')
 export class TagEntity {
-  constructor(name: string) {}
-
   @PrimaryKey()
   @Field(() => ID)
   name: string;
@@ -41,6 +41,9 @@ export class TagEntity {
 
   @OneToMany(() => FileTagEntity, (file) => file.tag)
   files = new Collection<FileTagEntity>(this);
+
+  [PrimaryKeyProp]: 'name';
+  [OptionalProps]: 'aliases';
 }
 
 export enum TagColorPresets {

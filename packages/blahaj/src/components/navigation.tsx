@@ -1,4 +1,4 @@
-import React, { type FC } from 'react';
+import { type FC } from 'react';
 import { FiPauseCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { setSearch, useSearchStore } from '../search';
@@ -23,7 +23,10 @@ export const Navigation: FC = () => {
             <div className="text-gray-500 text-xs">Current Task</div>
             <div>Generating thumbnails</div>
           </div>
-          <FiPauseCircle className="ml-6 text-gray-700 group-hover:text-green-400 transition" size={24} />
+          <FiPauseCircle
+            className="ml-6 text-gray-700 group-hover:text-green-400 transition"
+            size={24}
+          />
         </button>
       </div>
     </div>

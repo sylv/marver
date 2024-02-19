@@ -1,4 +1,4 @@
-import { NavigateFunction } from 'react-router';
+import { type NavigateFunction } from 'react-router';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -13,8 +13,8 @@ export const useSearchStore = create(
     }),
     {
       name: 'search',
-    }
-  )
+    },
+  ),
 );
 
 export const setSearch = (query: string, navigate: NavigateFunction) => {

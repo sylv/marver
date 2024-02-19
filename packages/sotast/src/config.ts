@@ -48,13 +48,6 @@ const schema = z.object({
       min_face_score: z.number().default(0.7),
     })
     .default({}),
-  services: z.object({
-    llm: z.object({
-      enabled: z.boolean().default(true),
-      server_url: z.string().default('http://localhost:8080'),
-      template: z.string(),
-    }),
-  }),
   virtual_tags: z
     .array(
       z.object({

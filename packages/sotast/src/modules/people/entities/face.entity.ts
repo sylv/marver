@@ -1,8 +1,15 @@
-import { Embedded, Entity, ManyToOne, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
+import {
+  Embedded,
+  Entity,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+  type Ref,
+} from '@mikro-orm/better-sqlite';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { MediaEntity } from '../../media/entities/media.entity.js';
-import { PersonEntity } from '../../metadata/entities/person.entity.js';
 import { BoundingBoxEmbeddable } from './bounding-box.embeddable.js';
+import { FileEntity } from '../../file/entities/file.entity.js';
+import { PersonEntity } from './person.entity.js';
 
 @Entity()
 @ObjectType('Face')
@@ -18,8 +25,8 @@ export class FaceEntity {
   @Field(() => BoundingBoxEmbeddable)
   boundingBox: BoundingBoxEmbeddable;
 
-  @ManyToOne(() => MediaEntity, { ref: true })
-  media: Ref<MediaEntity>;
+  @ManyToOne(() => FileEntity, { ref: true })
+  file: Ref<FileEntity>;
 
   @ManyToOne(() => PersonEntity, { ref: true, nullable: true })
   @Field(() => PersonEntity, { nullable: true })

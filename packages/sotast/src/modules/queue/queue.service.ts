@@ -1,7 +1,8 @@
 import { Collection } from '@discordjs/collection';
+import { MikroORM } from '@mikro-orm/core';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { MikroORM, RequestContext, type ObjectQuery } from '@mikro-orm/core';
+import { RequestContext, type ObjectQuery } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { randomInt } from 'crypto';
@@ -96,7 +97,7 @@ export class QueueService implements OnApplicationBootstrap {
 
     let hasMore = null;
     const em = this.orm.em.fork();
-    await RequestContext.createAsync(em, async () => {
+    await RequestContext.create(em, async () => {
       const query: ObjectQuery<FileEntity> = {
         $and: [
           {
@@ -149,7 +150,7 @@ export class QueueService implements OnApplicationBootstrap {
       const [files, filesTotal] = await this.fileRepo.findAndCount(query, {
         limit: fetchCount,
         populate: ['jobStates', ...((queue.meta.populate ?? []) as any[])],
-        orderBy: { info: { size: 'ASC' } },
+        orderBy: { size: 'ASC' },
         populateWhere: {
           // only load the job state for this queue type and the parent (so we can get the job data)
           jobStates: {
@@ -213,7 +214,9 @@ export class QueueService implements OnApplicationBootstrap {
       .getItems()
       .find((jobState) => jobState.type === queueHandler.meta.type);
 
-    if (!jobState) {
+    if (jobState) {
+      jobState.retries++;
+    } else {
       jobState = this.jobStateRepo.create(
         {
           file: file,
@@ -223,8 +226,6 @@ export class QueueService implements OnApplicationBootstrap {
         },
         { persist: false },
       );
-    } else {
-      jobState.retries++;
     }
 
     try {
@@ -264,7 +265,7 @@ export class QueueService implements OnApplicationBootstrap {
           // but crawling up the path until we find a mount point that is mounted might not be awful) and if so,
           // mark all files in that source as unavailable until it comes back. plex does something similar to gracefully handle
           // unavailable network mounts or drives that are unplugged, etc.
-          file.info.unavailable = true;
+          file.unavailable = true;
           await this.em.persistAndFlush(file);
           return;
         }
@@ -274,7 +275,7 @@ export class QueueService implements OnApplicationBootstrap {
         await this.em.persistAndFlush(jobState);
         return;
       } else if (isCorrupt) {
-        file.info.corrupted = true;
+        file.corrupted = true;
         jobState.errorMessage = `CORRUPT_FILE_ERROR: ${error.message}`;
         await this.em.persistAndFlush([jobState, file]);
         return;

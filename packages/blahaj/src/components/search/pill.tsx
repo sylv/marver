@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { type ReactNode, useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FiHelpCircle } from 'react-icons/fi';
 
 export const Pill = ({

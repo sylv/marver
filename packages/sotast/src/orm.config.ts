@@ -1,10 +1,10 @@
+import { UnderscoreNamingStrategy } from '@mikro-orm/better-sqlite';
 import { defineConfig } from '@mikro-orm/better-sqlite';
 import { Logger, NotFoundException } from '@nestjs/common';
 import type { Database } from 'better-sqlite3';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
-import { UnderscoreNamingStrategy } from '@mikro-orm/core';
 
 export const ORM_LOGGER = new Logger('MikroORM');
 export const MIGRATIONS_TABLE_NAME = 'mikro_orm_migrations';
@@ -12,7 +12,7 @@ export const MIGRATIONS_TABLE_NAME = 'mikro_orm_migrations';
 class CustomNamingStrategy extends UnderscoreNamingStrategy {
   classToTableName(entityName: string): string {
     const result = super.classToTableName(entityName);
-    return result.replace(/_entity/g, '');
+    return result.replaceAll('_entity', '');
   }
 }
 
@@ -31,7 +31,6 @@ export default defineConfig({
     afterCreate: (...args) => {
       // ensure squtil extension is loaded on each connection
       const [conn, done] = args as [Database, () => void];
-
       const dirname = fileURLToPath(new URL('.', import.meta.url));
       const path = join(dirname, '../../../target/release/libsqutil.so');
       conn.loadExtension(path);

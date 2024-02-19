@@ -34,7 +34,7 @@ export class VideoController {
   @Get('/files/:fileId/vidproxy/index.m3u8')
   async videoProxy(@Param('fileId') fileId: string, @Res() reply: FastifyReply) {
     const file = await this.fileRepo.findOneOrFail(fileId);
-    if (file.info.unavailable) {
+    if (file.unavailable) {
       throw new NotFoundException('File is unavailable');
     }
 
@@ -54,8 +54,8 @@ export class VideoController {
       const bitrate = profile.bitrate || videoStream.bit_rate!;
       lines.push(
         `#EXT-X-STREAM-INF:BANDWIDTH=${bitrate},RESOLUTION=${scaledSize.width}x${scaledSize.height}`,
+        `${encodeURIComponent(profile.name)}.m3u8\n`,
       );
-      lines.push(`${encodeURIComponent(profile.name)}.m3u8\n`);
     }
 
     if (config.is_development) {
@@ -83,7 +83,7 @@ export class VideoController {
     if (!profile) throw new BadRequestException('Invalid profile');
 
     const file = await this.fileRepo.findOneOrFail(fileId);
-    if (file.info.unavailable) {
+    if (file.unavailable) {
       throw new NotFoundException('File is unavailable');
     }
 
@@ -110,8 +110,10 @@ export class VideoController {
       };
 
       const query = new URLSearchParams(queryParams);
-      lines.push(`#EXTINF:${segment_duration},`);
-      lines.push(`${encodeURIComponent(profile.name)}/${segmentIndex}.ts?${query}\n`);
+      lines.push(
+        `#EXTINF:${segment_duration},`,
+        `${encodeURIComponent(profile.name)}/${segmentIndex}.ts?${query}\n`,
+      );
       remainingDuration -= segment_duration;
     }
 

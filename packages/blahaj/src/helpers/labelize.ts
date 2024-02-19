@@ -11,5 +11,5 @@ export const labelize = (input: string): string => {
   }
 
   // Insert a space before all caps and capitalize the first letter
-  return input.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+  return input.replaceAll(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
 };

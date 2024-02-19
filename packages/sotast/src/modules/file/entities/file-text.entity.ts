@@ -1,30 +1,38 @@
-import { Embedded, Entity, Enum, ManyToOne, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
+import {
+  Embedded,
+  Entity,
+  Enum,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+  type Ref,
+} from '@mikro-orm/better-sqlite';
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { BoundingBoxEmbeddable } from '../../people/entities/bounding-box.embeddable.js';
-import { MediaEntity } from './media.entity.js';
+import { FileEntity } from './file.entity.js';
 
-export enum MediaTextType {
+export enum FileTextType {
   OCR, // For text extracted via OCR
   Cleaned, // OCR text after its cleaned automatically by an LLM
   Manual, // For text manually entered by a user
   Translated, // For text translated from another MediaText entity (e.g, translating the OCR result from German to English)
 }
 
-registerEnumType(MediaTextType, { name: 'MediaTextType' });
+registerEnumType(FileTextType, { name: 'FileTextType' });
 
 @Entity()
-@ObjectType('MediaText')
-export class MediaTextEntity {
+@ObjectType('FileText')
+export class FileTextEntity {
   @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
   id: number;
 
-  @ManyToOne(() => MediaEntity, { ref: true })
-  media: Ref<MediaEntity>;
+  @ManyToOne(() => FileEntity, { ref: true })
+  file: Ref<FileEntity>;
 
-  @Enum(() => MediaTextType)
+  @Enum(() => FileTextType)
   @Field()
-  type: MediaTextType;
+  type: FileTextType;
 
   @Property()
   @Field()

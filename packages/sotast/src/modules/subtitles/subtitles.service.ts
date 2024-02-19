@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
@@ -9,17 +10,17 @@ import { stripHtml } from 'string-strip-html';
 import { parseSync, type Node } from 'subtitle';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
-import type { FileEntity } from '../file/entities/file.entity.js';
+import { FileEntity } from '../file/entities/file.entity.js';
 import { Queue } from '../queue/queue.decorator.js';
-import { MediaSubtitleEntity } from '../subtitles/media-subtitle.entity.js';
+import { FileSubtitleEntity } from './file-subtitle.entity.js';
 
 const SUBTITLE_STRIP_PATTERN =
   /JOINNOW|free code|Downloaded from|Support us and become a VIP member|subtitles|corrected by|corrections by|rate this subtitle|created by|Advertise your product or brand here|tvsubtitles|YTS|YIFY|www\.|https:|ripped by|opensubtitles|sub(scene|rip)|podnapisi|addic7ed|titlovi|bozxphd|sazu489|psagmeno|normita|anoxmous|\. ?com|©|™|Free Online Movies|Subtitle edited by/;
 
 @Injectable()
 export class SubtitlesService {
-  @InjectRepository(MediaSubtitleEntity)
-  private subtitleRepo: EntityRepository<MediaSubtitleEntity>;
+  @InjectRepository(FileSubtitleEntity)
+  private subtitleRepo: EntityRepository<FileSubtitleEntity>;
   private log = new Logger(SubtitlesService.name);
   constructor(
     private ffmpegService: FfmpegService,
@@ -31,7 +32,7 @@ export class SubtitlesService {
     thirdPartyDependant: false,
     fileFilter: {
       extension: { $in: [...VIDEO_EXTENSIONS] },
-      media: {
+      info: {
         // require that ffprobe be run on the file first so we can determine
         // whether to extract embedded or to generate new
         hasEmbeddedSubtitles: { $ne: null },
@@ -39,7 +40,7 @@ export class SubtitlesService {
     },
   })
   async extractOrGenerateSubtitles(file: FileEntity) {
-    if (file.media!.hasEmbeddedSubtitles) {
+    if (file.info.hasEmbeddedSubtitles) {
       await this.extractEmbeddedSubtitles(file);
     } else {
       await this.generateSubtitles(file);
@@ -51,8 +52,7 @@ export class SubtitlesService {
   }
 
   private async extractEmbeddedSubtitles(file: FileEntity) {
-    const media = file.media!;
-    const ffprobeResult = await this.ffmpegService.ffprobe(media.file.path);
+    const ffprobeResult = await this.ffmpegService.ffprobe(file.path);
     const subtitleStreams = ffprobeResult.streams.filter(
       (stream) => stream.codec_type === 'subtitle',
     );
@@ -60,18 +60,18 @@ export class SubtitlesService {
     let madeDir = false;
     for (const subtitleStream of subtitleStreams) {
       const fileName = `embedded_${subtitleStream.index}.srt`;
-      const outputPath = join(media.file.metadataFolder, 'subtitles', fileName);
+      const outputPath = join(file.assetFolder, 'subtitles', fileName);
 
       if (!madeDir) {
         await mkdir(dirname(outputPath), { recursive: true });
         madeDir = true;
       }
 
-      await this.ffmpegService.extractSubtitles(media.file.path, outputPath, subtitleStream.index);
+      await this.ffmpegService.extractSubtitles(file.path, outputPath, subtitleStream.index);
 
       const languageName = await this.guessLanguage(outputPath);
       const fileSupport = this.subtitleRepo.create({
-        media: media,
+        file: file,
         forced: subtitleStream.disposition?.forced === 1,
         hearingImpaired: subtitleStream.disposition?.hearing_impaired === 1,
         path: outputPath,

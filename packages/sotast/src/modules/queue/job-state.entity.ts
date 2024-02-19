@@ -8,7 +8,7 @@ import {
   OptionalProps,
   Property,
   type Ref,
-} from '@mikro-orm/core';
+} from '@mikro-orm/better-sqlite';
 import ms from 'ms';
 import { FileEntity } from '../file/entities/file.entity.js';
 

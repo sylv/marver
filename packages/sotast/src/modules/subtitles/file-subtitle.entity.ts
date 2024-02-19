@@ -1,11 +1,18 @@
-import { Entity, ManyToOne, OptionalProps, PrimaryKey, Property, type Ref } from '@mikro-orm/core';
+import {
+  Entity,
+  ManyToOne,
+  OptionalProps,
+  PrimaryKey,
+  Property,
+  type Ref,
+} from '@mikro-orm/better-sqlite';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import ISO6391 from 'iso-639-1';
-import { MediaEntity } from '../media/entities/media.entity.js';
+import { FileEntity } from '../file/entities/file.entity.js';
 
-@Entity()
-@ObjectType('MediaSubtitle')
-export class MediaSubtitleEntity {
+@Entity({ tableName: 'file_subtitles' })
+@ObjectType('FileSubtitle')
+export class FileSubtitleEntity {
   @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
   id: number;
@@ -30,8 +37,8 @@ export class MediaSubtitleEntity {
   @Field()
   generated: boolean;
 
-  @ManyToOne(() => MediaEntity, { ref: true })
-  media: Ref<MediaEntity>;
+  @ManyToOne(() => FileEntity, { ref: true })
+  file: Ref<FileEntity>;
 
   @Property({ persist: false, type: 'string' })
   @Field(() => String)
@@ -49,8 +56,10 @@ export class MediaSubtitleEntity {
   @Field(() => String)
   get displayName() {
     const parts = [this.languageNameNative];
-    if (this.languageNameNative !== this.languageNameEnglish)
+    if (this.languageNameNative !== this.languageNameEnglish) {
       parts.push(`(${this.languageNameEnglish})`);
+    }
+
     if (this.hearingImpaired) parts.push('(hearing impaired)');
     else if (this.forced) parts.push('(forced)');
     if (this.generated) parts.push('(auto)');

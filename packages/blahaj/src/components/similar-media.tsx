@@ -1,12 +1,12 @@
-import React, { memo, useRef } from 'react';
-import { type MinimalMediaFragment } from '../@generated/graphql';
+import { memo, useRef } from 'react';
 import { useMediaListRows } from '../helpers/getRows';
 import { MediaPreview } from './media-preview';
+import type { FilePartsFragment } from '../@generated/graphql';
 
 const MARGIN = 4;
 
 interface SimilarMediaProps {
-  similarFiles: MinimalMediaFragment[];
+  similarFiles: FilePartsFragment[];
 }
 
 export const SimilarMedia = memo<SimilarMediaProps>(({ similarFiles }) => {
@@ -22,7 +22,7 @@ export const SimilarMedia = memo<SimilarMediaProps>(({ similarFiles }) => {
     <div className="flex flex-wrap" ref={containerRef}>
       {layout.map((tile) => (
         <MediaPreview
-          key={tile.data.file.id}
+          key={tile.data.id}
           media={tile.data}
           style={{
             width: tile.scaledWidth,

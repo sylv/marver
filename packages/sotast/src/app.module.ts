@@ -9,10 +9,8 @@ import { ImageModule } from './modules/image/image.module.js';
 import { QueueModule } from './modules/queue/queue.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
-import { MediaModule } from './modules/media/media.module.js';
 import { PersonModule } from './modules/people/person.module.js';
 import { config } from './config.js';
-import { MetadataModule } from './modules/metadata/metadata.module.js';
 import { TaskModule } from './modules/task/task.module.js';
 import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
 
@@ -24,6 +22,7 @@ const GQL_LOGGER = new Logger('GraphQL');
     GraphQLModule.forRoot<MercuriusDriverConfig>({
       driver: MercuriusDriver,
       jit: config.is_production ? 5 : 1,
+      sortSchema: true,
       autoSchemaFile: config.is_production ? true : 'schema.gql',
       fieldResolverEnhancers: ['interceptors', 'guards', 'filters'],
       errorFormatter: (execution) => {
@@ -51,8 +50,6 @@ const GQL_LOGGER = new Logger('GraphQL');
     VideoModule,
     FfmpegModule,
     RehoboamModule,
-    MediaModule,
-    MetadataModule,
     TaskModule,
   ],
 })

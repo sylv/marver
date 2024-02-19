@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { phashVideo, type MergedFrame } from '@marver/ephyra';
 import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
@@ -11,24 +12,22 @@ import { rgbaToThumbHash } from 'thumbhash-node';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
+import { FilePosterEntity } from '../file/entities/assets/file-poster.entity.js';
+import { FileThumbnailEntity } from '../file/entities/assets/file-thumbnail.entity.js';
+import { FileTimelineEntity } from '../file/entities/assets/file-timeline.entity.js';
 import { FileEntity } from '../file/entities/file.entity.js';
 import { ImageService } from '../image/image.service.js';
-import { MediaPosterEntity } from '../media/entities/media-poster.entity.js';
-import { MediaThumbnailEntity } from '../media/entities/media-thumbnail.entity.js';
-import { MediaTimelineEntity } from '../media/entities/media-timeline.entity.js';
-import { MediaEntity } from '../media/entities/media.entity.js';
 import { JobError } from '../queue/job.error.js';
 import { Queue } from '../queue/queue.decorator.js';
 import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 
 @Injectable()
 export class VideoQueues {
-  @InjectRepository(MediaEntity) private mediaRepo: EntityRepository<MediaEntity>;
-  @InjectRepository(MediaThumbnailEntity)
-  private fileThumbnailRepo: EntityRepository<MediaThumbnailEntity>;
-  @InjectRepository(MediaTimelineEntity)
-  private fileTimelineRepo: EntityRepository<MediaTimelineEntity>;
-  @InjectRepository(MediaPosterEntity) private filePosterRepo: EntityRepository<MediaPosterEntity>;
+  @InjectRepository(FileThumbnailEntity)
+  private fileThumbnailRepo: EntityRepository<FileThumbnailEntity>;
+  @InjectRepository(FileTimelineEntity)
+  private fileTimelineRepo: EntityRepository<FileTimelineEntity>;
+  @InjectRepository(FilePosterEntity) private filePosterRepo: EntityRepository<FilePosterEntity>;
 
   constructor(
     private ffmpegService: FfmpegService,
@@ -41,7 +40,6 @@ export class VideoQueues {
     targetConcurrency: 4,
     thirdPartyDependant: false,
     fileFilter: {
-      media: null,
       extension: {
         $in: [...VIDEO_EXTENSIONS],
       },
@@ -52,51 +50,48 @@ export class VideoQueues {
     const videoStream = result.streams.find((stream) => stream.codec_type === 'video');
     const audioStream = result.streams.find((stream) => stream.codec_type === 'audio');
     const subtitleStream = result.streams.find((stream) => stream.codec_type === 'subtitle');
-    const metadata = this.mediaRepo.create({
-      file: file,
-    });
 
     let hasStream = false;
     if (videoStream) {
       hasStream = true;
-      metadata.height = videoStream.height;
-      metadata.width = videoStream.width;
-      metadata.videoCodec = videoStream.codec_name;
-      if (videoStream.duration) metadata.durationSeconds = +videoStream.duration;
-      if (videoStream.bit_rate) metadata.bitrate = +videoStream.bit_rate;
+      file.info.height = videoStream.height;
+      file.info.width = videoStream.width;
+      file.info.videoCodec = videoStream.codec_name;
+      if (videoStream.duration) file.info.durationSeconds = +videoStream.duration;
+      if (videoStream.bit_rate) file.info.bitrate = +videoStream.bit_rate;
       if (videoStream.r_frame_rate) {
         const [num, den] = videoStream.r_frame_rate.split('/');
         if (num && den) {
-          metadata.framerate = +num / +den;
+          file.info.framerate = +num / +den;
         }
       }
     }
 
     if (audioStream) {
       hasStream = true;
-      metadata.audioCodec = audioStream.codec_name;
-      metadata.audioChannels = audioStream.channels;
+      file.info.audioCodec = audioStream.codec_name;
+      file.info.audioChannels = audioStream.channels;
     }
 
     if (subtitleStream) {
-      metadata.hasEmbeddedSubtitles = true;
-      metadata.nonVerbal = false;
+      file.info.hasEmbeddedSubtitles = true;
+      file.info.nonVerbal = false;
     } else {
-      metadata.hasEmbeddedSubtitles = false;
+      file.info.hasEmbeddedSubtitles = false;
     }
 
     if (!hasStream) {
       throw new JobError('No video or audio streams found', { corruptFile: true });
     }
 
-    await this.em.persistAndFlush(metadata);
+    await this.em.persistAndFlush(file);
   }
 
   @Queue('VIDEO_EXTRACT_SCREENSHOTS', {
     targetConcurrency: 3,
     thirdPartyDependant: false,
     fileFilter: {
-      media: {
+      info: {
         videoCodec: { $ne: null },
         durationSeconds: {
           $lte: ms('1h') / 1000,
@@ -111,10 +106,9 @@ export class VideoQueues {
     },
   })
   async extractScreenshots(file: FileEntity) {
-    const media = file.media!;
-    const screenshotPath = join(media.file.metadataFolder, 'screenshots');
+    const screenshotPath = join(file.assetFolder, 'screenshots');
     await mkdir(screenshotPath, { recursive: true });
-    const frames = await phashVideo(media.file.path, {
+    const frames = await phashVideo(file.path, {
       mergeFrames: true,
       hashSize: 16,
       writeFrames: {
@@ -131,7 +125,6 @@ export class VideoQueues {
     });
 
     // todo: file perceptual hash storage was removed during media refactoring
-
     return {
       frames,
       screenshotPath,
@@ -147,7 +140,6 @@ export class VideoQueues {
     file: FileEntity,
     { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
   ) {
-    const media = file.media!;
     const embeddings = [];
     for (const frame of frames) {
       if (!frame.path) continue;
@@ -157,8 +149,8 @@ export class VideoQueues {
 
     // todo: figure out how to do this without huge quality loss
     // const merged = await this.solomonService.mergeEmbeddings(embeddings);
-    media.embedding = embeddingToBuffer(embeddings[0]);
-    await this.em.persistAndFlush(media);
+    file.embedding = embeddingToBuffer(embeddings[0]);
+    await this.em.persistAndFlush(file);
   }
 
   @Queue('VIDEO_GENERATE_TIMELINE', {
@@ -166,16 +158,13 @@ export class VideoQueues {
     targetConcurrency: 1,
     thirdPartyDependant: false,
     fileFilter: {
-      media: {
-        timeline: null,
-      },
+      timeline: null,
     },
   })
   async generateTimeline(
     file: FileEntity,
     { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
   ) {
-    const media = file.media!;
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
     let layerIndex = 0;
@@ -198,7 +187,7 @@ export class VideoQueues {
       width = result.info.width;
     }
 
-    const timelinePreviewPath = join(media.file.metadataFolder, 'timeline.webp');
+    const timelinePreviewPath = join(file.assetFolder, 'timeline.webp');
     const compositeWidth = width! * layerIndex;
     const composite = sharp({
       create: {
@@ -223,7 +212,7 @@ export class VideoQueues {
     }
 
     const timeline = this.fileTimelineRepo.create({
-      media: media,
+      file: file,
       path: timelinePreviewPath,
       width: outputInfo.width,
       height: outputInfo.height,
@@ -238,26 +227,22 @@ export class VideoQueues {
     targetConcurrency: 1,
     thirdPartyDependant: false,
     fileFilter: {
-      media: {
-        thumbnail: null,
-      },
+      thumbnail: null,
     },
   })
   async pickThumbnail(
     file: FileEntity,
     { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
   ) {
-    const media = file.media!;
     const firstFrameWithPath = frames.find((frame) => frame.path);
     if (!firstFrameWithPath) {
       throw new Error('Expected at least one frame to been written to disk');
     }
 
-    const metadata = await sharp(firstFrameWithPath.path).metadata();
     const thumbnail = this.fileThumbnailRepo.create({
-      media: media,
-      width: metadata.width!,
-      height: metadata.height!,
+      file: file,
+      width: file.info.width!,
+      height: file.info.height!,
       mimeType: 'image/webp',
     });
 
@@ -276,16 +261,13 @@ export class VideoQueues {
     targetConcurrency: 1,
     thirdPartyDependant: false,
     fileFilter: {
-      media: {
-        poster: null,
-      },
+      poster: null,
     },
   })
   async pickPoster(
     file: FileEntity,
     { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
   ) {
-    const media = file.media!;
     // generate a poster by finding the largest (aka, hopefully most detailed) frame.
     // this approach should ignore things like intros/outros that are mostly black.
     let largestFrame: { frame: MergedFrame; data: Buffer; info: OutputInfo } | null = null;
@@ -313,7 +295,7 @@ export class VideoQueues {
 
     if (largestFrame) {
       const poster = this.filePosterRepo.create({
-        media: media,
+        file: file,
         width: largestFrame.info.width,
         height: largestFrame.info.height,
         mimeType: 'image/webp',
@@ -322,9 +304,9 @@ export class VideoQueues {
       });
 
       await writeFile(poster.path, largestFrame.data);
-      media.preview = undefined;
+      file.preview = undefined;
       this.em.persist(poster);
-      this.em.persist(media);
+      this.em.persist(file);
       await this.em.flush();
     }
   }
@@ -332,23 +314,22 @@ export class VideoQueues {
   @Queue('VIDEO_GENERATE_PHASH', {
     targetConcurrency: 2,
     thirdPartyDependant: false,
-    populate: ['media', 'media.poster'],
+    populate: ['poster'],
     fileFilter: {
-      media: {
-        preview: null,
-        poster: { $ne: null },
+      poster: { $ne: null },
+      preview: null,
+      info: {
         height: { $ne: null },
         width: { $ne: null },
       },
     },
   })
   async generateThumbhash(file: FileEntity) {
-    const media = file.media!;
-    if (!media.poster) throw new Error('Missing poster');
-    const poster = media.poster.getEntity();
+    if (!file.poster) throw new Error('Missing poster');
+    const poster = file.poster.getEntity();
     const { resizedSize, rgba } = await this.imageService.loadImageAndConvertToRgba(poster.path);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
-    media.preview = Buffer.from(hash);
-    await this.em.persistAndFlush(media);
+    file.preview = Buffer.from(hash);
+    await this.em.persistAndFlush(file);
   }
 }

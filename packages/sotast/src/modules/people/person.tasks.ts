@@ -3,7 +3,7 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
-import type { FileEntity } from '../file/entities/file.entity.js';
+import { FileEntity } from '../file/entities/file.entity.js';
 import { Queue } from '../queue/queue.decorator.js';
 import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 import { FaceEntity } from './entities/face.entity.js';
@@ -24,20 +24,19 @@ export class PersonTasks {
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
-      media: {
+      info: {
         height: { $ne: null },
         hasFaces: null,
       },
     },
   })
   async detectFaces(file: FileEntity) {
-    const media = file.media!;
     const faces = this.rehoboamService.detectFaces(file);
     for await (const face of faces) {
-      media.hasFaces = true;
+      file.info.hasFaces = true;
       this.faceRepo.create(
         {
-          media: media,
+          file: file,
           boundingBox: face.bounding_box!,
           vector: embeddingToBuffer(face.embedding!),
         },
@@ -45,8 +44,8 @@ export class PersonTasks {
       );
     }
 
-    if (media.hasFaces !== true) media.hasFaces = false;
-    this.em.persist(media);
+    if (file.info.hasFaces !== true) file.info.hasFaces = false;
+    this.em.persist(file);
     await this.em.flush();
   }
 }

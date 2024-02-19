@@ -1,12 +1,12 @@
-import { Entity, OneToOne, OptionalProps, Property, type Ref } from '@mikro-orm/core';
+import { Entity, OneToOne, OptionalProps, Property, type Ref } from '@mikro-orm/better-sqlite';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { MediaEntity } from './media.entity.js';
+import { FileEntity } from '../file.entity.js';
 
 @Entity({ abstract: true })
 @ObjectType({ isAbstract: true })
-export abstract class MediaAssetEntity {
-  @OneToOne(() => MediaEntity, { primary: true, ref: true })
-  media: Ref<MediaEntity>;
+export abstract class FileAssetEntity {
+  @OneToOne(() => FileEntity, { primary: true, ref: true })
+  file: Ref<FileEntity>;
 
   @Property()
   @Field()
