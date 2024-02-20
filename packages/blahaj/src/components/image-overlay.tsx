@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type FC } from 'react';
 import { type BoundingBox } from '../@generated/graphql';
-import { ImageLoader, type ImageLoaderProps } from './image-loader';
+import { Image, type ImageLoaderProps } from './image';
 
 export interface ImageOverlayProps extends ImageLoaderProps {
   overlays?: ImageOverlayItem[];
@@ -45,7 +45,7 @@ export const ImageOverlay: FC<ImageOverlayProps> = ({ overlays, ...rest }) => {
 
   return (
     <Fragment>
-      <ImageLoader {...rest} ref={imageRef} onLoad={calculateScale} onError={calculateScale} />
+      <Image {...rest} ref={imageRef} onLoad={calculateScale} onError={calculateScale} />
       <div className="absolute inset-0 pointer-events-none">
         {scaleX !== null &&
           scaleY !== null &&
