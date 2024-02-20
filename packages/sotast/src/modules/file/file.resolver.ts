@@ -124,14 +124,13 @@ export class FileResolver {
           .leftJoinAndSelect('texts', 'texts')
           .where({
             unavailable: false,
+            info: { height: { $ne: null } },
           })
           .limit(args.limit)
           .offset(args.offset);
 
-        if (filter.afterDate)
-          queryBuilder.andWhere({ info: { createdAt: { $gte: filter.afterDate } } });
-        if (filter.beforeDate)
-          queryBuilder.andWhere({ info: { createdAt: { $lte: filter.beforeDate } } });
+        if (filter.afterDate) queryBuilder.andWhere({ info: { createdAt: { $gte: filter.afterDate } } });
+        if (filter.beforeDate) queryBuilder.andWhere({ info: { createdAt: { $lte: filter.beforeDate } } });
 
         // we have to do this before the search query or else mikroorm can't
         // count the files properly. it's a bug in mikroorm.

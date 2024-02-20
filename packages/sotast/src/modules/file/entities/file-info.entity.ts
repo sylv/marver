@@ -3,7 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import ms from 'ms';
 
 @Embeddable()
-@ObjectType()
+@ObjectType('FileInfo')
 export class FileInfoEmbeddable {
   @Property({ nullable: true })
   @Field({ nullable: true })

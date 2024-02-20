@@ -57,9 +57,7 @@ export class FileScanService {
       })
       .where({
         [raw('path_dirname(path)')]: config.source_dirs,
-        info: {
-          checkedAt: { $lt: lastCheckedAt },
-        },
+        checkedAt: { $lt: lastCheckedAt },
       });
 
     const duration = performance.now() - start;
