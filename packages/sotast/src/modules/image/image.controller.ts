@@ -1,13 +1,5 @@
 import Accept from '@hapi/accept';
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  Query,
-  Request,
-  Response,
-} from '@nestjs/common';
+import { BadRequestException, Controller, Get, Param, Query, Request, Response } from '@nestjs/common';
 import bytes from 'bytes';
 import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 import { type FastifyReply, type FastifyRequest } from 'fastify';
@@ -87,7 +79,7 @@ export class ImageController {
 
       let suffix = 'processed';
       if (query.height || query.width) {
-        transformer.resize(query.width, query.height, { fit: query.fit });
+        transformer.resize(query.width, query.height, { fit: query.fit, withoutEnlargement: true });
         suffix = `resized`;
       }
 
@@ -119,11 +111,7 @@ export class ImageController {
    * Finds the ideal mime type for the image based on the "Accept" header the browser sends
    * @example the browser doesn't support webp, but does support avif, this will return "avif"
    */
-  private async detectBestMimeType(
-    query: ImageProxyQuery,
-    file: ProxyableImage,
-    req: FastifyRequest,
-  ) {
+  private async detectBestMimeType(query: ImageProxyQuery, file: ProxyableImage, req: FastifyRequest) {
     if (!file.mimeType) throw new BadRequestException('File is not an image');
     if (query.format) {
       return {
@@ -174,9 +162,7 @@ export class ImageController {
     }
 
     // if we can't find a format that the browser supports and we support, we're out of luck
-    throw new BadRequestException(
-      'Your browser does not support any of the image formats we support',
-    );
+    throw new BadRequestException('Your browser does not support any of the image formats we support');
   }
 
   /**

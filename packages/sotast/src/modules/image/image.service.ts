@@ -1,39 +1,36 @@
 import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger } from '@nestjs/common';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import avro from 'avsc';
 import ExifReader from 'exifreader';
-import { pack, unpack } from 'msgpackr';
 import sharp from 'sharp';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { FileExifDataEntity } from '../file/entities/file-exif.entity.js';
 import { type FileEntity } from '../file/entities/file.entity.js';
 
-export class ProxyableImage {
-  @IsString()
+export interface ProxyableImage {
   fileName: string;
-
-  @IsString()
   path: string;
-
-  @IsNumber()
-  @IsOptional()
   height?: number;
-
-  @IsNumber()
-  @IsOptional()
   width?: number;
-
-  @IsNumber()
-  @IsOptional()
   size: number | null;
-
-  @IsOptional()
   mimeType?: string | null;
-
-  @IsBoolean()
   isAnimated?: boolean;
 }
+
+const proxyableImageSchema = avro.Type.forSchema({
+  type: 'record',
+  name: 'ProxyableImage',
+  fields: [
+    { name: 'fileName', type: 'string' },
+    { name: 'path', type: 'string' },
+    { name: 'height', type: ['null', 'int'] },
+    { name: 'width', type: ['null', 'int'] },
+    { name: 'size', type: ['null', 'long'] },
+    { name: 'mimeType', type: ['null', 'string'] },
+    { name: 'isAnimated', type: 'boolean' },
+  ],
+});
 
 @Injectable()
 export class ImageService {
@@ -42,11 +39,20 @@ export class ImageService {
   private log = new Logger(ImageService.name);
 
   parseImageProxyPayload(payload: string): ProxyableImage {
-    return unpack(Buffer.from(payload, 'base64url'));
+    const buffer = Buffer.from(payload, 'base64url');
+    try {
+      return proxyableImageSchema.fromBuffer(buffer);
+    } catch (error: any) {
+      if (error.message.includes('truncated')) {
+        throw new BadRequestException('Invalid image proxy payload');
+      }
+
+      throw error;
+    }
   }
 
   createImageProxyUrl(fileId: string, image: ProxyableImage) {
-    const payload = pack(image);
+    const payload = proxyableImageSchema.toBuffer(image);
     return `/api/files/${fileId}/imgproxy/${payload.toString('base64url')}`;
   }
 
