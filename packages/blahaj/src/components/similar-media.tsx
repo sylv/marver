@@ -23,7 +23,7 @@ export const SimilarMedia = memo<SimilarMediaProps>(({ similarFiles }) => {
       {layout.map((tile) => (
         <MediaPreview
           key={tile.data.id}
-          media={tile.data}
+          file={tile.data}
           style={{
             width: tile.scaledWidth,
             height: tile.scaledHeight,

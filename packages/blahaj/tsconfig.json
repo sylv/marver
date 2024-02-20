@@ -1,26 +1,19 @@
 {
+  "extends": "@atlasbot/configs/tsconfig/esm.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "Bundler",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "noUnusedLocals": true,
-    "isolatedModules": true,
-    "noEmit": true,
+    "types": ["vite/client"],
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": false,
     "jsx": "react-jsx",
-    "baseUrl": ".",
+    "jsxImportSource": "react",
+    "baseUrl": "./",
+    "declaration": false,
     "paths": {
-      "@/*": ["./src/*"],
-    },
-  },
-  "include": ["src"],
+      "#root/*": ["./src/*"]
+    }
+  }
 }

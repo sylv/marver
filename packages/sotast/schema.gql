@@ -30,7 +30,7 @@ type File {
   faces: [Face!]!
   id: ID!
   indexedAt: DateTime!
-  info: FileInfoEmbeddable!
+  info: FileInfo!
   mimeType: String
   modifiedAt: DateTime!
   name: String!
@@ -79,7 +79,7 @@ type FileExifData {
   longitude: Float
 }
 
-type FileInfoEmbeddable {
+type FileInfo {
   audioChannels: Float
   audioCodec: String
   bitrate: Float

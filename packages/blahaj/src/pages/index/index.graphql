@@ -1,16 +1,12 @@
 query Files($search: String, $after: String) {
-  files(search: $search, after: $after, first: 50) {
-    totalCount
+  files(search: $search, after: $after, first: 100) {
     pageInfo {
-      hasNextPage
-      hasPreviousPage
-      startCursor
       endCursor
+      hasNextPage
     }
     edges {
       node {
         ...FileParts
-        createdAt
       }
     }
   }

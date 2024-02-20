@@ -1,0 +1,51 @@
+diff --git a/thumbhash.d.ts b/thumbhash.d.ts
+index d812c825ed1132df4aa9445a5955eb567a7b0741..7910ab12f0e52141abfe592e9758ff56f01b82c6 100644
+--- a/thumbhash.d.ts
++++ b/thumbhash.d.ts
+@@ -14,7 +14,7 @@ export function rgbaToThumbHash(w: number, h: number, rgba: ArrayLike<number>):
+  * @param hash The bytes of the ThumbHash.
+  * @returns The width, height, and pixels of the rendered placeholder image.
+  */
+-export function thumbHashToRGBA(hash: ArrayLike<number>): { w: number, h: number, rgba: Uint8Array }
++export function thumbHashToRGBA(hash: ArrayLike<number>, aspectRatio?: number): { w: number, h: number, rgba: Uint8Array }
+ 
+ /**
+  * Extracts the average color from a ThumbHash. RGB is not be premultiplied by A.
+@@ -51,4 +51,4 @@ export function rgbaToDataURL(w: number, h: number, rgba: ArrayLike<number>): st
+  * @param hash The bytes of the ThumbHash.
+  * @returns A data URL containing a PNG for the rendered ThumbHash.
+  */
+-export function thumbHashToDataURL(hash: ArrayLike<number>): string
++export function thumbHashToDataURL(hash: ArrayLike<number>, aspectRatio?: number): string
+diff --git a/thumbhash.js b/thumbhash.js
+index 369b118ec2299b51af01541e141635e02579edaa..6465f76f35ec7e6a50d100c6b63bad42c8d328ef 100644
+--- a/thumbhash.js
++++ b/thumbhash.js
+@@ -99,7 +99,7 @@ export function rgbaToThumbHash(w, h, rgba) {
+  * @param hash The bytes of the ThumbHash.
+  * @returns The width, height, and pixels of the rendered placeholder image.
+  */
+-export function thumbHashToRGBA(hash) {
++export function thumbHashToRGBA(hash, aspectRatio) {
+   let { PI, min, max, cos, round } = Math
+ 
+   // Read the constants
+@@ -134,7 +134,7 @@ export function thumbHashToRGBA(hash) {
+   let a_ac = hasAlpha && decodeChannel(5, 5, a_scale)
+ 
+   // Decode using the DCT into RGB
+-  let ratio = thumbHashToApproximateAspectRatio(hash)
++  let ratio = aspectRatio ?? thumbHashToApproximateAspectRatio(hash)
+   let w = round(ratio > 1 ? 32 : 32 * ratio)
+   let h = round(ratio > 1 ? 32 / ratio : 32)
+   let rgba = new Uint8Array(w * h * 4), fx = [], fy = []
+@@ -282,7 +282,7 @@ export function rgbaToDataURL(w, h, rgba) {
+  * @param hash The bytes of the ThumbHash.
+  * @returns A data URL containing a PNG for the rendered ThumbHash.
+  */
+-export function thumbHashToDataURL(hash) {
+-  let image = thumbHashToRGBA(hash)
++export function thumbHashToDataURL(hash, aspectRatio) {
++  let image = thumbHashToRGBA(hash, aspectRatio)
+   return rgbaToDataURL(image.w, image.h, image.rgba)
+ }

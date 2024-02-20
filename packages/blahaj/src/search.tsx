@@ -1,4 +1,5 @@
-import { type NavigateFunction } from 'react-router';
+import { navigate } from 'vike/client/router';
+import {} from 'vike/routing';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -17,9 +18,9 @@ export const useSearchStore = create(
   ),
 );
 
-export const setSearch = (query: string, navigate: NavigateFunction) => {
+export const setSearch = (query: string) => {
   useSearchStore.setState({ query });
   if (window.location.pathname !== '/') {
-    navigate('/');
+    void navigate('/');
   }
 };

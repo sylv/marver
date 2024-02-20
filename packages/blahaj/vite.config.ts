@@ -1,13 +1,13 @@
 import react from '@vitejs/plugin-react';
+import ssr from 'vike/plugin';
 import { defineConfig } from 'vite';
-import pages from 'vite-plugin-pages';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), pages()],
+  plugins: [react(), ssr()],
   resolve: {
     alias: {
-      '@': '/src',
+      '#root': '/src',
     },
   },
   server: {
@@ -18,5 +18,8 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
+  },
+  ssr: {
+    noExternal: ['react-helmet-async'],
   },
 });

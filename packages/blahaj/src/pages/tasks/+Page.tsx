@@ -1,19 +1,21 @@
-import { useMutation, useQuery } from '@apollo/client';
 import { FiChevronDown } from 'react-icons/fi';
-import { RunTaskDocument, TasksDocument } from '../@generated/graphql';
-import { Loading } from '../components/loading';
-import { Spinner, SpinnerSize } from '../components/spinner';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
+import { useMutation } from 'urql';
+import { RunTaskDocument, TasksDocument } from '../../@generated/graphql';
+import { Loading } from '../../components/loading';
+import { Spinner, SpinnerSize } from '../../components/spinner';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
+import { usePolledQuery } from '../../hooks/usePolledQuery';
 
-export default function Tasks() {
-  const [runTask, runningTask] = useMutation(RunTaskDocument);
-  const { loading, error, data } = useQuery(TasksDocument, {
+export function Page() {
+  const [runningTask, runTask] = useMutation(RunTaskDocument);
+  const [{ error, data }] = usePolledQuery({
+    query: TasksDocument,
     pollInterval: 1000,
   });
 
   if (error) return <div>Oh no... {error.message}</div>;
-  if (loading || !data) return <Loading />;
+  if (!data) return <Loading />;
 
   return (
     <div className="container mx-auto mt-20 space-y-2">
@@ -32,12 +34,10 @@ export default function Tasks() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  disabled={runningTask.loading || !!task.running}
+                  disabled={runningTask.fetching || !!task.running}
                   onClick={() =>
                     runTask({
-                      variables: {
-                        id: task.id,
-                      },
+                      id: task.id,
                     })
                   }
                 >

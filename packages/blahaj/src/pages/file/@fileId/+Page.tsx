@@ -1,12 +1,13 @@
-import { useQuery } from '@apollo/client';
 import clsx from 'clsx';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FileDocument, FileType } from '../../@generated/graphql';
-import { ImageOverlay } from '../../components/image-overlay';
-import { Loading } from '../../components/loading';
-import { Player } from '../../components/player/player';
-import { Card } from '../../components/ui/card';
-import { formatNumber } from '../../helpers/format-number';
+import type { FC } from 'react';
+import { useQuery } from 'urql';
+import { FileDocument, FileType } from '../../../@generated/graphql';
+import { ImageOverlay } from '../../../components/image-overlay';
+import { Loading } from '../../../components/loading';
+import { Player } from '../../../components/player/player';
+import { Card } from '../../../components/ui/card';
+import { formatNumber } from '../../../helpers/format-number';
+import type { PageProps } from '../../../renderer/types';
 import { useMediaStore } from './media.store';
 
 const TAG_COLOURS = [
@@ -33,16 +34,11 @@ const TEMP_TAGS = [
   'artist:john_doe',
 ];
 
-export default function File() {
-  const { fileId } = useParams();
-  const navigate = useNavigate();
-  if (!fileId) {
-    navigate('/');
-    return null;
-  }
-
+export const Page: FC<PageProps> = ({ routeParams }) => {
+  const fileId = routeParams.fileId!;
   const filter = useMediaStore((state) => state.filter);
-  const { data, loading, error } = useQuery(FileDocument, {
+  const [{ data, fetching, error }] = useQuery({
+    query: FileDocument,
     variables: {
       fileId: fileId,
       filter: filter,
@@ -50,7 +46,7 @@ export default function File() {
   });
 
   if (error) return <div>Oh no... {error.message}</div>;
-  if (loading || !data?.file) return <Loading />;
+  if (fetching || !data?.file) return <Loading />;
 
   return (
     <div className="container mx-auto mt-10 space-y-2">
@@ -58,14 +54,13 @@ export default function File() {
       <div className="flex flex-wrap gap-1">
         {TEMP_TAGS.map((tag, index) => {
           const colour = TAG_COLOURS[index % TAG_COLOURS.length];
-          const fileCount = Math.floor(Math.random() * 10000);
           return (
             <button
               key={tag}
               className="bg-zinc-900 text-xs border rounded-full px-3 py-1 hover:bg-zinc-800 transition"
             >
               <span className={clsx(colour, 'font-semibold')}>{tag}</span>
-              <span className="text-muted-foreground ml-1 text-xs">{formatNumber(fileCount)}</span>
+              <span className="text-muted-foreground ml-1 text-xs">{formatNumber(10_000)}</span>
             </button>
           );
         })}
@@ -97,4 +92,4 @@ export default function File() {
       </div>
     </div>
   );
-}
+};

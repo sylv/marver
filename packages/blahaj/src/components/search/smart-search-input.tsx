@@ -1,9 +1,7 @@
 import clsx from 'clsx';
-import { type HTMLAttributes, memo, useEffect, useMemo, useRef } from 'react';
-import React from 'react';
+import React, { memo, useEffect, useMemo, useRef, type ComponentProps } from 'react';
 
-export interface SmartSearchInputProps
-  extends Omit<HTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'value'> {
+export interface SmartSearchInputProps extends Omit<ComponentProps<'textarea'>, 'onChange' | 'value'> {
   value: string;
   height: string;
   onChange: (value: string) => void;

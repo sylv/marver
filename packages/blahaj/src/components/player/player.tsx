@@ -1,25 +1,25 @@
-import React, {
-  type FC,
-  type ReactNode,
-  type VideoHTMLAttributes,
+import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useTransition,
-  useMemo,
+  type ComponentProps,
+  type FC,
+  type ReactNode,
 } from 'react';
 
 // https://github.com/video-dev/hls.js/issues/5146#issuecomment-1375070955
 import type HlsType from 'hls.js';
 // @ts-expect-error missing types
 import HlsMin from 'hls.js/dist/hls.min';
-import { PlayerControls } from './player-controls';
 import { useBackgroundColours } from '../background';
+import { PlayerControls } from './player-controls';
 
 const Hls = HlsMin as typeof HlsType;
 
-export interface VideoProps extends VideoHTMLAttributes<HTMLVideoElement> {
+export interface VideoProps extends ComponentProps<'video'> {
   src: string;
   hlsSrc: string;
   hasAudio?: boolean;
@@ -27,14 +27,7 @@ export interface VideoProps extends VideoHTMLAttributes<HTMLVideoElement> {
   durationSeconds?: number;
 }
 
-export const Player: FC<VideoProps> = ({
-  src,
-  children,
-  hlsSrc,
-  hasAudio,
-  durationSeconds,
-  ...rest
-}) => {
+export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, durationSeconds, ...rest }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<HlsType>();
   const [useHLS, setUseHLS] = useState(false);

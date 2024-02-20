@@ -42,8 +42,8 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.18.0",
-    "@types/node": "^20.11.15",
-    "esbuild": "^0.20.0",
-    "prettier": "^3.2.4"
+    "@types/node": "^20.11.19",
+    "esbuild": "^0.20.1",
+    "prettier": "^3.2.5"
   }
 }

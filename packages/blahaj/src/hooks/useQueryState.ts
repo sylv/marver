@@ -1,17 +1,33 @@
 import { useSyncExternalStore } from 'react';
+import { usePageContext } from '../renderer/usePageContext';
 
 export const useQueryState = <T extends string | number>(key: string, initialValue: T) => {
+  const context = usePageContext();
+  const getValueServer = (): T => {
+    console.log(context.urlParsed);
+    const raw = context.urlParsed.search[key];
+    return parseValue(raw);
+  };
+
   const getValue = (): T => {
+    if (typeof window === 'undefined') {
+      return getValueServer();
+    }
+
     const url = new URL(window.location.href);
-    const query = url.searchParams.get(key);
-    if (!query) return initialValue;
+    const raw = url.searchParams.get(key);
+    return parseValue(raw);
+  };
+
+  const parseValue = (raw?: string | null) => {
+    if (!raw) return initialValue;
     if (typeof initialValue === 'number') {
-      const parsed = +query;
+      const parsed = +raw;
       if (Number.isNaN(parsed)) return initialValue;
       return parsed as T;
     }
 
-    return query as T;
+    return raw as T;
   };
 
   const value = useSyncExternalStore(
@@ -28,7 +44,10 @@ export const useQueryState = <T extends string | number>(key: string, initialVal
       };
     },
     () => getValue(),
+    () => getValueServer(),
   );
+
+  console.log({ value });
 
   const setValue = (updated: T) => {
     const route = new URL(location.href);

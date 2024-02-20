@@ -4,12 +4,20 @@ module.exports = {
     project: './tsconfig.json',
   },
   rules: {
-    // not necessary
+    '@typescript-eslint/no-floating-promises': 'off',
+    'jsx-a11y/no-autofocus': 'off',
+    'jsx-a11y/media-has-caption': 'off',
+    'unicorn/consistent-destructuring': 'off',
     'react/react-in-jsx-scope': 'off',
-    // zustand stores look like react hooks but aren't,
-    // and outside of that this rule is kinda obvious.
-    'react-hooks/rules-of-hooks': 'off',
-    // not possible with file routing
     'unicorn/filename-case': 'off',
+    'import/no-default-export': 'off',
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      {
+        prefer: 'type-imports',
+        disallowTypeAnnotations: false,
+        fixStyle: 'separate-type-imports',
+      },
+    ],
   },
 };

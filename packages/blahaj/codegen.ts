@@ -1,5 +1,5 @@
-import { CodegenConfig } from '@graphql-codegen/cli';
-import { ClientPresetConfig, FragmentMaskingConfig } from '@graphql-codegen/client-preset';
+import { type CodegenConfig } from '@graphql-codegen/cli';
+import { type ClientPresetConfig } from '@graphql-codegen/client-preset';
 
 export default {
   overwrite: true,
@@ -7,6 +7,9 @@ export default {
   schema: '../sotast/schema.gql',
   documents: 'src/**/*.graphql',
   generates: {
+    'src/@generated/schema.json': {
+      plugins: ['urql-introspection'],
+    },
     'src/@generated/': {
       preset: 'client',
       presetConfig: {

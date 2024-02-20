@@ -18,7 +18,7 @@ export const setVolume = (volume: number) => {
   usePlayerState.setState({ muted: false, volume });
 };
 
-if ('BroadcastChannel' in globalThis) {
+if ('BroadcastChannel' in globalThis && typeof window !== 'undefined') {
   share('loop', usePlayerState);
   share('volume', usePlayerState);
   console.debug('Shared player state');

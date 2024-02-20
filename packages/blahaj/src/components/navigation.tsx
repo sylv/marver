@@ -1,12 +1,10 @@
 import { type FC } from 'react';
 import { FiPauseCircle } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
 import { setSearch, useSearchStore } from '../search';
 import { SmartSearchInput } from './search/smart-search-input';
 
 export const Navigation: FC = () => {
   const query = useSearchStore((state) => state.query);
-  const navigate = useNavigate();
 
   return (
     <div className="container mx-auto mt-6">
@@ -15,7 +13,7 @@ export const Navigation: FC = () => {
           <SmartSearchInput
             height="h-full w-[32em]"
             value={query}
-            onChange={(value) => setSearch(value, navigate)}
+            onChange={(value) => setSearch(value)}
           />
         </div>
         <button className="flex items-center bg-gray-800/40 py-4 px-8 h-full mr-16 hover:bg-gray-700/40 transition group">

@@ -1,11 +1,10 @@
 import clsx from 'clsx';
-import { forwardRef, type HTMLAttributes } from 'react';
-import { Link } from 'react-router-dom';
-import { ImageLoader } from './image-loader';
+import { forwardRef, type ComponentProps } from 'react';
 import type { FilePartsFragment } from '../@generated/graphql';
+import { Image } from './image';
 
-export interface MediaPreviewProps extends HTMLAttributes<HTMLAnchorElement> {
-  media: FilePartsFragment;
+export interface MediaPreviewProps extends ComponentProps<'a'> {
+  file: FilePartsFragment;
   height?: number;
   width?: number;
 }
@@ -20,12 +19,12 @@ const scaleDownImage = (height: number, width: number) => {
 };
 
 export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
-  ({ media, height, width, ...rest }, ref) => {
-    if (!height && media?.info.height) height = media.info.height;
-    if (!width && media?.info.width) width = media.info.width;
+  ({ file, height, width, ...rest }, ref) => {
+    if (!height && file?.info.height) height = file.info.height;
+    if (!width && file?.info.width) width = file.info.width;
 
     let proxyHeight, proxyWidth;
-    if (media && height && width) {
+    if (file && height && width) {
       // we need to scale down height+width to estimate the preview size
       const result = scaleDownImage(height, width);
       proxyHeight = result.height;
@@ -39,33 +38,33 @@ export const MediaPreview = forwardRef<HTMLAnchorElement, MediaPreviewProps>(
     if (proxyHeight) query.set('height', proxyHeight.toString());
 
     return (
-      <Link
-        data-mediaid={media.id}
-        to={`/file/${media.id}`}
+      <a
+        href={`/file/${file.id}`}
+        data-mediaid={file.id}
         ref={ref}
         {...rest}
         className={clsx('transition relative overflow-hidden rounded-lg group', rest.className)}
       >
         <div className="transition opacity-0 pointer-events-none absolute inset-0 z-10 group-hover:opacity-100 bg-gradient-to-t from-black/90 via-transparent to-transparent">
           <div className="p-3 flex justify-end items-start h-full flex-col">
-            <h3 className="max-w-full truncate">{media.name}</h3>
+            <h3 className="max-w-full truncate">{file.name}</h3>
           </div>
         </div>
-        {media?.info.durationFormatted && (
+        {file?.info.durationFormatted && (
           <span className="absolute top-1 left-1 p-1 z-10 text-xs bg-black/70 rounded-lg">
-            {media.info.durationFormatted}
+            {file.info.durationFormatted}
           </span>
         )}
-        <div key={media.id} className="h-full w-full overflow-hidden rounded">
-          <ImageLoader
-            src={media.thumbnailUrl!}
-            previewBase64={media.previewBase64}
+        <div key={file.id} className="h-full w-full overflow-hidden rounded">
+          <Image
+            src={file.thumbnailUrl!}
+            previewBase64={file.previewBase64}
             height={height}
             width={width}
             className="h-full w-full object-cover bg-gray-200"
           />
         </div>
-      </Link>
+      </a>
     );
   },
 );

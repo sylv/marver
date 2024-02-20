@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '#root/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '#root/components/ui/popover';
 import * as React from 'react';
 
 const groups = [
