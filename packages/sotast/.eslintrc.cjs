@@ -10,5 +10,6 @@ module.exports = {
     // unicorn isn't smart enough to know that.
     'unicorn/explicit-length-check': 'off',
     'unicorn/no-useless-switch-case': 'off',
+    'unicorn/filename-case': 'off',
   },
 };

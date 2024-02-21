@@ -2,8 +2,8 @@ import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Controller, Get, Headers, Param, Res } from '@nestjs/common';
 import { type FastifyReply } from 'fastify';
-import { createReadStream } from 'fs';
 import parseRange from 'range-parser';
+import { createDurableHttpReadStream } from '../../helpers/createDurableReadStream.js';
 import { FileEntity } from './entities/file.entity.js';
 
 @Controller()
@@ -17,19 +17,19 @@ export class FileController {
     @Headers('Range') range?: string,
   ) {
     const file = await this.fileRepo.findOneOrFail(fileId);
-    const parsedRange = range ? this.getRange(range, file.info.size) : null;
-    const stream = createReadStream(file.path, {
+    const parsedRange = range ? this.getRange(range, file.size) : null;
+    const stream = await createDurableHttpReadStream(file, {
       start: parsedRange?.start,
       end: parsedRange?.end,
     });
 
     if (parsedRange) {
       reply
-        .header('Content-Range', `bytes ${parsedRange.start}-${parsedRange.end}/${file.info.size}`)
+        .header('Content-Range', `bytes ${parsedRange.start}-${parsedRange.end}/${file.size}`)
         .header('Content-Length', parsedRange.end - parsedRange.start + 1)
         .status(206);
     } else {
-      reply.header('Content-Length', file.info.size);
+      reply.header('Content-Length', file.size);
     }
 
     reply

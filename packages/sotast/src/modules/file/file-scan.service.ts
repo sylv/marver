@@ -1,10 +1,5 @@
-import {
-  EntityManager,
-  EntityRepository,
-  CreateRequestContext,
-  type Loaded,
-} from '@mikro-orm/better-sqlite';
-import { MikroORM, raw } from '@mikro-orm/core';
+import { CreateRequestContext, EntityManager, EntityRepository, type Loaded } from '@mikro-orm/better-sqlite';
+import { MikroORM } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable, Logger } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
@@ -56,7 +51,6 @@ export class FileScanService {
         unavailable: true,
       })
       .where({
-        [raw('path_dirname(path)')]: config.source_dirs,
         checkedAt: { $lt: lastCheckedAt },
       });
 
@@ -98,11 +92,7 @@ export class FileScanService {
 
   private async scanFile(
     path: string,
-    existingFiles: Loaded<
-      FileEntity,
-      never,
-      'id' | 'path' | 'info' | 'unavailable' | 'checkedAt'
-    >[],
+    existingFiles: Loaded<FileEntity, never, 'id' | 'path' | 'info' | 'unavailable' | 'checkedAt'>[],
   ) {
     const existing = existingFiles.find((file) => file.path === path);
     if (existing) {
