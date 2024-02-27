@@ -1,8 +1,8 @@
 import { type FC } from 'react';
-import './globals.css';
-import { ModeToggle } from './components/mode-toggle';
-import { ThemeProvider } from './components/theme-provider';
 import { Helmet } from 'react-helmet-async';
+import { Sidebar } from './components/sidebar';
+import { ThemeProvider } from './components/theme-provider';
+import './globals.css';
 
 interface AppProps {
   children: React.ReactNode;
@@ -42,14 +42,3 @@ export const App: FC<AppProps> = ({ children }) => (
     </div>
   </ThemeProvider>
 );
-
-const Sidebar: FC = () => {
-  return (
-    <div className="w-[300px] min-h-dvh bottom-0 top-0 bg-zinc-100 border-zinc-200 dark:bg-zinc-900 border-r dark:border-zinc-800 relative">
-      <a href="/" className="block p-4 dark:text-white">
-        marver
-      </a>
-      <ModeToggle />
-    </div>
-  );
-};

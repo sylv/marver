@@ -216,6 +216,7 @@ export type Query = {
   __typename?: 'Query';
   file?: Maybe<File>;
   files: FileConnection;
+  serverInfo: ServerInfo;
   tasks: Array<Task>;
 };
 
@@ -236,6 +237,14 @@ export type QueryFilesArgs = {
   offset?: InputMaybe<Scalars['Float']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort?: InputMaybe<FileSort>;
+};
+
+export type ServerInfo = {
+  __typename?: 'ServerInfo';
+  branch: Scalars['String']['output'];
+  buildDate: Scalars['DateTime']['output'];
+  commit: Scalars['String']['output'];
+  version: Scalars['String']['output'];
 };
 
 export enum SimilarityType {

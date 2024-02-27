@@ -30,9 +30,20 @@ import { FileTagEntity } from './file-tag.entity.js';
 import { FileTextEntity } from './file-text.entity.js';
 import { JobStateEntity } from '../../queue/job-state.entity.js';
 
+// when using raw queries in a query builder,
+// .addSelect(raw('COUNT(*) as count'))
+// mikroorm throws an error about the field not existing if you try order
+// by that field, because it doesnt know the "count" property exists.
+// this works around that.
+@Entity({ abstract: true })
+export class FileEntityFilter {
+  @Property({ persist: false })
+  similarity?: number;
+}
+
 @Entity({ tableName: 'files' })
 @ObjectType('File')
-export class FileEntity {
+export class FileEntity extends FileEntityFilter {
   @PrimaryKey()
   @Field(() => ID)
   id: string = ulid();

@@ -7,11 +7,11 @@ import { config } from './config.js';
 
 export const ORM_LOGGER = new Logger('MikroORM');
 export const MIGRATIONS_TABLE_NAME = 'mikro_orm_migrations';
+const IS_TS = import.meta.url.endsWith('.ts');
 
 export default defineConfig({
   dbName: join(config.metadata_dir, 'mesa.db'),
-  entities: ['dist/**/*.entity.js'],
-  entitiesTs: ['src/**/*.entity.ts'],
+  entities: IS_TS ? ['src/**/*.entity.ts'] : ['dist/**/*.entity.{ts,js}'],
   persistOnCreate: false,
   debug: config.orm_debug,
   migrations: {

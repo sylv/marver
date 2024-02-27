@@ -1,24 +1,57 @@
-import { type FC, type ReactNode } from 'react';
-import { FiHome, FiShare2 } from 'react-icons/fi';
+import { LucideAlbum, LucideHash, LucideListTodo, LucideTv, type LucideIcon } from 'lucide-react';
+import { memo } from 'react';
+import { ModeToggle } from './mode-toggle';
+import { cn } from '../helpers/cn';
+import { usePageContext } from '../renderer/usePageContext';
 
-export const Sidebar: FC<{ children: ReactNode }> = ({ children }) => {
-  return (
-    <div className="flex h-screen">
-      <aside className="h-full bg-black px-6 py-6 w-[15em]">
-        <div className="flex flex-col justify-between gap-2 h-full">
-          <div className="sidebar-top">
-            <div className="flex items-center gap-2">
-              <FiHome className="opacity-60" /> Files
-            </div>
-            <div className="flex items-center gap-2">
-              <FiShare2 className="opacity-60" /> Shared
-            </div>
-          </div>
-        </div>
-      </aside>
-      <main className="relative flex-grow rounded-tl-3xl overflow-hidden overflow-y-auto shadow-inner p-3">
+const SIDEBAR_WIDTH = '15rem';
+
+const SidebarTab = memo<{ href: string; icon: LucideIcon; children: React.ReactNode }>(
+  ({ href, icon: Icon, children }) => {
+    const { urlParsed } = usePageContext();
+    const isActive = urlParsed.pathname === href;
+    return (
+      <a
+        href={href}
+        className={cn(
+          'flex gap-2 px-4 py-1.5 rounded-lg items-center text-zinc-200 hover:bg-zinc-700/60 text-[0.9125rem]',
+          isActive && 'bg-zinc-700/60',
+        )}
+      >
+        <Icon className="h-4 w-4" />
         {children}
-      </main>
+      </a>
+    );
+  },
+);
+export const Sidebar = memo(() => {
+  return (
+    <div
+      className="min-h-dvh bottom-0 top-0 bg-zinc-100 border-zinc-200 dark:bg-zinc-900 border-r dark:border-zinc-800 relative"
+      style={{ width: SIDEBAR_WIDTH }}
+    >
+      <div className="fixed h-dvh flex flex-col justify-between" style={{ width: SIDEBAR_WIDTH }}>
+        <div className="h-full p-2 py-6">
+          <div className="space-y-1">
+            <SidebarTab href="/" icon={LucideTv}>
+              All Media
+            </SidebarTab>
+            <SidebarTab href="/collections" icon={LucideAlbum}>
+              Collections
+            </SidebarTab>
+          </div>
+          <div className="text-gray-400 uppercase text-xs mb-2 px-4 mt-4 mb-2">Admin</div>
+          <SidebarTab href="/tags" icon={LucideHash}>
+            Tags
+          </SidebarTab>
+          <SidebarTab href="/tasks" icon={LucideListTodo}>
+            Tasks
+          </SidebarTab>
+        </div>
+        <div className="bg-zinc-750 min-w-full p-2">
+          <ModeToggle />
+        </div>
+      </div>
     </div>
   );
-};
+});

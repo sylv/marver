@@ -1,22 +1,24 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { HttpException, Logger, Module } from '@nestjs/common';
-import { FileModule } from './modules/file/file.module.js';
-import ORM_CONFIG from './orm.config.js';
-import { ScheduleModule } from '@nestjs/schedule';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MercuriusDriver, type MercuriusDriverConfig } from '@nestjs/mercurius';
-import { ImageModule } from './modules/image/image.module.js';
-import { QueueModule } from './modules/queue/queue.module.js';
-import { VideoModule } from './modules/video/video.module.js';
-import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
-import { PersonModule } from './modules/people/person.module.js';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AppResolver } from './app.resolver.js';
 import { config } from './config.js';
-import { TaskModule } from './modules/task/task.module.js';
+import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
+import { FileModule } from './modules/file/file.module.js';
+import { ImageModule } from './modules/image/image.module.js';
+import { PersonModule } from './modules/people/person.module.js';
+import { QueueModule } from './modules/queue/queue.module.js';
 import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
+import { TaskModule } from './modules/task/task.module.js';
+import { VideoModule } from './modules/video/video.module.js';
+import ORM_CONFIG from './orm.config.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
 @Module({
+  providers: [AppResolver],
   imports: [
     MikroOrmModule.forRoot(ORM_CONFIG),
     GraphQLModule.forRoot<MercuriusDriverConfig>({

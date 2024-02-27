@@ -1,35 +1,15 @@
 {
-  "include": ["src", "types"],
+  "extends": "@atlasbot/configs/tsconfig/esm.json",
+  "include": ["src"],
   "compilerOptions": {
-    // https://www.npmjs.com/package/@tsconfig/node16
-    // https://github.com/sindresorhus/tsconfig/blob/main/tsconfig.json
-    "module": "node16",
-    "moduleResolution": "node16",
-    "moduleDetection": "force",
-    "target": "es2021", // node 16
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "pretty": true,
-    "newLine": "lf",
-    "stripInternal": true,
-    "strict": true,
-    "noImplicitOverride": false,
-    "esModuleInterop": true,
-    "noUnusedLocals": true,
-    "noFallthroughCasesInSwitch": true,
-    "noEmitOnError": true,
-    "verbatimModuleSyntax": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
     "outDir": "dist",
     "noUncheckedIndexedAccess": false,
-    "strictPropertyInitialization": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "lib": ["es2021", "dom"],
-    "baseUrl": ".",
+    "strictPropertyInitialization": false,
     "types": ["vitest/importMeta"],
-  },
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler"
+  }
 }

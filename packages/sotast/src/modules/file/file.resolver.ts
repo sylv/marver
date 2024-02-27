@@ -222,68 +222,57 @@ export class FileResolver {
           .limit(args.limit)
           .offset(args.offset);
 
-        switch (filter.type) {
-          case undefined:
-          case null:
-          case SimilarityType.SameFolder:
-          case SimilarityType.SameType:
-          case SimilarityType.Related:
-          case SimilarityType.Images:
-          case SimilarityType.Videos: {
-            queryBuilder
-              .andWhere({
-                similarity: {
-                  $lt: 0.85,
-                  $gt: 0.3,
-                },
-              })
-              .orderBy({ similarity: 'DESC' });
+        if (filter.type === SimilarityType.Similar) {
+          queryBuilder
+            .andWhere({
+              similarity: {
+                $gt: 0.85,
+              },
+            })
+            .orderBy({ similarity: 'DESC' });
+        } else {
+          queryBuilder
+            .andWhere({
+              similarity: {
+                // we want to avoid perfect matches or else we just get
+                // files from the same set, or duplicates of the same file.
+                $lt: 0.85,
+                $gt: 0.3,
+              },
+            })
+            .orderBy({ similarity: 'DESC' });
 
-            switch (filter.type) {
-              case SimilarityType.SameFolder: {
-                queryBuilder.andWhere({ directory: file.directory });
+          switch (filter.type) {
+            case SimilarityType.SameFolder: {
+              queryBuilder.andWhere({ directory: file.directory });
 
-                break;
-              }
-              case SimilarityType.SameType: {
-                // todo: should use similar extensions, but fileType is not accessible here
-                // eg if its an mp4 video, it should show all videos, not just mp4s
-                queryBuilder.andWhere({ extension: file.extension });
-
-                break;
-              }
-              case SimilarityType.Videos: {
-                queryBuilder.andWhere({
-                  extension: {
-                    $in: [...VIDEO_EXTENSIONS],
-                  },
-                });
-
-                break;
-              }
-              case SimilarityType.Images: {
-                queryBuilder.andWhere({
-                  extension: {
-                    $in: [...IMAGE_EXTENSIONS],
-                  },
-                });
-
-                break;
-              }
-              // No default
+              break;
             }
+            case SimilarityType.SameType: {
+              // todo: should use similar extensions, but fileType is not accessible here
+              // eg if its an mp4 video, it should show all videos, not just mp4s
+              queryBuilder.andWhere({ extension: file.extension });
 
-            break;
-          }
-          case SimilarityType.Similar: {
-            queryBuilder
-              .andWhere({
-                similarity: {
-                  $gt: 0.85,
+              break;
+            }
+            case SimilarityType.Videos: {
+              queryBuilder.andWhere({
+                extension: {
+                  $in: [...VIDEO_EXTENSIONS],
                 },
-              })
-              .orderBy({ similarity: 'DESC' });
-            break;
+              });
+
+              break;
+            }
+            case SimilarityType.Images: {
+              queryBuilder.andWhere({
+                extension: {
+                  $in: [...IMAGE_EXTENSIONS],
+                },
+              });
+
+              break;
+            }
           }
         }
 

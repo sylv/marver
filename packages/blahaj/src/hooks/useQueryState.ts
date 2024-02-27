@@ -4,7 +4,6 @@ import { usePageContext } from '../renderer/usePageContext';
 export const useQueryState = <T extends string | number>(key: string, initialValue: T) => {
   const context = usePageContext();
   const getValueServer = (): T => {
-    console.log(context.urlParsed);
     const raw = context.urlParsed.search[key];
     return parseValue(raw);
   };
@@ -46,8 +45,6 @@ export const useQueryState = <T extends string | number>(key: string, initialVal
     () => getValue(),
     () => getValueServer(),
   );
-
-  console.log({ value });
 
   const setValue = (updated: T) => {
     const route = new URL(location.href);

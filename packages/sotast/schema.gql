@@ -178,7 +178,15 @@ type Person {
 type Query {
   file(id: String!): File
   files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
+  serverInfo: ServerInfo!
   tasks: [Task!]!
+}
+
+type ServerInfo {
+  branch: String!
+  buildDate: DateTime!
+  commit: String!
+  version: String!
 }
 
 enum SimilarityType {

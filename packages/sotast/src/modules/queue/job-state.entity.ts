@@ -66,7 +66,6 @@ export class JobStateEntity {
   @BeforeCreate()
   @BeforeUpdate()
   computeRetryAfter() {
-    console.log(this);
     if (this.retries == null || this.state == null) {
       throw new Error('"retries" and "state" must be present');
     }
