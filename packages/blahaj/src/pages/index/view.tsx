@@ -37,7 +37,7 @@ export const FileView = memo<FileViewProps>(({ variables, isLastPage, onLoadMore
     if (!loaderRef.current || !isLastPage) return;
     const observer = new IntersectionObserver((entries) => {
       if (!data || fetching) return;
-      if (entries[0].isIntersecting) {
+      if (entries[0].isIntersecting && data.files.pageInfo.hasNextPage) {
         onLoadMore(data.files.pageInfo.endCursor);
       }
     });
