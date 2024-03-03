@@ -1,9 +1,6 @@
 import { getPackageMetadata } from './helpers/getPackageMetadata';
 
-export const SUBTITLE_EXTENSIONS = new Set(['sub', 'srt']);
-export const METADATA_EXTENSIONS = new Set(['json', 'xml']);
-export const SUPPORTING_EXTENSIONS = new Set([...SUBTITLE_EXTENSIONS, ...METADATA_EXTENSIONS]);
-
+export const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'jfif', 'tiff', 'tif', 'bmp']);
 export const VIDEO_EXTENSIONS = new Set([
   'mp4',
   'mkv',
@@ -16,8 +13,6 @@ export const VIDEO_EXTENSIONS = new Set([
   'mpeg',
   'm4v',
 ]);
-export const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'jfif', 'tiff', 'tif', 'bmp']);
-export const FILE_EXTENSIONS = new Set([...VIDEO_EXTENSIONS, ...IMAGE_EXTENSIONS]);
 
 // works around swc+esbuild macro limitation
 export const SERVER_INFO = await getPackageMetadata();

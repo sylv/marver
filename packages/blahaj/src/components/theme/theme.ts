@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { disableAnimations } from './disable-animations';
 
-export const STORAGE_KEY = 'ui-theme';
-export const DEFAULT_THEME = 'system';
+const STORAGE_KEY = 'ui-theme';
+const DEFAULT_THEME = 'system';
 
-export const themeStore = create<string | null>(() => {
+const themeStore = create<string | null>(() => {
   if (typeof localStorage === 'undefined') {
     // during SSR we can't know the final theme, and defaulting to system
     // should not cause SSR mismatches because it shouldn't change anything visually.

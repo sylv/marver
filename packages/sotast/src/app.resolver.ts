@@ -2,7 +2,7 @@ import { Field, ObjectType, Query, Resolver } from '@nestjs/graphql';
 import { SERVER_INFO } from './constants.js';
 
 @ObjectType()
-export class ServerInfo {
+class ServerInfo {
   @Field(() => String)
   version: string;
 

@@ -31,7 +31,7 @@ const IMAGE_MIMES_BY_PRIORITY = [
   'image/gif',
 ];
 
-export class ImageProxyQuery {
+class ImageProxyQuery {
   @IsIn(IMAGE_MIMES_BY_PRIORITY)
   @IsString()
   @IsOptional()

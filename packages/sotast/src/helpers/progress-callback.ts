@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-export type ProgressData =
+type ProgressData =
   | {
       status: 'download' | 'initiate' | 'done';
       name: string;

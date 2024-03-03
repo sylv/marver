@@ -8,7 +8,3 @@ export function embeddingToBuffer(vector: Embedding) {
 export function bufferToEmbedding(buffer: Buffer) {
   return Embedding.fromBinary(buffer);
 }
-
-export function embeddingFrom(value: number[]) {
-  return Embedding.fromJson({ value });
-}

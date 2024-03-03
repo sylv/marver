@@ -5,8 +5,8 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
 
-export const ORM_LOGGER = new Logger('MikroORM');
-export const MIGRATIONS_TABLE_NAME = 'mikro_orm_migrations';
+const ORM_LOGGER = new Logger('MikroORM');
+const MIGRATIONS_TABLE_NAME = 'mikro_orm_migrations';
 const IS_TS = import.meta.url.endsWith('.ts');
 
 export default defineConfig({

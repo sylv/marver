@@ -14,7 +14,7 @@ import { JobState, JobStateEntity } from './job-state.entity.js';
 import { QUEUE_KEY, type QueueKeyValue, type QueueOptions } from './queue.decorator.js';
 
 // todo: cleanupMethod is never used
-export interface LoadedQueue {
+interface LoadedQueue {
   method: (entity: FileEntity | FileEntity[], parentOutput?: unknown) => Promise<unknown>;
   meta: QueueOptions;
   limiter: PQueue;

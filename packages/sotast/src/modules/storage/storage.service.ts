@@ -8,7 +8,7 @@ import { createReadStream, type ReadStream } from 'fs';
 import { readFile } from 'fs/promises';
 import { FileEntity } from '../file/entities/file.entity';
 
-export const UNAVAILBLE_ERROR_CODES = new Set(['ENOENT', 'EACCES', 'EISDIR']);
+const UNAVAILBLE_ERROR_CODES = new Set(['ENOENT', 'EACCES', 'EISDIR']);
 
 type CreateReadStreamOptions = Parameters<typeof createReadStream>[1];
 

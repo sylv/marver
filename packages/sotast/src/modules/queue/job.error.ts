@@ -1,8 +1,8 @@
-export type JobErrorOptions = {
+interface JobErrorOptions {
   corruptFile?: boolean;
   unavailableFile?: boolean;
   networkError?: boolean;
-};
+}
 
 export class JobError extends Error {
   constructor(

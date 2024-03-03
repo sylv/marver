@@ -1,6 +1,6 @@
-import clsx from 'clsx';
 import React, { type FC } from 'react';
 import { Center } from './center';
+import { cn } from '../helpers/cn';
 
 export enum SpinnerSize {
   Small = 'w-4',
@@ -14,7 +14,7 @@ interface SpinnerProps {
 }
 
 export const Spinner: FC<SpinnerProps> = ({ className, size = SpinnerSize.Medium }) => {
-  const classes = clsx('animate-spin', className, size);
+  const classes = cn('animate-spin', className, size);
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className={classes}>

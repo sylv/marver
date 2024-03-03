@@ -63,18 +63,3 @@ export const isCorruptFileError = (error: unknown): boolean => {
   if (error instanceof JobError && error.options.corruptFile) return true;
   return false;
 };
-
-// export const wrapExternalCall = async <T>(fn: () => Promise<T>): Promise<T> => {
-//   try {
-//     return await fn();
-//   } catch (error: any) {
-//     if (isNetworkError(error)) {
-//       throw new JobError(`Handled network error: ${error.message}`, {
-//         retry: true,
-//         blockQueue: true,
-//       });
-//     }
-
-//     throw error;
-//   }
-// };

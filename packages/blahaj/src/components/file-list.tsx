@@ -2,10 +2,10 @@
 import { memo, useEffect, useRef } from 'react';
 import { useQuery } from 'urql';
 import { FilesDocument, type FilesQueryVariables } from '../@generated/graphql';
-import { FilePreview } from './file-preview';
 import { cn } from '../helpers/cn';
+import { FilePreview } from './file-preview';
 
-export interface FileViewProps {
+interface FileViewProps {
   variables: FilesQueryVariables;
   isLastPage: boolean;
   targetWidth?: number;

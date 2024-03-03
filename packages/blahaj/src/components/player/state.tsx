@@ -1,7 +1,7 @@
 import { share } from 'shared-zustand';
 import create from 'zustand';
 
-export const usePlayerState = create(() => ({
+const usePlayerState = create(() => ({
   volume: 100,
   loop: true,
   muted: false,

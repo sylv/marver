@@ -1,17 +1,9 @@
-import {
-  Embedded,
-  Entity,
-  Enum,
-  ManyToOne,
-  PrimaryKey,
-  Property,
-  type Ref,
-} from '@mikro-orm/better-sqlite';
+import { Embedded, Entity, Enum, ManyToOne, PrimaryKey, Property, type Ref } from '@mikro-orm/better-sqlite';
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { BoundingBoxEmbeddable } from '../../people/entities/bounding-box.embeddable.js';
 import { FileEntity } from './file.entity.js';
 
-export enum FileTextType {
+enum FileTextType {
   OCR, // For text extracted via OCR
   Cleaned, // OCR text after its cleaned automatically by an LLM
   Manual, // For text manually entered by a user

@@ -15,6 +15,7 @@ import { TaskModule } from './modules/task/task.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import ORM_CONFIG from './orm.config.js';
 import { CLIPModule } from './modules/clip/clip.module.js';
+import { SubtitlesModule } from './modules/subtitles/subtitles.module.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
@@ -52,6 +53,7 @@ const GQL_LOGGER = new Logger('GraphQL');
     QueueModule,
     VideoModule,
     FfmpegModule,
+    SubtitlesModule,
     RehoboamModule,
     CLIPModule,
     TaskModule,

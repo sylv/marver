@@ -15,7 +15,7 @@ import { dedupe } from '../../helpers/dedupe';
 import { expiringValue } from '../../helpers/expire-value';
 import { progressCallback } from '../../helpers/progress-callback';
 
-export enum ClipEmbeddingModelType {
+enum ClipEmbeddingModelType {
   OPENAI__CLIP_VIT_BASE_PATCH32 = 1,
   OPENAI__CLIP_VIT_BASE_PATCH16 = 2,
 }

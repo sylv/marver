@@ -45,13 +45,3 @@ export class TagEntity {
   [PrimaryKeyProp]: 'name';
   [OptionalProps]: 'aliases';
 }
-
-export enum TagColorPresets {
-  Red = 0xe74c3c,
-  Orange = 0xe67e22,
-  Yellow = 0xf1c40f,
-  Green = 0x2ecc71,
-  Blue = 0x3498db,
-  Purple = 0x9b59b6,
-  Pink = 0xe91e63,
-}
