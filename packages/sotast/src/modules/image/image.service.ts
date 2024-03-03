@@ -127,8 +127,8 @@ export class ImageService {
   }
 
   async createExifFromFile(file: FileEntity) {
-    const exif = this.exifRepo.create({ file });
     try {
+      const exif = this.exifRepo.create({ file });
       const exifData = await ExifReader.load(file.path);
 
       if (exifData.LensMake) exif.lensMake = exifData.LensMake.description;
@@ -150,12 +150,12 @@ export class ImageService {
         exif.longitude = location[1];
       }
     } catch (error: any) {
-      if (error.name !== 'MetadataMissingError') {
-        throw error;
+      if (error.name === 'MetadataMissingError') {
+        return null;
       }
-    }
 
-    return exif;
+      throw error;
+    }
   }
 
   private getLatLongFromExif(exifData: ExifReader.Tags): [number, number] | null {

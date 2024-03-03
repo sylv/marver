@@ -12,7 +12,7 @@ const IS_TS = import.meta.url.endsWith('.ts');
 export default defineConfig({
   dbName: join(config.metadata_dir, 'mesa.db'),
   entities: IS_TS ? ['src/**/*.entity.ts'] : ['dist/**/*.entity.{ts,js}'],
-  persistOnCreate: false,
+  persistOnCreate: true,
   debug: config.orm_debug,
   migrations: {
     path: join(dirname(fileURLToPath(import.meta.url)), 'migrations'),

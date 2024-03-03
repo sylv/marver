@@ -15,22 +15,26 @@ pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f32 {
     }
 
     // hash_a and hash_b are Vectors which we have to decode
-    let vec_a = Embedding::decode(vec_a)
-        .expect("could not decode vec_a")
-        .value;
-    let vec_b = Embedding::decode(vec_b)
-        .expect("could not decode vec_b")
-        .value;
+    let embedding_a = Embedding::decode(vec_a).expect("could not decode vec_a");
+    let embedding_b = Embedding::decode(vec_b).expect("could not decode vec_b");
 
-    assert_eq!(vec_a.len(), vec_b.len(), "vectors must be of equal length");
+    assert_eq!(
+        embedding_a.value.len(),
+        vec_b.len(),
+        "vectors must be of equal length"
+    );
+    assert_eq!(
+        embedding_a.source, embedding_b.source,
+        "cannot compare vectors from different models"
+    );
 
     let mut dot_product = 0.0;
     let mut a_norm = 0.0;
     let mut b_norm = 0.0;
-    for i in 0..vec_a.len() {
-        dot_product += vec_a[i] * vec_b[i];
-        a_norm += vec_a[i] * vec_a[i];
-        b_norm += vec_b[i] * vec_b[i];
+    for i in 0..embedding_a.value.len() {
+        dot_product += embedding_a.value[i] * embedding_b.value[i];
+        a_norm += embedding_a.value[i] * embedding_a.value[i];
+        b_norm += embedding_b.value[i] * embedding_b.value[i];
     }
 
     dot_product / (a_norm.sqrt() * b_norm.sqrt())

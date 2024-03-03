@@ -34,13 +34,16 @@ async fn check_hash(path: &PathBuf, md5sum: &str) -> Result<bool, anyhow::Error>
 pub async fn ensure_file(url: &str, path: &PathBuf, md5sum: Option<&str>) -> anyhow::Result<()> {
     // If path exists on disk, check md5sum, if matches return
     if path.exists() {
-        if let Some(md5sum) = md5sum {
-            if !check_hash(path, md5sum).await? {
-                return Err(anyhow!("MD5 mismatch on {}", path.display()));
-            }
-        }
+        // if let Some(md5sum) = md5sum {
+        //     if !check_hash(path, md5sum).await? {
+        //         return Err(anyhow!("MD5 mismatch on {}", path.display()));
+        //     }
+        // }
 
-        println!("File {} already exists, skipping download", path.display());
+        println!(
+            "File {} already exists, assuming correct and skipping download",
+            path.display()
+        );
         return Ok(());
     }
 

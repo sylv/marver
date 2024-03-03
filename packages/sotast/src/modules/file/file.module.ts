@@ -1,23 +1,25 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
+import { CLIPModule } from '../clip/clip.module.js';
 import { ImageModule } from '../image/image.module.js';
-import { RehoboamModule } from '../rehoboam/rehoboam.module.js';
+import { StorageModule } from '../storage/storage.module.js';
+import { FileEmbeddingEntity } from './entities/file-embedding.entity.js';
 import { FileTagEntity } from './entities/file-tag.entity.js';
 import { FileEntity } from './entities/file.entity.js';
 import { TagEntity } from './entities/tag.entity.js';
 import { FileScanService } from './file-scan.service.js';
 import { FileController } from './file.controller.js';
 import { FileResolver } from './file.resolver.js';
-import { FileService } from './file.service.js';
 
 @Module({
   controllers: [FileController],
   imports: [
+    StorageModule,
     ImageModule,
-    MikroOrmModule.forFeature([FileEntity, FileTagEntity, TagEntity]),
-    RehoboamModule,
+    CLIPModule,
+    MikroOrmModule.forFeature([FileEntity, FileTagEntity, TagEntity, FileEmbeddingEntity]),
   ],
-  providers: [FileResolver, FileScanService, FileService],
+  providers: [FileResolver, FileScanService],
   exports: [],
 })
 export class FileModule {}

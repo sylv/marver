@@ -1,4 +1,3 @@
-use clip::Clip;
 use facerec::arcface::ArcFace;
 use facerec::download_models;
 use facerec::retinaface::RetinaFace;
@@ -8,7 +7,6 @@ use service::Service;
 use tonic::transport::Server;
 use whisper::Whisper;
 
-mod clip;
 mod facerec;
 mod service;
 mod util;
@@ -28,11 +26,9 @@ async fn main() -> anyhow::Result<()> {
     let retinaface = RetinaFace::init(environment.clone(), det_model).await?;
     let arcface = ArcFace::init(environment.clone(), rec_model).await?;
 
-    let clip = Clip::init(environment).await.expect("Failed to load CLIP");
-
     let whisper = Whisper::init().await.expect("Failed to load Whisper");
 
-    let server = Service::new(clip, retinaface, arcface, whisper);
+    let server = Service::new(retinaface, arcface, whisper);
 
     println!("Starting server");
 

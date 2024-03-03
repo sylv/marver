@@ -1,14 +1,11 @@
 import Accept from '@hapi/accept';
-import { EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Controller, Get, Param, Query, Request, Response } from '@nestjs/common';
 import bytes from 'bytes';
 import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 import { type FastifyReply, type FastifyRequest } from 'fastify';
 import { type ReadStream } from 'fs';
 import sharp, { type FitEnum, type FormatEnum } from 'sharp';
-import { createDurableHttpReadStream } from '../../helpers/createDurableReadStream.js';
-import { FileEntity } from '../file/entities/file.entity.js';
+import { StorageService } from '../storage/storage.service.js';
 import { ImageService, type ProxyableImage } from './image.service.js';
 
 const FIT = ['cover', 'contain', 'fill', 'inside', 'outside'] as (keyof FitEnum)[];
@@ -56,10 +53,11 @@ export class ImageProxyQuery {
 
 @Controller()
 export class ImageController {
-  @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
-
   private static readonly FORCE_PROCESS_SIZE = bytes('5MB');
-  constructor(private imageService: ImageService) {}
+  constructor(
+    private imageService: ImageService,
+    private storageService: StorageService,
+  ) {}
 
   @Get('/files/:fileId/imgproxy/:data')
   async imageProxy(
@@ -91,10 +89,12 @@ export class ImageController {
       }
 
       // eslint-disable-next-line unicorn/no-await-expression-member
-      stream = (await createDurableHttpReadStream({ id: fileId, path: image.path })).pipe(transformer);
+      stream = (await this.storageService.createReadStreamHttp({ id: fileId, path: image.path })).pipe(
+        transformer,
+      );
       contentDisposition = `inline; filename="${cleanFileName}_${suffix}.${extension}"`;
     } else {
-      stream = await createDurableHttpReadStream({ id: fileId, path: image.path });
+      stream = await this.storageService.createReadStreamHttp({ id: fileId, path: image.path });
       contentDisposition = `inline; filename="${cleanFileName}.${extension}"`;
       if (image.size) {
         reply.header('Content-Length', image.size);

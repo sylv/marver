@@ -40,7 +40,6 @@ type File {
   similar(after: String, before: String, first: Float, last: Float, offset: Float, type: SimilarityType): FileConnection!
   size: Float!
   sizeFormatted: String!
-  tags: [FileTag!]!
   texts: [FileText!]!
   thumbnail: FileThumbnail!
   thumbnailUrl: String
@@ -116,11 +115,6 @@ enum FileSort {
 enum FileSortDirection {
   ASC
   DESC
-}
-
-type FileTag {
-  system: Boolean!
-  tag: Tag!
 }
 
 type FileText {

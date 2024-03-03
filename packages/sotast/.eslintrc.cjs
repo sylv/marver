@@ -11,5 +11,6 @@ module.exports = {
     'unicorn/explicit-length-check': 'off',
     'unicorn/no-useless-switch-case': 'off',
     'unicorn/filename-case': 'off',
+    'unicorn/no-array-method-this-argument': 'off',
   },
 };

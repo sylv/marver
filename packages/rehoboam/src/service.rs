@@ -2,7 +2,6 @@ use proto::rehoboam_service_server::RehoboamService;
 use tonic::{Request, Response, Status};
 
 use crate::{
-    clip::Clip,
     facerec::{arcface::ArcFace, retinaface::RetinaFace},
     whisper::Whisper,
 };
@@ -10,7 +9,6 @@ use crate::{
 use self::{
     core::{BoundingBox, Embedding, Face, Landmark, Subtitle},
     proto::{
-        EncodeImageReply, EncodeImageRequest, EncodeTextReply, EncodeTextRequest,
         ExtractFacesReply, ExtractFacesRequest, ExtractSubtitlesReply, ExtractSubtitlesRequest,
     },
 };
@@ -26,16 +24,14 @@ pub mod proto {
 }
 
 pub struct Service {
-    clip: Clip,
     retinaface: RetinaFace,
     arcface: ArcFace,
     whisper: Whisper,
 }
 
 impl Service {
-    pub fn new(clip: Clip, retinaface: RetinaFace, arcface: ArcFace, whisper: Whisper) -> Self {
+    pub fn new(retinaface: RetinaFace, arcface: ArcFace, whisper: Whisper) -> Self {
         Self {
-            clip,
             retinaface,
             arcface,
             whisper,
@@ -67,44 +63,6 @@ impl RehoboamService for Service {
         };
     }
 
-    async fn encode_text(
-        &self,
-        request: Request<EncodeTextRequest>,
-    ) -> Result<Response<EncodeTextReply>, Status> {
-        let texts = request.into_inner().texts;
-        let embeddings = self
-            .clip
-            .encode_text(&texts.iter().map(|t| t.as_str()).collect());
-
-        return match embeddings {
-            Err(e) => Err(Status::internal(e.to_string())),
-            Ok(embeddings) => Ok(Response::new(EncodeTextReply {
-                embeddings: embeddings
-                    .into_iter()
-                    .map(|value| Embedding { value })
-                    .collect(),
-            })),
-        };
-    }
-
-    async fn encode_image(
-        &self,
-        request: Request<EncodeImageRequest>,
-    ) -> Result<Response<EncodeImageReply>, Status> {
-        let images = request.into_inner().images;
-        let embeddings = self.clip.encode_image(&images);
-
-        return match embeddings {
-            Err(e) => Err(Status::internal(e.to_string())),
-            Ok(embeddings) => Ok(Response::new(EncodeImageReply {
-                embeddings: embeddings
-                    .into_iter()
-                    .map(|value| Embedding { value })
-                    .collect(),
-            })),
-        };
-    }
-
     async fn extract_faces(
         &self,
         request: Request<ExtractFacesRequest>,
@@ -131,7 +89,11 @@ impl RehoboamService for Service {
             faces: embeddings
                 .into_iter()
                 .map(|(face, embedding)| {
-                    let embedding = Embedding { value: embedding };
+                    let embedding = Embedding {
+                        value: embedding,
+                        source: None,
+                    };
+
                     // bounding box is in percentages, we convert back to pixels
                     let bbox = face.bbox;
                     let bbox = BoundingBox {

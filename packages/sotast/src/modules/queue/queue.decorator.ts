@@ -10,11 +10,7 @@ export interface QueueOptions {
   type: string;
   parentType?: string;
   targetConcurrency: number;
-  /**
-   * Whether this queue contacts external services.
-   * This has some minor effects, like starting with concurrency forced to 1 until the job succeeds to ensure the API is ready.
-   */
-  thirdPartyDependant: boolean;
+  batchSize?: number;
   /** The filter that determines which files this task will run on. */
   fileFilter?: ObjectQuery<FileEntity>;
   /** The relations of the file to populate */
@@ -29,6 +25,10 @@ export interface QueueOptions {
 
 export const Queue = (type: string, options: Omit<QueueOptions, 'type'>) => {
   mergeRecursive(options.fileFilter, { unavailable: false });
+  if (options.batchSize && options.targetConcurrency !== 1) {
+    throw new Error('Batch size can only be used with a target concurrency of 1');
+  }
+
   return SetMetadata<symbol, QueueOptions>(QUEUE_KEY, {
     ...options,
     type: type,

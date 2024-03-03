@@ -54,7 +54,7 @@ await app.listen(8080, '0.0.0.0', (error, address) => {
   if (error) throw error;
   const end = performance.now();
   const duration = ms(end - start, { long: true });
-  logger.debug(`Startup completed in ${duration}`);
+  logger.debug(`Started in ${duration}`);
   logger.log(`Listening at ${address}`);
   clearTimeout(startupTimer);
 });

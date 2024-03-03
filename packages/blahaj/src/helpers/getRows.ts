@@ -106,5 +106,5 @@ export const useMediaListRows = (
       ...options,
       containerWidth,
     });
-  }, [mediaList, options]);
+  }, [mediaList, options, containerWidth]);
 };

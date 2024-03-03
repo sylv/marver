@@ -1,25 +1,28 @@
-import { EntityManager } from '@mikro-orm/better-sqlite';
+import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
+import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import bytes from 'bytes';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { IMAGE_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
+import { CLIPService } from '../clip/clip.service.js';
+import { FileEmbeddingEntity } from '../file/entities/file-embedding.entity.js';
 import { FileEntity } from '../file/entities/file.entity.js';
 import { Queue } from '../queue/queue.decorator.js';
-import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 import { ImageService } from './image.service.js';
 
 @Injectable()
 export class ImageTasks {
+  @InjectRepository(FileEmbeddingEntity) embeddingRepo: EntityRepository<FileEmbeddingEntity>;
+
   constructor(
     private imageService: ImageService,
-    private rehoboamService: RehoboamService,
+    private clipService: CLIPService,
     private em: EntityManager,
   ) {}
 
   @Queue('IMAGE_EXTRACT_EXIF', {
     targetConcurrency: 4,
-    thirdPartyDependant: false,
     fileFilter: {
       exifData: null,
       info: {
@@ -35,12 +38,13 @@ export class ImageTasks {
   })
   async extractExif(file: FileEntity) {
     const exif = await this.imageService.createExifFromFile(file);
-    await this.em.persistAndFlush(exif);
+    if (exif) {
+      await this.em.persistAndFlush(exif);
+    }
   }
 
   @Queue('CREATE_IMAGE_MEDIA', {
     targetConcurrency: 4,
-    thirdPartyDependant: false,
     fileFilter: {
       extension: { $in: [...IMAGE_EXTENSIONS] },
       size: { $lte: bytes('100mb') },
@@ -52,9 +56,7 @@ export class ImageTasks {
     },
   })
   async extractMetadata(file: FileEntity) {
-    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(
-      file.path,
-    );
+    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(file.path);
 
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
     file.preview = Buffer.from(hash);
@@ -85,30 +87,33 @@ export class ImageTasks {
 
   @Queue('IMAGE_GENERATE_CLIP_EMBEDDING', {
     targetConcurrency: 1,
-    thirdPartyDependant: true,
+    batchSize: 20,
     fileFilter: {
-      embedding: null,
-      info: {
-        height: { $ne: null },
-      },
+      info: { height: { $ne: null } },
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
       size: { $lte: bytes('10mb') },
     },
   })
-  async generateClipEmbeddings(file: FileEntity) {
-    // todo: handle solomon being offline, if we throw an error
-    // here the task will be retried at a later point which means
-    // a delay when the service is probably just restarting or updating.
-    const embedding = await this.rehoboamService.encodeImage(file);
-    file.embedding = embeddingToBuffer(embedding);
-    await this.em.persistAndFlush(file);
+  async generateClipEmbeddings(files: FileEntity[]) {
+    const embedding = await this.clipService.encodeImageBatch(files.map((file) => file.path));
+    for (const [i, element] of embedding.entries()) {
+      const file = files[i];
+      const embedding = this.embeddingRepo.create({
+        primary: true,
+        data: embeddingToBuffer(element),
+        file: file,
+      });
+
+      this.em.persist(embedding);
+    }
+
+    await this.em.flush();
   }
 
   // @Queue('IMAGE_EXTRACT_TEXT', {
   //   targetConcurrency: 4,
-  //   thirdPartyDependant: true,
   //   fileFilter: {
   //     media: {
   //       hasText: null,

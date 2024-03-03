@@ -3,12 +3,13 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Controller, Get, Headers, Param, Res } from '@nestjs/common';
 import { type FastifyReply } from 'fastify';
 import parseRange from 'range-parser';
-import { createDurableHttpReadStream } from '../../helpers/createDurableReadStream.js';
+import { StorageService } from '../storage/storage.service.js';
 import { FileEntity } from './entities/file.entity.js';
 
 @Controller()
 export class FileController {
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
+  constructor(private storageService: StorageService) {}
 
   @Get('/files/:fileId/raw')
   async readFile(
@@ -18,7 +19,7 @@ export class FileController {
   ) {
     const file = await this.fileRepo.findOneOrFail(fileId);
     const parsedRange = range ? this.getRange(range, file.size) : null;
-    const stream = await createDurableHttpReadStream(file, {
+    const stream = await this.storageService.createReadStreamHttp(file, {
       start: parsedRange?.start,
       end: parsedRange?.end,
     });

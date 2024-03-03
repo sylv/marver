@@ -354,24 +354,6 @@
             "args": []
           },
           {
-            "name": "tags",
-            "type": {
-              "kind": "NON_NULL",
-              "ofType": {
-                "kind": "LIST",
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "OBJECT",
-                    "name": "FileTag",
-                    "ofType": null
-                  }
-                }
-              }
-            },
-            "args": []
-          },
-          {
             "name": "texts",
             "type": {
               "kind": "NON_NULL",
@@ -776,36 +758,6 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "Any"
-              }
-            },
-            "args": []
-          }
-        ],
-        "interfaces": []
-      },
-      {
-        "kind": "OBJECT",
-        "name": "FileTag",
-        "fields": [
-          {
-            "name": "system",
-            "type": {
-              "kind": "NON_NULL",
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Any"
-              }
-            },
-            "args": []
-          },
-          {
-            "name": "tag",
-            "type": {
-              "kind": "NON_NULL",
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Tag",
-                "ofType": null
               }
             },
             "args": []

@@ -11,6 +11,7 @@ import sharp from 'sharp';
 import { rgbaToThumbHash } from 'thumbhash-node';
 import { VIDEO_EXTENSIONS } from '../../constants.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
+import { CLIPService } from '../clip/clip.service.js';
 import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
 import { FilePosterEntity } from '../file/entities/assets/file-poster.entity.js';
 import { FileThumbnailEntity } from '../file/entities/assets/file-thumbnail.entity.js';
@@ -19,7 +20,6 @@ import { FileEntity } from '../file/entities/file.entity.js';
 import { ImageService } from '../image/image.service.js';
 import { JobError } from '../queue/job.error.js';
 import { Queue } from '../queue/queue.decorator.js';
-import { RehoboamService } from '../rehoboam/rehoboam.service.js';
 
 @Injectable()
 export class VideoQueues {
@@ -31,14 +31,13 @@ export class VideoQueues {
 
   constructor(
     private ffmpegService: FfmpegService,
-    private rehoboamService: RehoboamService,
+    private clipService: CLIPService,
     private imageService: ImageService,
     private em: EntityManager,
   ) {}
 
   @Queue('CREATE_VIDEO_MEDIA', {
     targetConcurrency: 4,
-    thirdPartyDependant: false,
     fileFilter: {
       extension: {
         $in: [...VIDEO_EXTENSIONS],
@@ -89,7 +88,6 @@ export class VideoQueues {
 
   @Queue('VIDEO_EXTRACT_SCREENSHOTS', {
     targetConcurrency: 3,
-    thirdPartyDependant: false,
     fileFilter: {
       info: {
         videoCodec: { $ne: null },
@@ -134,18 +132,18 @@ export class VideoQueues {
   @Queue('VIDEO_GENERATE_CLIP_EMBEDDING', {
     parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
     targetConcurrency: 1,
-    thirdPartyDependant: true,
   })
   async generateClipVector(
     file: FileEntity,
     { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
   ) {
-    const embeddings = [];
+    const framePaths: string[] = [];
     for (const frame of frames) {
       if (!frame.path) continue;
-      const embedding = await this.rehoboamService.encodeImage({ path: frame.path });
-      embeddings.push(embedding);
+      framePaths.push(frame.path);
     }
+
+    const embeddings = await this.clipService.encodeImageBatch(framePaths);
 
     // todo: figure out how to do this without huge quality loss
     // const merged = await this.solomonService.mergeEmbeddings(embeddings);
@@ -156,7 +154,6 @@ export class VideoQueues {
   @Queue('VIDEO_GENERATE_TIMELINE', {
     parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
     targetConcurrency: 1,
-    thirdPartyDependant: false,
     fileFilter: {
       timeline: null,
     },
@@ -225,15 +222,11 @@ export class VideoQueues {
   @Queue('VIDEO_PICK_THUMBNAIL', {
     parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
     targetConcurrency: 1,
-    thirdPartyDependant: false,
     fileFilter: {
       thumbnail: null,
     },
   })
-  async pickThumbnail(
-    file: FileEntity,
-    { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
-  ) {
+  async pickThumbnail(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>) {
     const firstFrameWithPath = frames.find((frame) => frame.path);
     if (!firstFrameWithPath) {
       throw new Error('Expected at least one frame to been written to disk');
@@ -259,15 +252,11 @@ export class VideoQueues {
   @Queue('VIDEO_PICK_POSTER', {
     parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
     targetConcurrency: 1,
-    thirdPartyDependant: false,
     fileFilter: {
       poster: null,
     },
   })
-  async pickPoster(
-    file: FileEntity,
-    { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
-  ) {
+  async pickPoster(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>) {
     // generate a poster by finding the largest (aka, hopefully most detailed) frame.
     // this approach should ignore things like intros/outros that are mostly black.
     let largestFrame: { frame: MergedFrame; data: Buffer; info: OutputInfo } | null = null;
@@ -313,7 +302,6 @@ export class VideoQueues {
 
   @Queue('VIDEO_GENERATE_PHASH', {
     targetConcurrency: 2,
-    thirdPartyDependant: false,
     populate: ['poster'],
     fileFilter: {
       poster: { $ne: null },

@@ -14,6 +14,7 @@ import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
 import { TaskModule } from './modules/task/task.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import ORM_CONFIG from './orm.config.js';
+import { CLIPModule } from './modules/clip/clip.module.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
@@ -52,6 +53,7 @@ const GQL_LOGGER = new Logger('GraphQL');
     VideoModule,
     FfmpegModule,
     RehoboamModule,
+    CLIPModule,
     TaskModule,
   ],
 })

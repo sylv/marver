@@ -1,9 +1,10 @@
-import { EntityRepository, raw, wrap } from '@mikro-orm/better-sqlite';
+import { EntityRepository, sql, wrap, type FilterQuery, type QueryOrderMap } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {
   Args,
   ArgsType,
   Field,
+  Info,
   Parent,
   Query,
   ResolveField,
@@ -13,15 +14,13 @@ import {
 import bytes from 'bytes';
 import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { createConnection } from 'nest-graphql-utils';
-import { VIRTUAL_TAGS } from '../../config/virtual-tags.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
+import { AutoPopulate, inferPopulate } from '../../helpers/autoloader.js';
 import { embeddingToBuffer } from '../../helpers/embedding.js';
 import { PaginationArgs } from '../../pagination.js';
-import { RehoboamService } from '../rehoboam/rehoboam.service.js';
-import { FileTagEntity } from './entities/file-tag.entity.js';
-import { FileConnection, FileEntity } from './entities/file.entity.js';
-import { FileService } from './file.service.js';
+import { CLIPService } from '../clip/clip.service.js';
 import { ImageService } from '../image/image.service.js';
+import { FileConnection, FileEntity } from './entities/file.entity.js';
 
 enum FileType {
   Image,
@@ -95,85 +94,105 @@ class FileFilter extends PaginationArgs {
 @Resolver(() => FileEntity)
 export class FileResolver {
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
-  @InjectRepository(FileTagEntity) private fileTagRepo: EntityRepository<FileTagEntity>;
+
   constructor(
-    private fileService: FileService,
-    private rehoboamService: RehoboamService,
+    private clipService: CLIPService,
     private imageService: ImageService,
   ) {}
 
   @Query(() => FileEntity, { nullable: true })
-  async file(@Args('id') fileId: string) {
+  async file(@Args('id') fileId: string, @Info() info: any) {
+    const populate = inferPopulate(FileEntity, 'file', info);
     return this.fileRepo.findOne(fileId, {
-      populate: ['poster', 'thumbnail', 'timeline', 'faces', 'texts'],
+      populate,
     });
   }
 
   @Query(() => FileConnection)
-  async files(@Args() filter: FileFilter) {
+  async files(@Args() filter: FileFilter, @Info() info: any) {
     return createConnection({
       paginationArgs: filter,
       defaultPageSize: 25,
       paginate: async (args) => {
-        const queryBuilder = this.fileRepo
-          .createQueryBuilder('file')
-          .select('*')
-          .leftJoinAndSelect('poster', 'poster')
-          .leftJoinAndSelect('thumbnail', 'thumbnail')
-          .leftJoinAndSelect('faces', 'faces')
-          .leftJoinAndSelect('texts', 'texts')
-          .where({
+        const populate = inferPopulate(FileEntity, 'files.edges.node', info);
+        const orderBy: QueryOrderMap<FileEntity> = {};
+        const filters: FilterQuery<FileEntity>[] = [
+          {
             unavailable: false,
             info: { height: { $ne: null } },
-          })
-          .limit(args.limit)
-          .offset(args.offset);
+          },
+        ];
 
-        if (filter.afterDate) queryBuilder.andWhere({ info: { createdAt: { $gte: filter.afterDate } } });
-        if (filter.beforeDate) queryBuilder.andWhere({ info: { createdAt: { $lte: filter.beforeDate } } });
+        // const queryBuilder = this.fileRepo
+        //   .createQueryBuilder('file')
+        //   .select('*')
 
-        // we have to do this before the search query or else mikroorm can't
-        // count the files properly. it's a bug in mikroorm.
-        const count = await queryBuilder.getCount();
+        if (filter.afterDate) filters.push({ createdAt: { $gte: filter.afterDate } });
+        if (filter.beforeDate) filters.push({ createdAt: { $lte: filter.beforeDate } });
+
+        // // we have to do this before the search query or else mikroorm can't
+        // // count the files properly. it's a bug in mikroorm.
+        // const count = await queryBuilder.getCount();
 
         if (filter.search) {
-          const parsedQuery = this.fileService.parseSearchQuery(filter.search, queryBuilder);
-          if (parsedQuery) {
-            const embedding = await this.rehoboamService.encodeText(filter.search);
-            const serialized = embeddingToBuffer(embedding);
-            queryBuilder
-              .addSelect(
-                raw(`cosine_similarity(file.embedding, :embedding) as similarity`, {
-                  embedding: serialized,
-                }),
-              )
-              .orderBy({
-                similarity: filter.direction,
-              });
+          const embedding = await this.clipService.encodeText(filter.search);
+          const serialized = embeddingToBuffer(embedding);
+          const qb = this.fileRepo
+            .createQueryBuilder()
+            .select('*')
+            .leftJoin('embeddings', 'embeddings')
+            .where({
+              $and: filters,
+              embeddings: { $ne: null },
+            });
+
+          for (const field of populate) {
+            qb.leftJoinAndSelect(field, field);
           }
+
+          // we have to count first, because otherwise mikroorm doesn't count properly.
+          // in the past this produced an error, now it says there is a single file, so..
+          const count = await qb.getCount();
+
+          qb.addSelect(sql`MAX(cosine_similarity(embeddings.data, ${serialized})) as similarity`)
+            .orderBy({
+              [sql`similarity`]: filter.direction,
+            })
+            .groupBy('id')
+            .limit(args.limit)
+            .offset(args.offset);
+
+          const result = await qb.getResult();
+          return [result, count];
         } else {
           switch (filter.sort) {
             case FileSort.Size: {
-              queryBuilder.orderBy({ info: { size: filter.direction } });
+              orderBy.size = filter.direction;
               break;
             }
             case FileSort.Name: {
-              queryBuilder.orderBy({ name: filter.direction });
+              orderBy.name = filter.direction;
               break;
             }
             case FileSort.Path: {
-              queryBuilder.orderBy({ path: filter.direction });
+              orderBy.path = filter.direction;
               break;
             }
             case FileSort.DiskCreated:
             default: {
-              queryBuilder.orderBy({ createdAt: filter.direction });
+              orderBy.createdAt = filter.direction;
             }
           }
-        }
 
-        const results = await queryBuilder.getResultList();
-        return [results, count];
+          return this.fileRepo.findAndCount(
+            { $and: filters },
+            {
+              limit: args.limit,
+              offset: args.offset,
+              populate: populate,
+            },
+          );
+        }
       },
     });
   }
@@ -184,129 +203,122 @@ export class FileResolver {
       defaultPageSize: 20,
       paginationArgs: filter,
       paginate: async (args) => {
-        // graphql converts the FileEntity into a normal object. this is really annoying,
-        // but we can hack around it by grabbing the "real" file from the request context.
-        const file = this.fileRepo.getReference(_file.id);
-        if (!wrap(file).isInitialized()) {
-          throw new Error('file must be a reference');
-        }
+        return [[], 0];
+        // // graphql converts the FileEntity into a normal object. this is really annoying,
+        // // but we can hack around it by grabbing the "real" file from the request context.
+        // const file = this.fileRepo.getReference(_file.id);
+        // if (!wrap(file).isInitialized()) {
+        //   throw new Error('file must be a reference');
+        // }
 
-        if (!file.embedding) return [[], 0];
+        // const embedding = await file.getPrimaryEmbedding();
+        // if (!embedding) return [[], 0];
 
-        // essentially we just want to find files that are similar but not too similar.
-        const queryBuilder = this.fileRepo.createQueryBuilder('file');
-        queryBuilder
-          .select('*')
-          .leftJoinAndSelect('poster', 'poster')
-          .leftJoinAndSelect('thumbnail', 'thumbnail')
-          .leftJoinAndSelect('faces', 'faces')
-          .addSelect(
-            raw(`cosine_similarity(file.embedding, :embedding) as similarity`, {
-              embedding: file.embedding,
-            }),
-          )
-          .where({
-            id: { $ne: file.id },
-            unavailable: false,
-            $or: [
-              {
-                extension: { $in: [...IMAGE_EXTENSIONS] },
-              },
-              {
-                thumbnail: { $ne: null },
-              },
-            ],
-          })
-          // dedupe files that are the same
-          .groupBy('similarity')
-          .limit(args.limit)
-          .offset(args.offset);
+        // const embeddingQuery = this.fileEmbeddingRepo
+        //   .createQueryBuilder()
+        //   .select(['file_id'])
+        //   .addSelect(
+        //     raw(`cosine_similarity(embedding, :embedding) as similarity`, {
+        //       embedding: embedding,
+        //     }),
+        //   )
+        //   .where({
+        //     file: {
+        //       id: { $ne: file.id },
+        //       unavailable: false,
+        //       info: { height: { $ne: null } },
+        //     },
+        //   })
+        //   .orderBy({
+        //     [sql`MAX(similarity)`]: 'DESC',
+        //   })
+        //   .groupBy('file_id');
 
-        if (filter.type === SimilarityType.Similar) {
-          queryBuilder
-            .andWhere({
-              similarity: {
-                $gt: 0.85,
-              },
-            })
-            .orderBy({ similarity: 'DESC' });
-        } else {
-          queryBuilder
-            .andWhere({
-              similarity: {
-                // we want to avoid perfect matches or else we just get
-                // files from the same set, or duplicates of the same file.
-                $lt: 0.85,
-                $gt: 0.3,
-              },
-            })
-            .orderBy({ similarity: 'DESC' });
+        // // essentially we just want to find files that are similar but not too similar.
+        // const queryBuilder = this.fileRepo.createQueryBuilder('file');
+        // queryBuilder
+        //   .select('*')
+        //   .leftJoinAndSelect('poster', 'poster')
+        //   .leftJoinAndSelect('thumbnail', 'thumbnail')
+        //   .leftJoinAndSelect('faces', 'faces')
+        //   .addSelect(
+        //     raw(`cosine_similarity(file.embedding, :embedding) as similarity`, {
+        //       embedding: embedding,
+        //     }),
+        //   )
+        //   .where({
+        //     id: {
+        //       $in: embeddingQuery.getKnexQuery(),
+        //     },
+        //     unavailable: false,
+        //   })
+        //   // dedupe files that are the same
+        //   .groupBy('similarity')
+        //   .limit(args.limit)
+        //   .offset(args.offset);
 
-          switch (filter.type) {
-            case SimilarityType.SameFolder: {
-              queryBuilder.andWhere({ directory: file.directory });
+        // if (filter.type === SimilarityType.Similar) {
+        //   queryBuilder
+        //     .andWhere({
+        //       similarity: {
+        //         $gt: 0.85,
+        //       },
+        //     })
+        //     .orderBy({ similarity: 'DESC' });
+        // } else {
+        //   queryBuilder
+        //     .andWhere({
+        //       similarity: {
+        //         // we want to avoid perfect matches or else we just get
+        //         // files from the same set, or duplicates of the same file.
+        //         $lt: 0.85,
+        //         $gt: 0.3,
+        //       },
+        //     })
+        //     .orderBy({ similarity: 'DESC' });
 
-              break;
-            }
-            case SimilarityType.SameType: {
-              // todo: should use similar extensions, but fileType is not accessible here
-              // eg if its an mp4 video, it should show all videos, not just mp4s
-              queryBuilder.andWhere({ extension: file.extension });
+        //   switch (filter.type) {
+        //     case SimilarityType.SameFolder: {
+        //       queryBuilder.andWhere({ directory: file.directory });
 
-              break;
-            }
-            case SimilarityType.Videos: {
-              queryBuilder.andWhere({
-                extension: {
-                  $in: [...VIDEO_EXTENSIONS],
-                },
-              });
+        //       break;
+        //     }
+        //     case SimilarityType.SameType: {
+        //       // todo: should use similar extensions, but fileType is not accessible here
+        //       // eg if its an mp4 video, it should show all videos, not just mp4s
+        //       queryBuilder.andWhere({ extension: file.extension });
 
-              break;
-            }
-            case SimilarityType.Images: {
-              queryBuilder.andWhere({
-                extension: {
-                  $in: [...IMAGE_EXTENSIONS],
-                },
-              });
+        //       break;
+        //     }
+        //     case SimilarityType.Videos: {
+        //       queryBuilder.andWhere({
+        //         extension: {
+        //           $in: [...VIDEO_EXTENSIONS],
+        //         },
+        //       });
 
-              break;
-            }
-          }
-        }
+        //       break;
+        //     }
+        //     case SimilarityType.Images: {
+        //       queryBuilder.andWhere({
+        //         extension: {
+        //           $in: [...IMAGE_EXTENSIONS],
+        //         },
+        //       });
 
-        // todo: getResultAndCount() removes the similarity column,
-        // but then complains that the similarity column does not exist.
-        // for now, i just disabled pagination, but its likely a mikro bug.
-        // return queryBuilder.getResultAndCount();
-        const result = await queryBuilder.getResult();
-        return [result, result.length];
+        //       break;
+        //     }
+        //   }
+        // }
+
+        // // todo: getResultAndCount() removes the similarity column,
+        // // but then complains that the similarity column does not exist.
+        // // for now, i just disabled pagination, but its likely a mikro bug.
+        // // return queryBuilder.getResultAndCount();
+        // const result = await queryBuilder.getResult();
+        // return [result, result.length];
       },
     });
-  }
-
-  @ResolveField(() => [FileTagEntity])
-  async tags(@Parent() file: FileEntity) {
-    await file.tags.init({ populate: ['tag'] });
-    const fileTags = file.tags.getItems();
-    const virtualTags = VIRTUAL_TAGS.filter((tag) => tag.check(file));
-    for (const virtualTag of virtualTags) {
-      fileTags.push(
-        this.fileTagRepo.create({
-          file: file,
-          matchPercent: 1,
-          system: true,
-          tag: {
-            name: virtualTag.name,
-            description: virtualTag.description,
-            color: virtualTag.color,
-          },
-        }),
-      );
-    }
-
-    return fileTags;
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -329,6 +341,7 @@ export class FileResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
+  @AutoPopulate(['poster', 'thumbnail'])
   async thumbnailUrl(@Parent() _fileRef: { id: string }) {
     // graphql requires the @Query(() => File) or whatever be serialized
     // so it can validate fields exist, then the serialized object is passed to

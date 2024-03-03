@@ -4,8 +4,6 @@ package me.sylver.marver.rehoboam;
 import "core.proto";
 
 service RehoboamService {
-    rpc EncodeImage (EncodeImageRequest) returns (EncodeImageReply) {}
-    rpc EncodeText (EncodeTextRequest) returns (EncodeTextReply) {}
     rpc ExtractFaces (ExtractFacesRequest) returns (ExtractFacesReply) {}
     rpc ExtractSubtitles (ExtractSubtitlesRequest) returns (ExtractSubtitlesReply) {}
 }
@@ -16,22 +14,6 @@ message ExtractSubtitlesRequest {
 
 message ExtractSubtitlesReply {
     repeated me.sylver.marver.core.Subtitle subtitles = 1;
-}
-
-message EncodeImageRequest {
-    repeated bytes images = 1;
-}
-
-message EncodeImageReply {
-    repeated me.sylver.marver.core.Embedding embeddings = 1;
-}
-
-message EncodeTextRequest {
-    repeated string texts = 1;
-}
-
-message EncodeTextReply {
-    repeated me.sylver.marver.core.Embedding embeddings = 1;
 }
 
 message ExtractFacesRequest {

@@ -19,31 +19,22 @@ import { extname, join } from 'path';
 import { ulid } from 'ulid';
 import { config } from '../../../config.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';
+import { AutoPopulate } from '../../../helpers/autoloader.js';
 import { FaceEntity } from '../../people/entities/face.entity.js';
+import { JobStateEntity } from '../../queue/job-state.entity.js';
 import { FilePosterEntity } from './assets/file-poster.entity.js';
 import { FileThumbnailEntity } from './assets/file-thumbnail.entity.js';
 import { FileTimelineEntity } from './assets/file-timeline.entity.js';
+import { FileEmbeddingEntity } from './file-embedding.entity.js';
 import { FileExifDataEntity } from './file-exif.entity.js';
 import { FileInfoEmbeddable } from './file-info.entity.js';
 import { FilePerceptualHashEntity } from './file-perceptual-hash.entity.js';
 import { FileTagEntity } from './file-tag.entity.js';
 import { FileTextEntity } from './file-text.entity.js';
-import { JobStateEntity } from '../../queue/job-state.entity.js';
-
-// when using raw queries in a query builder,
-// .addSelect(raw('COUNT(*) as count'))
-// mikroorm throws an error about the field not existing if you try order
-// by that field, because it doesnt know the "count" property exists.
-// this works around that.
-@Entity({ abstract: true })
-export class FileEntityFilter {
-  @Property({ persist: false })
-  similarity?: number;
-}
 
 @Entity({ tableName: 'files' })
 @ObjectType('File')
-export class FileEntity extends FileEntityFilter {
+export class FileEntity {
   @PrimaryKey()
   @Field(() => ID)
   id: string = ulid();
@@ -75,8 +66,8 @@ export class FileEntity extends FileEntityFilter {
   @Index()
   size: number;
 
-  @Property({ nullable: true, type: 'blob' })
-  embedding?: Buffer;
+  // @Property({ nullable: true, type: 'blob' })
+  // embedding?: Buffer;
 
   /** Thumbhash-computed preview */
   // todo: this should be lazy-loaded, only if graphql requests it.
@@ -106,14 +97,17 @@ export class FileEntity extends FileEntityFilter {
   @OneToMany(() => FileTagEntity, (tag) => tag.file)
   tags = new Collection<FileTagEntity>(this);
 
+  @AutoPopulate()
   @OneToOne(() => FileThumbnailEntity, (thumbnail) => thumbnail.file, { ref: true, nullable: true })
   @Field(() => FileThumbnailEntity)
   thumbnail?: Ref<FileThumbnailEntity>;
 
+  @AutoPopulate()
   @OneToOne(() => FilePosterEntity, (poster) => poster.file, { ref: true, nullable: true })
   @Field(() => FilePosterEntity)
   poster?: Ref<FilePosterEntity>;
 
+  @AutoPopulate()
   @OneToOne(() => FileTimelineEntity, (timeline) => timeline.file, { ref: true, nullable: true })
   @Field(() => FileTimelineEntity)
   timeline?: Ref<FileTimelineEntity>;
@@ -125,10 +119,15 @@ export class FileEntity extends FileEntityFilter {
   @OneToMany(() => FilePerceptualHashEntity, (phash) => phash.file)
   perceptualHashes = new Collection<FilePerceptualHashEntity>(this);
 
+  @OneToMany(() => FileEmbeddingEntity, (embedding) => embedding.file)
+  embeddings = new Collection<FileEmbeddingEntity>(this);
+
+  @AutoPopulate()
   @OneToMany(() => FaceEntity, (face) => face.file)
   @Field(() => [FaceEntity])
   faces = new Collection<FaceEntity>(this);
 
+  @AutoPopulate()
   @OneToMany(() => FileTextEntity, (text) => text.file)
   @Field(() => [FileTextEntity])
   texts = new Collection<FileTextEntity>(this);
@@ -172,6 +171,10 @@ export class FileEntity extends FileEntityFilter {
     if (IMAGE_EXTENSIONS.has(ext)) return true;
     if (VIDEO_EXTENSIONS.has(ext)) return true;
     return false;
+  }
+
+  getPrimaryEmbedding() {
+    return this.embeddings.getItems().find((embedding) => embedding.primary);
   }
 
   static getAssetFolder(id: string) {

@@ -17,35 +17,34 @@ export class PersonTasks {
     private em: EntityManager,
   ) {}
 
-  @Queue('IMAGE_DETECT_FACES', {
-    targetConcurrency: 1,
-    thirdPartyDependant: true,
-    fileFilter: {
-      extension: {
-        $in: [...IMAGE_EXTENSIONS],
-      },
-      info: {
-        height: { $ne: null },
-        hasFaces: null,
-      },
-    },
-  })
-  async detectFaces(file: FileEntity) {
-    const faces = this.rehoboamService.detectFaces(file);
-    for await (const face of faces) {
-      file.info.hasFaces = true;
-      this.faceRepo.create(
-        {
-          file: file,
-          boundingBox: face.bounding_box!,
-          vector: embeddingToBuffer(face.embedding!),
-        },
-        { persist: true },
-      );
-    }
+  // @Queue('IMAGE_DETECT_FACES', {
+  //   targetConcurrency: 1,
+  //   fileFilter: {
+  //     extension: {
+  //       $in: [...IMAGE_EXTENSIONS],
+  //     },
+  //     info: {
+  //       height: { $ne: null },
+  //       hasFaces: null,
+  //     },
+  //   },
+  // })
+  // async detectFaces(file: FileEntity) {
+  //   const faces = this.rehoboamService.detectFaces(file);
+  //   for await (const face of faces) {
+  //     file.info.hasFaces = true;
+  //     this.faceRepo.create(
+  //       {
+  //         file: file,
+  //         boundingBox: face.bounding_box!,
+  //         vector: embeddingToBuffer(face.embedding!),
+  //       },
+  //       { persist: true },
+  //     );
+  //   }
 
-    if (file.info.hasFaces !== true) file.info.hasFaces = false;
-    this.em.persist(file);
-    await this.em.flush();
-  }
+  //   if (file.info.hasFaces !== true) file.info.hasFaces = false;
+  //   this.em.persist(file);
+  //   await this.em.flush();
+  // }
 }

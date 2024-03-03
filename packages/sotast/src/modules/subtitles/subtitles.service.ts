@@ -29,7 +29,6 @@ export class SubtitlesService {
 
   @Queue('VIDEO_EXTRACT_OR_GENERATE_SUBTITLES', {
     targetConcurrency: 1,
-    thirdPartyDependant: false,
     fileFilter: {
       extension: { $in: [...VIDEO_EXTENSIONS] },
       info: {
@@ -53,9 +52,7 @@ export class SubtitlesService {
 
   private async extractEmbeddedSubtitles(file: FileEntity) {
     const ffprobeResult = await this.ffmpegService.ffprobe(file.path);
-    const subtitleStreams = ffprobeResult.streams.filter(
-      (stream) => stream.codec_type === 'subtitle',
-    );
+    const subtitleStreams = ffprobeResult.streams.filter((stream) => stream.codec_type === 'subtitle');
 
     let madeDir = false;
     for (const subtitleStream of subtitleStreams) {
