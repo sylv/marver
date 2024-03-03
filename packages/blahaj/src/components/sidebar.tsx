@@ -1,6 +1,6 @@
 import { LucideAlbum, LucideHash, LucideListTodo, LucideTv, type LucideIcon } from 'lucide-react';
 import { memo } from 'react';
-import { ModeToggle } from './mode-toggle';
+import { ModeToggle } from './theme/theme-switcher';
 import { cn } from '../helpers/cn';
 import { usePageContext } from '../renderer/usePageContext';
 
@@ -26,7 +26,7 @@ const SidebarTab = memo<{ href: string; icon: LucideIcon; children: React.ReactN
 );
 export const Sidebar = memo(() => {
   return (
-    <div
+    <nav
       className="min-h-dvh bottom-0 top-0 bg-zinc-100 border-zinc-200 dark:bg-zinc-900 border-r dark:border-zinc-800 relative"
       style={{ width: SIDEBAR_WIDTH }}
     >
@@ -52,6 +52,6 @@ export const Sidebar = memo(() => {
           <ModeToggle />
         </div>
       </div>
-    </div>
+    </nav>
   );
 });

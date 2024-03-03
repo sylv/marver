@@ -1,9 +1,9 @@
 import type { FC } from 'react';
 import { useQuery } from 'urql';
 import { FileDocument, FileType } from '../../../@generated/graphql';
-import { ImageOverlay } from '../../../components/image-overlay';
-import { Loading } from '../../../components/loading';
+import { Image } from '../../../components/image';
 import { Player } from '../../../components/player/player';
+import { SpinnerCenter } from '../../../components/spinner';
 import { Card } from '../../../components/ui/card';
 import type { PageProps } from '../../../renderer/types';
 import { useMediaStore } from './media.store';
@@ -20,36 +20,28 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
   });
 
   if (error) return <div>Oh no... {error.message}</div>;
-  if (fetching || !data?.file) return <Loading />;
+  if (fetching || !data?.file) return <SpinnerCenter />;
 
   return (
     <div className="container mx-auto mt-10 space-y-2">
       <h1 className="text-xl font-semibold truncate">{data.file.name}</h1>
-      <div className="grid grid-cols-6 gap-2">
-        <div className="col-span-5">
-          <Card className="bg-zinc-900 overflow-hidden">
-            {data.file.type === FileType.Video && data.file.thumbnailUrl && (
-              <Player
-                src={data.file.thumbnailUrl}
-                height={data.file?.info.height || undefined}
-                width={data.file?.info.width || undefined}
-                hlsSrc={`/api/files/${fileId}/vidproxy/index.m3u8`}
-                durationSeconds={data.file.info.durationSeconds || undefined}
-                className="max-h-[60vh] h-full w-full object-contain"
-              />
-            )}
-            {data.file.type === FileType.Image && data.file.thumbnailUrl && (
-              <ImageOverlay
-                src={data.file.thumbnailUrl}
-                height={data.file.info?.height || undefined}
-                width={data.file.info?.width || undefined}
-                previewBase64={data.file.previewBase64}
-                className="max-h-[60vh] h-full w-full object-contain"
-              />
-            )}
-          </Card>
-        </div>
-      </div>
+      <Card className="bg-black overflow-hidden">
+        {data.file.type === FileType.Video && data.file.thumbnailUrl && (
+          <Player
+            src={`/api/files/${fileId}/vidproxy/index.m3u8`}
+            height={data.file?.info.height || undefined}
+            width={data.file?.info.width || undefined}
+            hlsSrc={`/api/files/${fileId}/vidproxy/index.m3u8`}
+            durationSeconds={data.file.info.durationSeconds || undefined}
+            className="max-h-[60vh] h-full w-full bg-black"
+          />
+        )}
+        {data.file.type === FileType.Image && data.file.thumbnailUrl && (
+          <div className="max-h-[60vh] flex items-center justify-center bg-black">
+            <Image file={data.file} />
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

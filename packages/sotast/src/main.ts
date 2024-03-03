@@ -50,7 +50,10 @@ app.useGlobalPipes(
 const orm = app.get(MikroORM) as BetterMikroORM;
 await orm.getSchemaGenerator().updateSchema();
 
-await app.listen(8080, '0.0.0.0', (error, address) => {
+const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || '127.0.0.1';
+
+await app.listen(PORT, HOST, (error, address) => {
   if (error) throw error;
   const end = performance.now();
   const duration = ms(end - start, { long: true });

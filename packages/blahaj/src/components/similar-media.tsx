@@ -1,6 +1,6 @@
 import { memo, useRef } from 'react';
 import { useMediaListRows } from '../helpers/getRows';
-import { MediaPreview } from './media-preview';
+import { FilePreview } from './file-preview';
 import type { FilePartsFragment } from '../@generated/graphql';
 
 const MARGIN = 4;
@@ -21,7 +21,7 @@ export const SimilarMedia = memo<SimilarMediaProps>(({ similarFiles }) => {
   return (
     <div className="flex flex-wrap" ref={containerRef}>
       {layout.map((tile) => (
-        <MediaPreview
+        <FilePreview
           key={tile.data.id}
           file={tile.data}
           style={{

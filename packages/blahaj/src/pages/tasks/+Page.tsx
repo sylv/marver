@@ -1,8 +1,7 @@
 import { FiChevronDown } from 'react-icons/fi';
 import { useMutation } from 'urql';
 import { RunTaskDocument, TasksDocument } from '../../@generated/graphql';
-import { Loading } from '../../components/loading';
-import { Spinner, SpinnerSize } from '../../components/spinner';
+import { Spinner, SpinnerCenter, SpinnerSize } from '../../components/spinner';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { usePolledQuery } from '../../hooks/usePolledQuery';
@@ -15,7 +14,7 @@ export function Page() {
   });
 
   if (error) return <div>Oh no... {error.message}</div>;
-  if (!data) return <Loading />;
+  if (!data) return <SpinnerCenter />;
 
   return (
     <div className="container mx-auto mt-20 space-y-2">

@@ -4,7 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useDebounced } from '../../hooks/useDebounced';
 import { useQueryState } from '../../hooks/useQueryState';
-import { FileView } from './view';
+import { FileView } from '../../components/file-list';
 
 export const Page = () => {
   const [tab, setTab] = useQueryState<string>('tab', 'all');
