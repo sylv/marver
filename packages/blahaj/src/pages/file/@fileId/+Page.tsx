@@ -37,9 +37,7 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
           />
         )}
         {data.file.type === FileType.Image && data.file.thumbnailUrl && (
-          <div className="max-h-[60vh] flex items-center justify-center bg-black">
-            <Image file={data.file} />
-          </div>
+          <Image file={data.file} className="max-h-[60vh] bg-black object-contain" />
         )}
       </Card>
     </div>

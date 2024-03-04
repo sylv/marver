@@ -12,7 +12,6 @@ interface ImageProps {
   className?: string;
 }
 
-// todo: using decoding=async
 export const Image = memo<ImageProps>(({ file, className, style }) => {
   const [loaded, setLoaded] = useState(false);
   const [decoded, setDecoded] = useState(false);
@@ -37,6 +36,11 @@ export const Image = memo<ImageProps>(({ file, className, style }) => {
     return parts.join(', ');
   }, [file]);
 
+  // the hack we use to scale the images slightly larger only works if the image overflow is not visible.
+  // with object-cover it is visible and so the scale hack looks weird - the preview is 1.25x larger,
+  // so when it swaps to the image, it looks like it shrinks.
+  const scalePreview = !className?.includes('object-contain');
+
   return (
     <figure
       style={style}
@@ -55,7 +59,6 @@ export const Image = memo<ImageProps>(({ file, className, style }) => {
         width={file.info.width || undefined}
         src={file.thumbnailUrl || undefined}
         srcSet={sourceSet}
-        draggable={false}
         onLoad={() => setLoaded(true)}
         ref={(img) => {
           // using onLoad() is good, but doesn't fire if the image is cached.
@@ -84,7 +87,7 @@ export const Image = memo<ImageProps>(({ file, className, style }) => {
           className={cn(
             IMAGE_INNER_CLASSES,
             'absolute top-0 left-0 right-0 bottom-0 pointer-events-none will-change-[opacity]',
-            'scale-125', // fixes some rendering issues with blurry edges or the preview not covering the image fully.
+            scalePreview && 'scale-125', // fixes some rendering issues with blurry edges or the preview not covering the image fully.
             loaded && decoded ? 'opacity-0' : 'opacity-100',
             className,
           )}

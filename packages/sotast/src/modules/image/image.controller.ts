@@ -120,8 +120,6 @@ export class ImageController {
         'cache-control': 'public, max-age=31536000',
         'content-type': formatMime,
         'content-disposition': contentDisposition,
-        'X-Marver-Processed': shouldProcess.toString(),
-        'x-marver-original-size': image.size?.toString(),
         'x-marver-original-type': image.mimeType?.toString(),
         'x-marver-cache': cacheStatus,
       })
