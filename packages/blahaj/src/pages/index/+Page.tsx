@@ -4,7 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useDebounced } from '../../hooks/useDebounced';
 import { useQueryState } from '../../hooks/useQueryState';
-import { FileView } from '../../components/file-list';
+import { FileList } from '../../components/file-list';
 
 export const Page = () => {
   const [tab, setTab] = useQueryState<string>('tab', 'all');
@@ -33,13 +33,19 @@ export const Page = () => {
         </div>
         <TabsContent value="all">
           {pageVariables.map((variables, index) => (
-            <FileView
+            <FileList
               key={'file-view-' + variables.after}
-              variables={variables}
               isLastPage={index === pageVariables.length - 1}
               onLoadMore={(cursor) => {
                 const baseVariables = pageVariables[index];
                 setPageVariables([...pageVariables, { ...baseVariables, after: cursor }]);
+              }}
+              variables={{
+                ...variables,
+                // with ssr, preview data for images adds up quickly. 28 images = 200kb of html.
+                // so the first page is smaller so the user sees it faster, then it ramps up to 100
+                // to make for a smoother scrolling experience.
+                first: index === 0 ? 28 : 100,
               }}
             />
           ))}

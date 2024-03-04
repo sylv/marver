@@ -1,5 +1,5 @@
-query Files($search: String, $after: String) {
-  files(search: $search, after: $after, first: 28) {
+query Files($search: String, $after: String, $first: Float) {
+  files(search: $search, after: $after, first: $first) {
     pageInfo {
       endCursor
       hasNextPage

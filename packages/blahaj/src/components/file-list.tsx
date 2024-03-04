@@ -5,7 +5,7 @@ import { FilesDocument, type FilesQueryVariables } from '../@generated/graphql';
 import { cn } from '../helpers/cn';
 import { FilePreview } from './file-preview';
 
-interface FileViewProps {
+interface FileListProps {
   variables: FilesQueryVariables;
   isLastPage: boolean;
   targetWidth?: number;
@@ -13,7 +13,7 @@ interface FileViewProps {
   onLoadMore: (cursor: string) => void;
 }
 
-export const FileView = memo<FileViewProps>(
+export const FileList = memo<FileListProps>(
   ({ variables, isLastPage, targetWidth = 250, rowHeight = 200, onLoadMore }) => {
     const loaderRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
