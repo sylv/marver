@@ -2,9 +2,11 @@ import Accept from '@hapi/accept';
 import { BadRequestException, Controller, Get, Param, Query, Request, Response } from '@nestjs/common';
 import bytes from 'bytes';
 import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
+import { createHash } from 'crypto';
 import { type FastifyReply, type FastifyRequest } from 'fastify';
 import { type ReadStream } from 'fs';
 import sharp, { type FitEnum, type FormatEnum } from 'sharp';
+import { CacheService } from '../cache/cache.service.js';
 import { StorageService } from '../storage/storage.service.js';
 import { ImageService, type ProxyableImage } from './image.service.js';
 
@@ -57,6 +59,7 @@ export class ImageController {
   constructor(
     private imageService: ImageService,
     private storageService: StorageService,
+    private cache: CacheService,
   ) {}
 
   @Get('/files/:fileId/imgproxy/:data')
@@ -74,25 +77,36 @@ export class ImageController {
 
     let contentDisposition: string | undefined;
     let stream: sharp.Sharp | ReadStream;
+    let cacheStatus = 'BYPASS';
 
     const extension = IMAGE_TYPES.get(formatMime)!;
     if (shouldProcess) {
-      const transformer = sharp({ animated: true }).toFormat(formatKey, {
-        progressive: true,
-        quality: 80,
-      });
-
-      let suffix = 'processed';
-      if (query.height || query.width) {
-        transformer.resize(query.width, query.height, { fit: query.fit, withoutEnlargement: true });
-        suffix = `resized`;
-      }
-
-      // eslint-disable-next-line unicorn/no-await-expression-member
-      stream = (await this.storageService.createReadStreamHttp({ id: fileId, path: image.path })).pipe(
-        transformer,
-      );
+      const suffix = query.height || query.width ? 'resized' : 'processed';
       contentDisposition = `inline; filename="${cleanFileName}_${suffix}.${extension}"`;
+
+      const cacheKey = this.getCacheKey(fileId, data, query);
+      const cachedStream = await this.cache.createReadStream(cacheKey);
+
+      if (cachedStream) {
+        stream = cachedStream;
+        cacheStatus = 'HIT';
+      } else {
+        cacheStatus = 'MISS';
+        const transformer = sharp({ animated: true }).toFormat(formatKey, {
+          progressive: true,
+          quality: 80,
+        });
+
+        if (query.height || query.width) {
+          transformer.resize(query.width, query.height, { fit: query.fit, withoutEnlargement: true });
+        }
+
+        const fileStream = await this.storageService.createReadStreamHttp({ id: fileId, path: image.path });
+        const cacheStream = this.cache.createWriteStream(cacheKey);
+        const transformerStream = fileStream.pipe(transformer);
+        transformerStream.pipe(cacheStream);
+        stream = transformerStream;
+      }
     } else {
       stream = await this.storageService.createReadStreamHttp({ id: fileId, path: image.path });
       contentDisposition = `inline; filename="${cleanFileName}.${extension}"`;
@@ -103,16 +117,23 @@ export class ImageController {
 
     return reply
       .headers({
-        'Cache-Control': 'public, max-age=31536000',
-        'Content-Type': formatMime,
-        'Content-Disposition': contentDisposition,
+        'cache-control': 'public, max-age=31536000',
+        'content-type': formatMime,
+        'content-disposition': contentDisposition,
         'X-Marver-Processed': shouldProcess.toString(),
-        'X-Marver-Original-Size': image.size?.toString(),
-        'X-Marver-Original-Format': image.mimeType?.toString(),
-        'X-Marver-Original-Name': encodeURIComponent(image.fileName),
-        'X-Marver-Path': encodeURIComponent(image.path),
+        'x-marver-original-size': image.size?.toString(),
+        'x-marver-original-type': image.mimeType?.toString(),
+        'x-marver-cache': cacheStatus,
       })
       .send(stream);
+  }
+
+  private getCacheKey(fileId: string, data: string, query: ImageProxyQuery) {
+    const hash = createHash('sha256');
+    hash.update(fileId);
+    hash.update(data);
+    hash.update(JSON.stringify(query));
+    return hash.digest('hex');
   }
 
   /**
