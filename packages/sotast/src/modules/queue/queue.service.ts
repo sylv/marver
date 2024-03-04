@@ -10,7 +10,7 @@ import PQueue from 'p-queue';
 import { setTimeout as sleep } from 'timers/promises';
 import { config } from '../../config.js';
 import { FileEntity } from '../file/entities/file.entity.js';
-import { JobState, JobStateEntity } from './job-state.entity.js';
+import { State, JobStateEntity } from './job-state.entity.js';
 import { QUEUE_KEY, type QueueKeyValue, type QueueOptions } from './queue.decorator.js';
 
 // todo: cleanupMethod is never used
@@ -140,7 +140,7 @@ export class QueueService implements OnApplicationBootstrap {
               .select('file_id')
               .where({
                 type: queue.parent.meta.type,
-                state: JobState.Completed,
+                state: State.Completed,
               })
               .getKnexQuery() as any,
           },
@@ -228,7 +228,7 @@ export class QueueService implements OnApplicationBootstrap {
       for (const file of files) {
         const jobState = this.getJobState(file, queueHandler.meta.type);
         jobState.result = keepResult ? result : null;
-        jobState.state = JobState.Completed;
+        jobState.state = State.Completed;
         jobState.executedAt = new Date();
         this.em.persist(jobState);
       }
@@ -255,7 +255,7 @@ export class QueueService implements OnApplicationBootstrap {
       this.log.error(error, error.stack);
       for (const file of files) {
         const jobState = this.getJobState(file, queueHandler.meta.type);
-        jobState.state = JobState.Failed;
+        jobState.state = State.Failed;
         jobState.errorMessage = error.message;
         this.em.persist(jobState);
       }
@@ -274,7 +274,7 @@ export class QueueService implements OnApplicationBootstrap {
         file: file,
         type: type,
         retries: 0,
-        state: JobState.Completed,
+        state: State.Completed,
         executedAt: new Date(),
       });
     }

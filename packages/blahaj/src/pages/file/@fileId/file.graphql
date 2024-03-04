@@ -1,44 +1,49 @@
 query File($fileId: String!, $filter: SimilarityType) {
   file(id: $fileId) {
-    ...FileParts
+    ...FullFile
+  }
+}
+
+fragment FullFile on File {
+  ...FileParts
+  type
+  jobStates {
     type
-    faces {
-      id
-      boundingBox {
-        x1
-        y1
-        x2
-        y2
-      }
-      person {
-        id
-        name
-      }
+    state
+    executedAt
+    errorMessage
+    retryAfter
+  }
+  exifData {
+    ...ExifPart
+  }
+  similar(type: $filter) {
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
     }
-    texts {
-      id
-      text
-      code
-      boundingBox {
-        x1
-        y1
-        x2
-        y2
-      }
-    }
-    similar(type: $filter) {
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
-      edges {
-        node {
-          ...FileParts
-        }
+    edges {
+      node {
+        ...FileParts
       }
     }
   }
+}
+
+fragment ExifPart on FileExifData {
+  cameraMake
+  cameraModel
+  lensModel
+  lensMake
+  dateTime
+  exposureTime
+  fNumber
+  flash
+  focalLength
+  iso
+  latitude
+  longitude
 }

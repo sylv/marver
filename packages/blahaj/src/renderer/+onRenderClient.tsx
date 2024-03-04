@@ -4,7 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Provider as UrqlProvider, createClient, fetchExchange, ssrExchange } from 'urql';
 import type { OnRenderClientAsync } from 'vike/types';
 import { App } from '../app';
-import { cacheOptions } from './cache';
+import { cacheOptions, retryExchange } from './cache';
 import { PageContextProvider } from './usePageContext';
 
 export const onRenderClient: OnRenderClientAsync = async (pageContext) => {
@@ -12,6 +12,7 @@ export const onRenderClient: OnRenderClientAsync = async (pageContext) => {
   const exchanges = [
     cacheExchange(cacheOptions),
     ssrExchange({ isClient: true, initialState: pageContext.state }),
+    retryExchange,
     fetchExchange,
   ];
 

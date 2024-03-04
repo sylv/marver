@@ -27,7 +27,7 @@ const SidebarTab = memo<{ href: string; icon: LucideIcon; children: React.ReactN
 export const Sidebar = memo(() => {
   return (
     <nav
-      className="min-h-dvh bottom-0 top-0 bg-zinc-100 border-zinc-200 dark:bg-zinc-900 border-r dark:border-zinc-800 relative"
+      className="min-h-dvh bottom-0 top-0 bg-zinc-100 border-zinc-200 dark:bg-zinc-900 border-r dark:border-zinc-800 relative flex-shrink-0"
       style={{ width: SIDEBAR_WIDTH }}
     >
       <div className="fixed h-dvh flex flex-col justify-between" style={{ width: SIDEBAR_WIDTH }}>

@@ -1,7 +1,7 @@
 import { CreateRequestContext, EntityManager, EntityRepository, type Loaded } from '@mikro-orm/better-sqlite';
 import { MikroORM } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import { opendir, stat } from 'fs/promises';
 import PQueue from 'p-queue';
@@ -13,7 +13,7 @@ import { FileEntity } from './entities/file.entity.js';
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()
-export class FileScanService {
+export class FileScanService implements OnApplicationBootstrap {
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
 
   private directoryQueue = new PQueue({ concurrency: 8 });
@@ -26,6 +26,14 @@ export class FileScanService {
     protected orm: MikroORM,
     private em: EntityManager,
   ) {}
+
+  async onApplicationBootstrap() {
+    const fileCount = await this.fileRepo.count();
+    if (fileCount === 0) {
+      this.log.log('No files found, starting scan');
+      this.scan();
+    }
+  }
 
   @PublicCron(CronExpression.EVERY_12_HOURS, {
     name: 'Scan Files',
@@ -54,6 +62,8 @@ export class FileScanService {
         checkedAt: { $lt: lastCheckedAt },
       });
 
+    // todo: reset task cooldowns. when tasks have no files to process, they sleep for awhile.
+    // if we reset them it'll feel more responsive when new files are added
     const duration = performance.now() - start;
     this.log.log(`Scanned source in ${duration}ms`);
   }

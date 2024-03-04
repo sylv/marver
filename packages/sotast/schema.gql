@@ -31,6 +31,7 @@ type File {
   id: ID!
   indexedAt: DateTime!
   info: FileInfo!
+  jobStates: [JobState!]!
   mimeType: String
   modifiedAt: DateTime!
   name: String!
@@ -144,6 +145,15 @@ enum FileType {
   Video
 }
 
+type JobState {
+  errorMessage: String
+  executedAt: DateTime!
+  retries: Float!
+  retryAfter: Float
+  state: State!
+  type: String!
+}
+
 type Mutation {
   runTask(id: ID!): Task!
 }
@@ -190,6 +200,11 @@ enum SimilarityType {
   SameType
   Similar
   Videos
+}
+
+enum State {
+  Completed
+  Failed
 }
 
 type Tag {

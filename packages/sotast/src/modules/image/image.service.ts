@@ -107,6 +107,7 @@ export class ImageService {
     const image = sharp(imagePath);
     const metadata = await image.metadata();
     const rgba = await image
+      .rotate() // auto-rotate based on exif data
       .resize({
         width: maxSize,
         height: maxSize,
@@ -149,6 +150,8 @@ export class ImageService {
         exif.latitude = location[0];
         exif.longitude = location[1];
       }
+
+      return exif;
     } catch (error: any) {
       if (error.name === 'MetadataMissingError') {
         return null;
@@ -168,8 +171,20 @@ export class ImageService {
     const lat = exifData['GPSLatitude'].description;
     const long = exifData['GPSLongitude'].description;
     const latRef = (exifData['GPSLatitudeRef'].value as string[])[0];
-    if (latRef === 'S') return [Number.parseFloat(lat) * -1, Number.parseFloat(long)];
-    return [Number.parseFloat(lat), Number.parseFloat(long)];
+
+    let latVal;
+    let longVal;
+    if (latRef === 'S') {
+      // return [Number.parseFloat(lat) * -1, Number.parseFloat(long)]
+      latVal = Number.parseFloat(lat) * -1;
+      longVal = Number.parseFloat(long);
+    } else {
+      latVal = Number.parseFloat(lat);
+      longVal = Number.parseFloat(long);
+    }
+
+    if (Number.isNaN(latVal) || Number.isNaN(longVal)) return null;
+    return [latVal, longVal];
   }
 
   private parseExifDate(date: string) {

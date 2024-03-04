@@ -1,6 +1,6 @@
 import { memo, type CSSProperties } from 'react';
-import type { FilePartsFragment } from '../@generated/graphql';
-import { Image } from './image';
+import type { FilePartsFragment } from '../../@generated/graphql';
+import { Image } from '../image';
 
 interface FilePreviewProps {
   file: FilePartsFragment;

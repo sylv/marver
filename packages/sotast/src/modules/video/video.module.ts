@@ -11,6 +11,7 @@ import { FileEntity } from '../file/entities/file.entity.js';
 import { ImageModule } from '../image/image.module.js';
 import { VideoController } from './video.controller.js';
 import { VideoQueues } from './video.queues.js';
+import { FileEmbeddingEntity } from '../file/entities/file-embedding.entity.js';
 
 @Module({
   providers: [VideoQueues],
@@ -26,6 +27,7 @@ import { VideoQueues } from './video.queues.js';
       FileThumbnailEntity,
       FilePosterEntity,
       FileTimelineEntity,
+      FileEmbeddingEntity,
     ]),
   ],
 })

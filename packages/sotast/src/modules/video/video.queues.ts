@@ -20,14 +20,14 @@ import { FileEntity } from '../file/entities/file.entity.js';
 import { ImageService } from '../image/image.service.js';
 import { JobError } from '../queue/job.error.js';
 import { Queue } from '../queue/queue.decorator.js';
+import { FileEmbeddingEntity } from '../file/entities/file-embedding.entity.js';
 
 @Injectable()
 export class VideoQueues {
-  @InjectRepository(FileThumbnailEntity)
-  private fileThumbnailRepo: EntityRepository<FileThumbnailEntity>;
-  @InjectRepository(FileTimelineEntity)
-  private fileTimelineRepo: EntityRepository<FileTimelineEntity>;
+  @InjectRepository(FileThumbnailEntity) private fileThumbnailRepo: EntityRepository<FileThumbnailEntity>;
+  @InjectRepository(FileTimelineEntity) private fileTimelineRepo: EntityRepository<FileTimelineEntity>;
   @InjectRepository(FilePosterEntity) private filePosterRepo: EntityRepository<FilePosterEntity>;
+  @InjectRepository(FileEmbeddingEntity) private fileEmbeddingRepo: EntityRepository<FileEmbeddingEntity>;
 
   constructor(
     private ffmpegService: FfmpegService,
@@ -144,11 +144,19 @@ export class VideoQueues {
     }
 
     const embeddings = await this.clipService.encodeImageBatch(framePaths);
+    for (const embedding of embeddings) {
+      // todo: biggest frame in the first ~20% should be primary
+      this.fileEmbeddingRepo.create(
+        {
+          data: embeddingToBuffer(embedding),
+          file: file,
+          primary: false,
+        },
+        { persist: true },
+      );
+    }
 
-    // todo: figure out how to do this without huge quality loss
-    // const merged = await this.solomonService.mergeEmbeddings(embeddings);
-    file.embedding = embeddingToBuffer(embeddings[0]);
-    await this.em.persistAndFlush(file);
+    await this.em.flush();
   }
 
   @Queue('VIDEO_GENERATE_TIMELINE', {

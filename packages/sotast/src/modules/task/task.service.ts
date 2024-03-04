@@ -15,9 +15,9 @@ export class TaskService {
   constructor(private schedulerRegistry: SchedulerRegistry) {}
 
   getTasks(): TaskModel[] {
-    const intervals = this.schedulerRegistry.getIntervals();
+    // todo: intervals should be supported
+    // const intervals = this.schedulerRegistry.getIntervals();
     const cronjobs = this.schedulerRegistry.getCronJobs();
-    if (intervals[0]) throw new Error('Intervals as tasks are not implemented yet');
     const tasks: TaskModel[] = [];
     for (const [id, job] of cronjobs) {
       const metadata = TaskService.metadata.get(id);

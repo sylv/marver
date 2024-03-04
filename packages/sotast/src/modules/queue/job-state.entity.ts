@@ -11,12 +11,15 @@ import {
 } from '@mikro-orm/better-sqlite';
 import ms from 'ms';
 import { FileEntity } from '../file/entities/file.entity.js';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 // Tasks that have not started will not have task entities associated with them.
-export enum JobState {
+export enum State {
   Failed,
   Completed,
 }
+
+registerEnumType(State, { name: 'State' });
 
 const RETRY_DELAYS = [
   ms('1m'),
@@ -32,31 +35,38 @@ const RETRY_DELAYS = [
 ];
 
 @Entity({ tableName: 'job_states' })
+@ObjectType('JobState')
 export class JobStateEntity {
   @ManyToOne(() => FileEntity, { primary: true, ref: true })
   file: Ref<FileEntity>;
 
   @Property({ primary: true, type: 'text' })
+  @Field()
   @Index()
   type: string;
 
-  @Enum(() => JobState)
+  @Enum(() => State)
+  @Field(() => State)
   @Index()
-  state: JobState;
+  state: State;
 
   @Property({ type: 'jsonb', nullable: true })
   result?: unknown;
 
   @Property({ nullable: true })
+  @Field({ nullable: true })
   errorMessage?: string;
 
   @Property({ nullable: true })
+  @Field({ nullable: true })
   retryAfter?: number;
 
   @Property()
+  @Field()
   retries: number;
 
   @Property()
+  @Field()
   executedAt: Date;
 
   // some of these are actually required, but are marked optional so we can
@@ -70,7 +80,7 @@ export class JobStateEntity {
       throw new Error('"retries" and "state" must be present');
     }
 
-    if (this.state === JobState.Completed) {
+    if (this.state === State.Completed) {
       this.retryAfter = undefined;
       return;
     }

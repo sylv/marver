@@ -1,6 +1,6 @@
 import { memo, useRef } from 'react';
 import { useMediaListRows } from '../helpers/getRows';
-import { FilePreview } from './file-preview';
+import { FilePreview } from './file/file-preview';
 import type { FilePartsFragment } from '../@generated/graphql';
 
 const MARGIN = 4;

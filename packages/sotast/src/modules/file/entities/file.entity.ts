@@ -112,6 +112,7 @@ export class FileEntity {
   @Field(() => FileTimelineEntity)
   timeline?: Ref<FileTimelineEntity>;
 
+  @AutoPopulate()
   @OneToOne(() => FileExifDataEntity, (exif) => exif.file, { ref: true, nullable: true })
   @Field(() => FileExifDataEntity, { nullable: true })
   exifData?: Ref<FileExifDataEntity>;
@@ -133,6 +134,8 @@ export class FileEntity {
   texts = new Collection<FileTextEntity>(this);
 
   @OneToMany(() => JobStateEntity, (jobState) => jobState.file)
+  @AutoPopulate()
+  @Field(() => [JobStateEntity])
   jobStates = new Collection<JobStateEntity>(this);
 
   @Property({ type: () => String, nullable: true })

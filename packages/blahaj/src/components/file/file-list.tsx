@@ -1,8 +1,8 @@
 /* eslint-disable jsx-a11y/alt-text */
 import { memo, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'urql';
-import { FilesDocument, type FilesQueryVariables } from '../@generated/graphql';
-import { cn } from '../helpers/cn';
+import { FilesDocument, type FilesQueryVariables } from '../../@generated/graphql';
+import { cn } from '../../helpers/cn';
 import { FilePreview } from './file-preview';
 
 interface FileListProps {

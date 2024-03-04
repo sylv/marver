@@ -18,6 +18,12 @@ export default {
       config: {
         defaultScalarType: 'unknown',
         useTypeImports: true,
+        scalars: {
+          DateTime: 'string',
+          Date: 'string',
+          JSON: 'Record<string, unknown>',
+          JSONObject: 'Record<string, unknown>',
+        },
       },
     },
   },

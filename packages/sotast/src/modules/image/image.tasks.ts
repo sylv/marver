@@ -28,18 +28,21 @@ export class ImageTasks {
       info: {
         height: { $ne: null },
       },
-      extension: {
-        $in: ['jog', 'tif', 'png', 'webp'],
-      },
       size: {
-        $lte: bytes('50mb'), // very large images can be fucky to process
+        $lte: bytes('50mb'),
       },
     },
   })
   async extractExif(file: FileEntity) {
     const exif = await this.imageService.createExifFromFile(file);
     if (exif) {
-      await this.em.persistAndFlush(exif);
+      if (exif.dateTime) {
+        file.createdAt = exif.dateTime;
+        this.em.persist(file);
+      }
+
+      this.em.persist(exif);
+      await this.em.flush();
     }
   }
 

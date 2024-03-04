@@ -26,12 +26,12 @@ export class CLIPService {
   private processor?: Processor;
   private tokenizer?: CLIPTokenizer;
   private log = new Logger(CLIPService.name);
-  private textModel = expiringValue<CLIPTextModelWithProjection>(ms(`5sec`), (value) => {
+  private textModel = expiringValue<CLIPTextModelWithProjection>(ms(`5min`), (value) => {
     this.log.debug(`Disposing of CLIP text model`);
     value.dispose();
   });
 
-  private visionModel = expiringValue<CLIPVisionModelWithProjection>(ms(`5sec`), (value) => {
+  private visionModel = expiringValue<CLIPVisionModelWithProjection>(ms(`30sec`), (value) => {
     this.log.debug(`Disposing of CLIP vision model`);
     value.dispose();
   });
