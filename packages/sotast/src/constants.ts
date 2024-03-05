@@ -1,6 +1,18 @@
 import { getPackageMetadata } from './helpers/getPackageMetadata';
 
-export const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'jfif', 'tiff', 'tif', 'bmp']);
+export const IMAGE_EXTENSIONS = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'webp',
+  'jfif',
+  'tiff',
+  'tif',
+  'bmp',
+  'heif',
+]);
+
 export const VIDEO_EXTENSIONS = new Set([
   'mp4',
   'mkv',

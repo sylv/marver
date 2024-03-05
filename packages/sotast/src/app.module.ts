@@ -5,17 +5,18 @@ import { MercuriusDriver, type MercuriusDriverConfig } from '@nestjs/mercurius';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppResolver } from './app.resolver.js';
 import { config } from './config.js';
+import { CLIPModule } from './modules/clip/clip.module.js';
+import { CollectionModule } from './modules/collection/collection.module.js';
 import { FfmpegModule } from './modules/ffmpeg/ffmpeg.module.js';
 import { FileModule } from './modules/file/file.module.js';
 import { ImageModule } from './modules/image/image.module.js';
 import { PersonModule } from './modules/people/person.module.js';
 import { QueueModule } from './modules/queue/queue.module.js';
 import { RehoboamModule } from './modules/rehoboam/rehoboam.module.js';
+import { SubtitlesModule } from './modules/subtitles/subtitles.module.js';
 import { TaskModule } from './modules/task/task.module.js';
 import { VideoModule } from './modules/video/video.module.js';
 import ORM_CONFIG from './orm.config.js';
-import { CLIPModule } from './modules/clip/clip.module.js';
-import { SubtitlesModule } from './modules/subtitles/subtitles.module.js';
 
 const GQL_LOGGER = new Logger('GraphQL');
 
@@ -48,6 +49,7 @@ const GQL_LOGGER = new Logger('GraphQL');
     }),
     ScheduleModule.forRoot(),
     FileModule,
+    CollectionModule,
     PersonModule,
     ImageModule,
     QueueModule,

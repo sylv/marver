@@ -9,10 +9,11 @@ const SOURCE_SET_SIZES = [800, 1600, 3200];
 interface ImageProps {
   file: FilePartsFragment;
   style?: CSSProperties;
+  draggable?: boolean;
   className?: string;
 }
 
-export const Image = memo<ImageProps>(({ file, className, style }) => {
+export const Image = memo<ImageProps>(({ file, className, draggable, style }) => {
   const [loaded, setLoaded] = useState(false);
   const [decoded, setDecoded] = useState(false);
   const aspectRatio = useMemo(() => {
@@ -59,6 +60,7 @@ export const Image = memo<ImageProps>(({ file, className, style }) => {
         width={file.info.width || undefined}
         src={file.thumbnailUrl || undefined}
         srcSet={sourceSet}
+        draggable={draggable}
         onLoad={() => setLoaded(true)}
         ref={(img) => {
           // using onLoad() is good, but doesn't fire if the image is cached.

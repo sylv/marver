@@ -1,9 +1,16 @@
 import react from '@vitejs/plugin-react';
 import ssr from 'vike/plugin';
 import { defineConfig } from 'vite';
+import { cjsInterop } from 'vite-plugin-cjs-interop';
 
 export default defineConfig({
-  plugins: [react(), ssr()],
+  plugins: [
+    react(),
+    ssr(),
+    cjsInterop({
+      dependencies: ['@privjs/gradients'],
+    }),
+  ],
   resolve: {
     alias: {
       '#root': '/src',

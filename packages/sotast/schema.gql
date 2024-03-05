@@ -9,6 +9,16 @@ type BoundingBox {
   y2: Float!
 }
 
+type Collection {
+  children: [Collection!]!
+  description: String
+  fileCount: Float!
+  id: ID!
+  name: String!
+  parent: Collection
+  previewFiles: [File!]!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -22,6 +32,7 @@ type Face {
 
 type File {
   checkedAt: DateTime!
+  collections: [Collection!]!
   corrupted: Boolean!
   createdAt: DateTime!
   directory: String!
@@ -180,6 +191,8 @@ type Person {
 }
 
 type Query {
+  collection(id: String!): Collection!
+  collections: [Collection!]!
   file(id: String!): File
   files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
   serverInfo: ServerInfo!

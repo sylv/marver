@@ -1,6 +1,7 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 import { CLIPModule } from '../clip/clip.module.js';
+import { CollectionEntity } from '../collection/collection.entity.js';
 import { ImageModule } from '../image/image.module.js';
 import { StorageModule } from '../storage/storage.module.js';
 import { FileEmbeddingEntity } from './entities/file-embedding.entity.js';
@@ -17,7 +18,7 @@ import { FileResolver } from './file.resolver.js';
     StorageModule,
     ImageModule,
     CLIPModule,
-    MikroOrmModule.forFeature([FileEntity, FileTagEntity, TagEntity, FileEmbeddingEntity]),
+    MikroOrmModule.forFeature([FileEntity, FileTagEntity, TagEntity, FileEmbeddingEntity, CollectionEntity]),
   ],
   providers: [FileResolver, FileScanService],
   exports: [],

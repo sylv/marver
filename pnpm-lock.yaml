@@ -19,6 +19,9 @@ importers:
 
   packages/blahaj:
     dependencies:
+      '@privjs/gradients':
+        specifier: ^1.0.11
+        version: 1.0.11
       '@radix-ui/react-dialog':
         specifier: ^1.0.5
         version: 1.0.5(@types/react-dom@18.2.19)(@types/react@18.2.61)(react-dom@18.2.0)(react@18.2.0)
@@ -161,6 +164,9 @@ importers:
       vite:
         specifier: ^5.1.4
         version: 5.1.4(@types/node@20.11.24)
+      vite-plugin-cjs-interop:
+        specifier: ^2.0.6
+        version: 2.0.6
 
   packages/ephyra:
     devDependencies:
@@ -3370,6 +3376,14 @@ packages:
     resolution: {integrity: sha512-2LuNTFBIO0m7kKIQvvPHN6UE63VjpmL9rnEEaOOaiSPbZK+zUOYIzBAWcED+3XYzhYsd/0mD57VdxAEqqV52CQ==}
     dev: true
 
+  /@privjs/gradients@1.0.11:
+    resolution: {integrity: sha512-89zsuOH7ZvACd4stuVh3dyQhcMNjD7dSbPk2QN02yLa/PO94Dj+SOhdYp17wzQ69pAaut4ovDy6l/FabeG49Gg==}
+    dependencies:
+      chroma-js: 2.4.2
+      polished: 4.3.1
+      seedrandom: 3.0.5
+    dev: false
+
   /@protobuf-ts/grpc-transport@2.9.3(@grpc/grpc-js@1.10.1):
     resolution: {integrity: sha512-2TarJgLrvhHVBpxgJonPeZzEtqlbQJeSTpFZjkNI5Ye+18r8SUIcvZhl4LLS1q4zjIQl/O7lZt/x27PTNglLpg==}
     peerDependencies:
@@ -5719,6 +5733,10 @@ packages:
   /chownr@2.0.0:
     resolution: {integrity: sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==}
     engines: {node: '>=10'}
+
+  /chroma-js@2.4.2:
+    resolution: {integrity: sha512-U9eDw6+wt7V8z5NncY2jJfZa+hUH8XEj8FQHgFJTrUFnJfXYf4Ml4adI2vXZOjqRDpFWtYVWypDfZwnJ+HIR4A==}
+    dev: false
 
   /ci-info@4.0.0:
     resolution: {integrity: sha512-TdHqgGf9odd8SXNuxtUBVx8Nv+qZOejE6qyqiy5NtbYYQOeFa6zmHkxlPzmaLxWWHsU6nJmB7AETdVPi+2NBUg==}
@@ -9575,6 +9593,13 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
+  /polished@4.3.1:
+    resolution: {integrity: sha512-OBatVyC/N7SCW/FaDHrSd+vn0o5cS855TOmYi4OkdWUMSJCET/xip//ch8xGUvtr3i44X9LVyWwQlRMTN3pwSA==}
+    engines: {node: '>=10'}
+    dependencies:
+      '@babel/runtime': 7.23.9
+    dev: false
+
   /pony-cause@2.1.10:
     resolution: {integrity: sha512-3IKLNXclQgkU++2fSi93sQ6BznFuxSLB11HdvZQ6JW/spahf/P1pAHBQEahr20rs0htZW0UDkM1HmA+nZkXKsw==}
     engines: {node: '>=12.0.0'}
@@ -10379,6 +10404,10 @@ packages:
 
   /secure-json-parse@2.7.0:
     resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
+    dev: false
+
+  /seedrandom@3.0.5:
+    resolution: {integrity: sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==}
     dev: false
 
   /semver@5.7.2:
@@ -11977,6 +12006,15 @@ packages:
       - sugarss
       - supports-color
       - terser
+    dev: true
+
+  /vite-plugin-cjs-interop@2.0.6:
+    resolution: {integrity: sha512-scJmH5cy3eB+PAZwp7hrwdfLdcYAJxqj4BnONZr/tk18NcqU4pal6oC+/WyAGcyRDqd5Sw1ZZdda1feUtrTGUg==}
+    dependencies:
+      acorn: 8.11.3
+      estree-walker: 3.0.3
+      magic-string: 0.30.7
+      minimatch: 9.0.3
     dev: true
 
   /vite@5.1.4(@types/node@20.11.24):

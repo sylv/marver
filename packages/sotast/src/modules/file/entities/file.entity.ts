@@ -4,6 +4,7 @@ import {
   Entity,
   Formula,
   Index,
+  ManyToMany,
   OneToMany,
   OneToOne,
   OptionalProps,
@@ -20,6 +21,7 @@ import { ulid } from 'ulid';
 import { config } from '../../../config.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';
 import { AutoPopulate } from '../../../helpers/autoloader.js';
+import { CollectionEntity } from '../../collection/collection.entity.js';
 import { FaceEntity } from '../../people/entities/face.entity.js';
 import { JobStateEntity } from '../../queue/job-state.entity.js';
 import { FilePosterEntity } from './assets/file-poster.entity.js';
@@ -122,6 +124,11 @@ export class FileEntity {
 
   @OneToMany(() => FileEmbeddingEntity, (embedding) => embedding.file)
   embeddings = new Collection<FileEmbeddingEntity>(this);
+
+  @AutoPopulate()
+  @ManyToMany(() => CollectionEntity, (collection) => collection.files)
+  @Field(() => [CollectionEntity])
+  collections = new Collection<CollectionEntity>(this);
 
   @AutoPopulate()
   @OneToMany(() => FaceEntity, (face) => face.file)

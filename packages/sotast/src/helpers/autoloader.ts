@@ -69,7 +69,7 @@ export const AutoPopulate = (populateList?: string | string[]): PropertyDecorato
 export const inferPopulate = (entity: AnyEntity, entityPath: string, info: GraphQLResolveInfo) => {
   const nestedFields = FIELD_STORE.get(entity);
   if (!nestedFields) {
-    throw new Error(`Entity ${entity.constructor.name} does not have any fields marked with @AutoPopulate`);
+    throw new Error(`Entity ${entity.name} does not have any fields marked with @AutoPopulate`);
   }
 
   const fieldTree: FieldSelections[] = [];
