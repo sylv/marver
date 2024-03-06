@@ -1,6 +1,8 @@
 import type { FC } from 'react';
 import { useQuery } from 'urql';
-import { FileDocument, FileType } from '../../../@generated/graphql';
+import { graphql } from '../../../@generated';
+import { FileType } from '../../../@generated/graphql';
+import { FileExif } from '../../../components/file/sidebar/exif/file-exif';
 import { FileLocation } from '../../../components/file/sidebar/file-location';
 import { FileTasks } from '../../../components/file/sidebar/file-tasks';
 import { Image } from '../../../components/image';
@@ -9,13 +11,31 @@ import { SpinnerCenter } from '../../../components/spinner';
 import { Card } from '../../../components/ui/card';
 import type { PageProps } from '../../../renderer/types';
 import { useMediaStore } from './media.store';
-import { FileExif } from '../../../components/file/sidebar/exif/file-exif';
+
+const FileQuery = graphql(`
+  query File($fileId: String!) {
+    file(id: $fileId) {
+      id
+      name
+      type
+      thumbnailUrl
+      info {
+        height
+        width
+        durationSeconds
+      }
+      ...FileLocationProps
+      ...FileTasksProps
+      ...FileExifProps
+    }
+  }
+`);
 
 export const Page: FC<PageProps> = ({ routeParams }) => {
   const fileId = routeParams.fileId!;
   const filter = useMediaStore((state) => state.filter);
   const [{ data, fetching, error }] = useQuery({
-    query: FileDocument,
+    query: FileQuery,
     variables: {
       fileId: fileId,
       filter: filter,

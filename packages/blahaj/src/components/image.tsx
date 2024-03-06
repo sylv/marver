@@ -1,13 +1,26 @@
 import { memo, useMemo, useState, type CSSProperties } from 'react';
-import type { FilePartsFragment } from '../@generated/graphql';
+import { graphql } from '../@generated';
+import type { ImagePropsFragment } from '../@generated/graphql';
 import { cn } from '../helpers/cn';
 import { thumbhashBase64ToDataUri } from '../helpers/thumbhashBase64ToDataUri';
 
 const IMAGE_INNER_CLASSES = 'text-transparent transition-opacity duration-200';
 const SOURCE_SET_SIZES = [800, 1600, 3200];
 
+graphql(`
+  fragment ImageProps on File {
+    name
+    thumbnailUrl
+    previewBase64
+    info {
+      height
+      width
+    }
+  }
+`);
+
 interface ImageProps {
-  file: FilePartsFragment;
+  file: ImagePropsFragment;
   style?: CSSProperties;
   draggable?: boolean;
   className?: string;

@@ -63,7 +63,21 @@ export class CollectionResolver {
   }
 
   @ResolveField(() => Number)
-  async fileCount(@Parent() collection: CollectionEntity) {
+  async directFileCount(@Parent() collection: CollectionEntity) {
+    return this.fileRepo.count({
+      collections: collection.id,
+      preview: { $ne: null },
+      $or: [
+        // videos/etc with a thumbnail we can display
+        { thumbnail: { $ne: null } },
+        // images, which dont have thumbnail set but the client can still render a preview.
+        { extension: { $in: [...IMAGE_EXTENSIONS] } },
+      ],
+    });
+  }
+
+  @ResolveField(() => Number)
+  async aggregateFileCount(@Parent() collection: CollectionEntity) {
     const em = this.collectionRepo.getEntityManager();
     const query = sql`
         WITH RECURSIVE collection_hierarchy AS (

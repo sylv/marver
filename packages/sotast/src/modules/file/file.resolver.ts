@@ -4,6 +4,7 @@ import {
   Args,
   ArgsType,
   Field,
+  ID,
   Info,
   Parent,
   Query,
@@ -75,6 +76,10 @@ class FileFilter extends PaginationArgs {
   @IsOptional()
   sort?: FileSort;
 
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  collectionId?: string;
+
   @Field(() => FileSortDirection, { nullable: true })
   @IsEnum(FileSortDirection)
   @IsOptional()
@@ -129,6 +134,7 @@ export class FileResolver {
 
         if (filter.afterDate) filters.push({ createdAt: { $gte: filter.afterDate } });
         if (filter.beforeDate) filters.push({ createdAt: { $lte: filter.beforeDate } });
+        if (filter.collectionId) filters.push({ collections: { id: filter.collectionId } });
 
         // // we have to do this before the search query or else mikroorm can't
         // // count the files properly. it's a bug in mikroorm.

@@ -1,9 +1,20 @@
 import { memo, type CSSProperties } from 'react';
-import type { FilePartsFragment } from '../../@generated/graphql';
+import { graphql } from '../../@generated';
+import type { FilePreviewPropsFragment } from '../../@generated/graphql';
 import { Image } from '../image';
 
+graphql(`
+  fragment FilePreviewProps on File {
+    id
+    name
+    info {
+      durationFormatted
+    }
+  }
+`);
+
 interface FilePreviewProps {
-  file: FilePartsFragment;
+  file: FilePreviewPropsFragment;
   style?: CSSProperties;
 }
 
@@ -23,7 +34,7 @@ export const FilePreview = memo<FilePreviewProps>(({ file, style }) => {
         </span>
       )}
       <div key={file.id} className="h-full w-full overflow-hidden rounded">
-        <Image file={file} className="w-full h-full object-cover" />
+        <Image draggable={false} file={file} className="w-full h-full object-cover" />
       </div>
     </a>
   );

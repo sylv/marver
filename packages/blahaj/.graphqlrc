@@ -1,0 +1,15 @@
+schema: "../sotast/schema.gql"
+documents: "src/**/*.{graphql,tsx}"
+errorsOnly: true
+generates:
+  "src/@generated/":
+    preset: "client"
+    presetConfig:
+      fragmentMasking: false
+    config:
+      defaultScalarType: "unknown"
+      useTypeImports: true
+      strictScalars: true
+      dedupeFragments: true
+      scalars:
+        DateTime: "string"

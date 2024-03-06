@@ -10,9 +10,10 @@ type BoundingBox {
 }
 
 type Collection {
+  aggregateFileCount: Float!
   children: [Collection!]!
   description: String
-  fileCount: Float!
+  directFileCount: Float!
   id: ID!
   name: String!
   parent: Collection
@@ -194,7 +195,7 @@ type Query {
   collection(id: String!): Collection!
   collections: [Collection!]!
   file(id: String!): File
-  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
+  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
   serverInfo: ServerInfo!
   tasks: [Task!]!
 }

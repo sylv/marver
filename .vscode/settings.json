@@ -1,7 +1,7 @@
 {
   "npm.scriptExplorerExclude": ["^((?!watch|generate:watch).)*$"],
   "typescript.preferences.importModuleSpecifier": "relative",
-  "graphql-config.load.legacy": true,
+  "graphql-config.load.rootDir": "packages/blahaj/",
   "eslint.workingDirectories": [
     {
       "pattern": "./{packages,apps}/*"

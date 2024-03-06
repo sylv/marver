@@ -9,7 +9,7 @@ const SIDEBAR_WIDTH = '15rem';
 const SidebarTab = memo<{ href: string; icon: LucideIcon; children: React.ReactNode }>(
   ({ href, icon: Icon, children }) => {
     const { urlParsed } = usePageContext();
-    const isActive = urlParsed.pathname === href;
+    const isActive = href === '/' ? urlParsed.pathname === href : urlParsed.pathname.startsWith(href);
     return (
       <a
         href={href}

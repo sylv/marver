@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import type { IconType } from 'react-icons/lib';
-import type { FullFileFragment } from '../../../../@generated/graphql';
+import { graphql } from '../../../../@generated';
+import type { FileExifPropsFragment } from '../../../../@generated/graphql';
 import { pascalToLabel } from '../../../../helpers/pascalToLabel';
 import { FileCard } from '../../parts/file-card';
 import { FileLabel } from '../../parts/file-label';
@@ -9,7 +10,26 @@ import { EXIF_ICONS } from './icons';
 
 const IGNORE_VALUES = new Set(['0', '0/0', '0/0/0', '0/0/0/0', 'unknown', 'none']);
 
-export const FileExif = memo<{ file: FullFileFragment }>(({ file }) => {
+graphql(`
+  fragment FileExifProps on File {
+    exifData {
+      cameraMake
+      cameraModel
+      lensModel
+      lensMake
+      dateTime
+      exposureTime
+      fNumber
+      flash
+      focalLength
+      iso
+      latitude
+      longitude
+    }
+  }
+`);
+
+export const FileExif = memo<{ file: FileExifPropsFragment }>(({ file }) => {
   const props = useMemo(() => {
     if (!file.exifData) return null;
     const props = [];

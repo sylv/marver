@@ -3,10 +3,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "watch": "concurrently \"vite --open\" \"pnpm generate --watch\"",
+    "watch": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "generate": "graphql-codegen --config codegen.ts"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@privjs/gradients": "^1.0.11",
@@ -34,13 +33,13 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "thumbhash": "^0.1.1",
+    "vite-plugin-graphql-codegen": "^3.3.6",
     "zustand": "4.5.1"
   },
   "devDependencies": {
     "@atlasbot/configs": "^10.5.16",
     "@graphql-codegen/cli": "^5.0.2",
     "@graphql-codegen/client-preset": "^4.2.4",
-    "@graphql-codegen/urql-introspection": "^3.0.0",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@parcel/watcher": "^2.4.1",
     "@types/react": "^18.2.61",
@@ -49,7 +48,6 @@
     "@urql/exchange-graphcache": "^6.4.1",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
-    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "postcss": "^8.4.35",
     "react-ssr-prepass": "^1.5.0",

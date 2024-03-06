@@ -1,15 +1,37 @@
 import { FiChevronDown } from 'react-icons/fi';
 import { useMutation } from 'urql';
-import { RunTaskDocument, TasksDocument } from '../../@generated/graphql';
+import { graphql } from '../../@generated';
 import { Spinner, SpinnerCenter, SpinnerSize } from '../../components/spinner';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { usePolledQuery } from '../../hooks/usePolledQuery';
 
+const TasksQuery = graphql(`
+  query Tasks {
+    tasks {
+      id
+      name
+      description
+      running
+      nextRunAt
+    }
+  }
+`);
+
+const RunTask = graphql(`
+  mutation RunTask($id: ID!) {
+    runTask(id: $id) {
+      id
+      nextRunAt
+      running
+    }
+  }
+`);
+
 export function Page() {
-  const [runningTask, runTask] = useMutation(RunTaskDocument);
+  const [runningTask, runTask] = useMutation(RunTask);
   const [{ error, data }] = usePolledQuery({
-    query: TasksDocument,
+    query: TasksQuery,
     pollInterval: 1000,
   });
 

@@ -8,17 +8,8 @@ import type { PageProps } from '../../renderer/types';
 const CollectionsQuery = graphql(`
   query CollectionsQuery {
     collections {
-      ...CollectionParts
-    }
-  }
-
-  fragment CollectionParts on Collection {
-    id
-    name
-    description
-    fileCount
-    previewFiles {
-      ...FileParts
+      id
+      ...CollectionPreviewProps
     }
   }
 `);
