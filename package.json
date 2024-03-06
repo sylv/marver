@@ -2,7 +2,8 @@
   "name": "marver",
   "version": "0.0.0",
   "devDependencies": {
-    "turbo": "^1.12.4"
+    "turbo": "^1.12.4",
+    "typescript": "^5.3.3"
   },
   "pnpm": {
     "patchedDependencies": {

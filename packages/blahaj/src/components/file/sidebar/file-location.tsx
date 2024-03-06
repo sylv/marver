@@ -1,11 +1,10 @@
 import { memo, useMemo } from 'react';
-import { graphql } from '../../../@generated';
-import type { FileLocationPropsFragment } from '../../../@generated/graphql';
+import { graphql, unmask, type FragmentType } from '../../../@generated';
 import { Card } from '../../ui/card';
 
 const BBOX_SIZE = 0.001;
 
-graphql(`
+const Fragment = graphql(`
   fragment FileLocationProps on File {
     exifData {
       longitude
@@ -16,7 +15,8 @@ graphql(`
 
 // todo: we could use "pigeon-maps" instead of an iframe for some more styling options,
 // but the iframe works remarkably well and doesn't bloat the bundle soo...
-export const FileLocation = memo<{ file: FileLocationPropsFragment }>(({ file }) => {
+export const FileLocation = memo<{ file: FragmentType<typeof Fragment> }>(({ file: fileFrag }) => {
+  const file = unmask(Fragment, fileFrag);
   const iframeUrl = useMemo(() => {
     if (!file.exifData?.longitude || !file.exifData?.latitude) return null;
     const base = new URL('https://www.openstreetmap.org/export/embed.html');

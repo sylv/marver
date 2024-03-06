@@ -5,7 +5,8 @@ generates:
   "src/@generated/":
     preset: "client"
     presetConfig:
-      fragmentMasking: false
+      fragmentMasking:
+        unmaskFunctionName: "unmask"
     config:
       defaultScalarType: "unknown"
       useTypeImports: true

@@ -1,4 +1,5 @@
 {
+  "typescript.tsdk": "node_modules/typescript/lib",
   "npm.scriptExplorerExclude": ["^((?!watch|generate:watch).)*$"],
   "typescript.preferences.importModuleSpecifier": "relative",
   "graphql-config.load.rootDir": "packages/blahaj/",

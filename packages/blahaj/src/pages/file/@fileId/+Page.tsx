@@ -27,6 +27,7 @@ const FileQuery = graphql(`
       ...FileLocationProps
       ...FileTasksProps
       ...FileExifProps
+      ...ImageProps
     }
   }
 `);

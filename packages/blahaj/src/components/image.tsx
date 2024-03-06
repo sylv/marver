@@ -1,13 +1,12 @@
 import { memo, useMemo, useState, type CSSProperties } from 'react';
-import { graphql } from '../@generated';
-import type { ImagePropsFragment } from '../@generated/graphql';
+import { graphql, unmask, type FragmentType } from '../@generated';
 import { cn } from '../helpers/cn';
 import { thumbhashBase64ToDataUri } from '../helpers/thumbhashBase64ToDataUri';
 
 const IMAGE_INNER_CLASSES = 'text-transparent transition-opacity duration-200';
 const SOURCE_SET_SIZES = [800, 1600, 3200];
 
-graphql(`
+const Fragment = graphql(`
   fragment ImageProps on File {
     name
     thumbnailUrl
@@ -20,13 +19,14 @@ graphql(`
 `);
 
 interface ImageProps {
-  file: ImagePropsFragment;
+  file: FragmentType<typeof Fragment>;
   style?: CSSProperties;
   draggable?: boolean;
   className?: string;
 }
 
-export const Image = memo<ImageProps>(({ file, className, draggable, style }) => {
+export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, style }) => {
+  const file = unmask(Fragment, fileFrag);
   const [loaded, setLoaded] = useState(false);
   const [decoded, setDecoded] = useState(false);
   const aspectRatio = useMemo(() => {

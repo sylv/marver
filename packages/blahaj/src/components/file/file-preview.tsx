@@ -1,24 +1,25 @@
 import { memo, type CSSProperties } from 'react';
-import { graphql } from '../../@generated';
-import type { FilePreviewPropsFragment } from '../../@generated/graphql';
+import { graphql, unmask, type FragmentType } from '../../@generated';
 import { Image } from '../image';
 
-graphql(`
+const Fragment = graphql(`
   fragment FilePreviewProps on File {
     id
     name
     info {
       durationFormatted
     }
+    ...ImageProps
   }
 `);
 
 interface FilePreviewProps {
-  file: FilePreviewPropsFragment;
+  file: FragmentType<typeof Fragment>;
   style?: CSSProperties;
 }
 
-export const FilePreview = memo<FilePreviewProps>(({ file, style }) => {
+export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) => {
+  const file = unmask(Fragment, fileFrag);
   const href = `/file/${file.id}`;
 
   return (

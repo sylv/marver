@@ -18,6 +18,7 @@ const CollectionQuery = graphql(`
         name
       }
       children {
+        id
         ...CollectionPreviewProps
       }
     }
