@@ -19,8 +19,10 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - Index text from OCR
   - Negate search terms with `-`, for example `apple -device` would search for apples, not apple devices.
   - Upload a photo/video and use perceptual hash/embeddings to find similar images/videos
+    - Upload a picture of an object and it finds all pictures/videos with that object
   - Index existing and generated subtitles
     - Clicking on a subtitle-provided result will take you to that time in the video
+  - Embeddings can be quantized with minimal quality loss. 1.58-bit quantization is possible, then once you have a small set of results run full-precision comparisons.
 - Subtitles
   - Use [whisper](https://github.com/openai/whisper) to generate subtitles.
   - Extract existing subtitles from files
