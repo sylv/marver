@@ -1,5 +1,4 @@
-/* eslint-disable unicorn/consistent-function-scoping */
-import { Logger } from '@nestjs/common';
+import { Logger } from "@nestjs/common";
 import {
   AutoProcessor,
   CLIPTextModelWithProjection,
@@ -8,12 +7,12 @@ import {
   RawImage,
   type Processor,
   type Tensor,
-} from '@xenova/transformers';
-import ms from 'ms';
-import type { Embedding } from '../../@generated/core';
-import { dedupe } from '../../helpers/dedupe';
-import { expiringValue } from '../../helpers/expire-value';
-import { progressCallback } from '../../helpers/progress-callback';
+} from "@xenova/transformers";
+import ms from "ms";
+import type { Embedding } from "../../@generated/core";
+import { dedupe } from "../../helpers/dedupe";
+import { expiringValue } from "../../helpers/expire-value";
+import { progressCallback } from "../../helpers/progress-callback";
 
 enum ClipEmbeddingModelType {
   OPENAI__CLIP_VIT_BASE_PATCH32 = 1,
@@ -45,7 +44,7 @@ export class CLIPService {
       };
     }
 
-    this.log.debug('Loading CLIP text model');
+    this.log.debug("Loading CLIP text model");
     const modelName = this.modelTypeToName(CURRENT_MODEL);
     if (!this.textModel.value) {
       this.textModel.value = await CLIPTextModelWithProjection.from_pretrained(modelName, {
@@ -74,7 +73,7 @@ export class CLIPService {
       };
     }
 
-    this.log.debug('Loading CLIP vision model');
+    this.log.debug("Loading CLIP vision model");
     const modelName = this.modelTypeToName(CURRENT_MODEL);
     if (!this.visionModel.value) {
       this.visionModel.value = await CLIPVisionModelWithProjection.from_pretrained(modelName, {
@@ -135,10 +134,10 @@ export class CLIPService {
     // aren't in the onnx format, so we have to use alternatives.
     switch (type) {
       case ClipEmbeddingModelType.OPENAI__CLIP_VIT_BASE_PATCH32: {
-        return 'Xenova/clip-vit-base-patch32';
+        return "Xenova/clip-vit-base-patch32";
       }
       case ClipEmbeddingModelType.OPENAI__CLIP_VIT_BASE_PATCH16: {
-        return 'Xenova/clip-vit-base-patch16';
+        return "Xenova/clip-vit-base-patch16";
       }
       default: {
         throw new Error(`Unknown model type: ${type}`);

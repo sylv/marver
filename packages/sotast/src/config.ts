@@ -1,6 +1,6 @@
 import { loadConfig } from '@ryanke/venera';
 import bytes from 'bytes';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import z from 'zod';
 import ms from 'ms';
 

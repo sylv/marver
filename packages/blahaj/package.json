@@ -48,7 +48,6 @@
     "@urql/exchange-graphcache": "^6.4.1",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
-    "eslint": "^8.57.0",
     "postcss": "^8.4.35",
     "react-ssr-prepass": "^1.5.0",
     "shadcn-ui": "^0.8.0",

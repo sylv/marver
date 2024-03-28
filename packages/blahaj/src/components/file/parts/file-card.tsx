@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, type FC, type ReactNode } from 'react';
 import { Card } from '../../ui/card';
 import { FiChevronDown } from 'react-icons/fi';

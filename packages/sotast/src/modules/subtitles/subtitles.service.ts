@@ -1,18 +1,17 @@
-/* eslint-disable no-await-in-loop */
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger } from '@nestjs/common';
-import { mkdir, readFile } from 'fs/promises';
-import ISO6391 from 'iso-639-1';
-import LanguageDetect from 'languagedetect';
-import { dirname, join } from 'path';
-import { stripHtml } from 'string-strip-html';
-import { parseSync, type Node } from 'subtitle';
-import { VIDEO_EXTENSIONS } from '../../constants.js';
-import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
-import { FileEntity } from '../file/entities/file.entity.js';
-import { Queue } from '../queue/queue.decorator.js';
-import { FileSubtitleEntity } from './file-subtitle.entity.js';
+import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { Injectable, Logger } from "@nestjs/common";
+import { mkdir, readFile } from "node:fs/promises";
+import ISO6391 from "iso-639-1";
+import LanguageDetect from "languagedetect";
+import { dirname, join } from "node:path";
+import { stripHtml } from "string-strip-html";
+import { parseSync, type Node } from "subtitle";
+import { VIDEO_EXTENSIONS } from "../../constants.js";
+import { FfmpegService } from "../ffmpeg/ffmpeg.service.js";
+import { FileEntity } from "../file/entities/file.entity.js";
+import { Queue } from "../queue/queue.decorator.js";
+import { FileSubtitleEntity } from "./file-subtitle.entity.js";
 
 const SUBTITLE_STRIP_PATTERN =
   /JOINNOW|free code|Downloaded from|Support us and become a VIP member|subtitles|corrected by|corrections by|rate this subtitle|created by|Advertise your product or brand here|tvsubtitles|YTS|YIFY|www\.|https:|ripped by|opensubtitles|sub(scene|rip)|podnapisi|addic7ed|titlovi|bozxphd|sazu489|psagmeno|normita|anoxmous|\. ?com|©|™|Free Online Movies|Subtitle edited by/;
@@ -27,7 +26,7 @@ export class SubtitlesService {
     private em: EntityManager,
   ) {}
 
-  @Queue('VIDEO_EXTRACT_OR_GENERATE_SUBTITLES', {
+  @Queue("VIDEO_EXTRACT_OR_GENERATE_SUBTITLES", {
     targetConcurrency: 1,
     fileFilter: {
       extension: { $in: [...VIDEO_EXTENSIONS] },
@@ -52,12 +51,12 @@ export class SubtitlesService {
 
   private async extractEmbeddedSubtitles(file: FileEntity) {
     const ffprobeResult = await this.ffmpegService.ffprobe(file.path);
-    const subtitleStreams = ffprobeResult.streams.filter((stream) => stream.codec_type === 'subtitle');
+    const subtitleStreams = ffprobeResult.streams.filter((stream) => stream.codec_type === "subtitle");
 
     let madeDir = false;
     for (const subtitleStream of subtitleStreams) {
       const fileName = `embedded_${subtitleStream.index}.srt`;
-      const outputPath = join(file.assetFolder, 'subtitles', fileName);
+      const outputPath = join(file.assetFolder, "subtitles", fileName);
 
       if (!madeDir) {
         await mkdir(dirname(outputPath), { recursive: true });
@@ -85,11 +84,11 @@ export class SubtitlesService {
   async guessLanguage(subtitlePath: string) {
     const dector = new LanguageDetect();
     const guessCounts = new Map<string, number>();
-    const content = await readFile(subtitlePath, 'utf8');
+    const content = await readFile(subtitlePath, "utf8");
     const result = parseSync(content);
 
     for (const node of result) {
-      if (node.type !== 'cue') continue;
+      if (node.type !== "cue") continue;
       const cleaned = this.cleanSubtitleNode(node);
       if (!cleaned) continue;
       const guesses = dector.detect(node.data.text, 2);
@@ -110,13 +109,13 @@ export class SubtitlesService {
       else this.log.error(`Failed to find ISO639-1 code for ${sortedGuesses[0][0]}`);
     }
 
-    return 'en';
+    return "en";
   }
 
   cleanSubtitleNode(node: Node) {
-    if (node.type === 'cue') {
+    if (node.type === "cue") {
       if (SUBTITLE_STRIP_PATTERN.test(node.data.text)) return false;
-      node.data.text = stripHtml(node.data.text, { ignoreTags: ['i', 'b', 'u', 'v'] }).result;
+      node.data.text = stripHtml(node.data.text, { ignoreTags: ["i", "b", "u", "v"] }).result;
       if (!node.data.text.trim()) return false;
     }
 

@@ -39,8 +39,7 @@ export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, durati
   useEffect(() => {
     // re-determine HLS usage when the source changes
     if (useHLS) setUseHLS(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src]);
+      }, [src]);
 
   const switchToHls = () => {
     if (useHLS) return;

@@ -2,7 +2,7 @@ import { EntityRepository } from '@mikro-orm/better-sqlite';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Controller, Get, Param, Res } from '@nestjs/common';
 import { type FastifyReply } from 'fastify';
-import { createReadStream } from 'fs';
+import { createReadStream } from 'node:fs';
 import parser from 'subtitle';
 import { FileSubtitleEntity } from './file-subtitle.entity.js';
 import { SubtitlesService } from './subtitles.service.js';

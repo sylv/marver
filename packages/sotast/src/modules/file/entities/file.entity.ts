@@ -16,7 +16,7 @@ import {
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import mime from 'mime-types';
 import { Connection } from 'nest-graphql-utils';
-import { extname, join } from 'path';
+import { extname, join } from 'node:path';
 import { ulid } from 'ulid';
 import { config } from '../../../config.js';
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';

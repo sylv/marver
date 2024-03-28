@@ -3,9 +3,9 @@ import { type EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { RawImage } from '@xenova/transformers';
-import { once } from 'events';
-import { createReadStream, type ReadStream } from 'fs';
-import { readFile } from 'fs/promises';
+import { once } from 'node:events';
+import { createReadStream, type ReadStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { FileEntity } from '../file/entities/file.entity';
 
 const UNAVAILBLE_ERROR_CODES = new Set(['ENOENT', 'EACCES', 'EISDIR']);

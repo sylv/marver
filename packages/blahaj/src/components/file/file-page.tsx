@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/alt-text */
 import { memo, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'urql';
 import { graphql } from '../../@generated';

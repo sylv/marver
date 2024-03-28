@@ -1,7 +1,7 @@
 import { Entity, Property } from '@mikro-orm/better-sqlite';
 import { ObjectType } from '@nestjs/graphql';
 import mime from 'mime-types';
-import { join } from 'path';
+import { join } from 'node:path';
 import { FileAssetEntity } from './file-asset.entity.js';
 import { FileEntity } from '../file.entity.js';
 

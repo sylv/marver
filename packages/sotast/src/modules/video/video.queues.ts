@@ -1,26 +1,25 @@
-/* eslint-disable no-await-in-loop */
-import { phashVideo, type MergedFrame } from '@marver/ephyra';
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable } from '@nestjs/common';
-import { mkdir, rm, writeFile } from 'fs/promises';
-import ms from 'ms';
-import { join } from 'path';
-import type { OutputInfo } from 'sharp';
-import sharp from 'sharp';
-import { rgbaToThumbHash } from 'thumbhash-node';
-import { VIDEO_EXTENSIONS } from '../../constants.js';
-import { embeddingToBuffer } from '../../helpers/embedding.js';
-import { CLIPService } from '../clip/clip.service.js';
-import { FfmpegService } from '../ffmpeg/ffmpeg.service.js';
-import { FilePosterEntity } from '../file/entities/assets/file-poster.entity.js';
-import { FileThumbnailEntity } from '../file/entities/assets/file-thumbnail.entity.js';
-import { FileTimelineEntity } from '../file/entities/assets/file-timeline.entity.js';
-import { FileEntity } from '../file/entities/file.entity.js';
-import { ImageService } from '../image/image.service.js';
-import { JobError } from '../queue/job.error.js';
-import { Queue } from '../queue/queue.decorator.js';
-import { FileEmbeddingEntity } from '../file/entities/file-embedding.entity.js';
+import { phashVideo, type MergedFrame } from "@marver/ephyra";
+import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { Injectable } from "@nestjs/common";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import ms from "ms";
+import { join } from "node:path";
+import type { OutputInfo } from "sharp";
+import sharp from "sharp";
+import { rgbaToThumbHash } from "thumbhash-node";
+import { VIDEO_EXTENSIONS } from "../../constants.js";
+import { embeddingToBuffer } from "../../helpers/embedding.js";
+import { CLIPService } from "../clip/clip.service.js";
+import { FfmpegService } from "../ffmpeg/ffmpeg.service.js";
+import { FilePosterEntity } from "../file/entities/assets/file-poster.entity.js";
+import { FileThumbnailEntity } from "../file/entities/assets/file-thumbnail.entity.js";
+import { FileTimelineEntity } from "../file/entities/assets/file-timeline.entity.js";
+import { FileEntity } from "../file/entities/file.entity.js";
+import { ImageService } from "../image/image.service.js";
+import { JobError } from "../queue/job.error.js";
+import { Queue } from "../queue/queue.decorator.js";
+import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
 
 @Injectable()
 export class VideoQueues {
@@ -36,7 +35,7 @@ export class VideoQueues {
     private em: EntityManager,
   ) {}
 
-  @Queue('CREATE_VIDEO_MEDIA', {
+  @Queue("CREATE_VIDEO_MEDIA", {
     targetConcurrency: 4,
     fileFilter: {
       extension: {
@@ -46,9 +45,9 @@ export class VideoQueues {
   })
   async extractMetadata(file: FileEntity) {
     const result = await this.ffmpegService.ffprobe(file.path);
-    const videoStream = result.streams.find((stream) => stream.codec_type === 'video');
-    const audioStream = result.streams.find((stream) => stream.codec_type === 'audio');
-    const subtitleStream = result.streams.find((stream) => stream.codec_type === 'subtitle');
+    const videoStream = result.streams.find((stream) => stream.codec_type === "video");
+    const audioStream = result.streams.find((stream) => stream.codec_type === "audio");
+    const subtitleStream = result.streams.find((stream) => stream.codec_type === "subtitle");
 
     let hasStream = false;
     if (videoStream) {
@@ -59,7 +58,7 @@ export class VideoQueues {
       if (videoStream.duration) file.info.durationSeconds = +videoStream.duration;
       if (videoStream.bit_rate) file.info.bitrate = +videoStream.bit_rate;
       if (videoStream.r_frame_rate) {
-        const [num, den] = videoStream.r_frame_rate.split('/');
+        const [num, den] = videoStream.r_frame_rate.split("/");
         if (num && den) {
           file.info.framerate = +num / +den;
         }
@@ -80,31 +79,31 @@ export class VideoQueues {
     }
 
     if (!hasStream) {
-      throw new JobError('No video or audio streams found', { corruptFile: true });
+      throw new JobError("No video or audio streams found", { corruptFile: true });
     }
 
     await this.em.persistAndFlush(file);
   }
 
-  @Queue('VIDEO_EXTRACT_SCREENSHOTS', {
+  @Queue("VIDEO_EXTRACT_SCREENSHOTS", {
     targetConcurrency: 3,
     fileFilter: {
       info: {
         videoCodec: { $ne: null },
         durationSeconds: {
-          $lte: ms('1h') / 1000,
+          $lte: ms("1h") / 1000,
         },
       },
       extension: {
         $in: [...VIDEO_EXTENSIONS],
       },
     },
-    cleanupMethod: async (result: Awaited<ReturnType<VideoQueues['extractScreenshots']>>) => {
+    cleanupMethod: async (result: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) => {
       await rm(result.screenshotPath, { recursive: true, force: true });
     },
   })
   async extractScreenshots(file: FileEntity) {
-    const screenshotPath = join(file.assetFolder, 'screenshots');
+    const screenshotPath = join(file.assetFolder, "screenshots");
     await mkdir(screenshotPath, { recursive: true });
     const frames = await phashVideo(file.path, {
       mergeFrames: true,
@@ -129,14 +128,11 @@ export class VideoQueues {
     };
   }
 
-  @Queue('VIDEO_GENERATE_CLIP_EMBEDDING', {
-    parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
+  @Queue("VIDEO_GENERATE_CLIP_EMBEDDING", {
+    parentType: "VIDEO_EXTRACT_SCREENSHOTS",
     targetConcurrency: 1,
   })
-  async generateClipVector(
-    file: FileEntity,
-    { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
-  ) {
+  async generateClipVector(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {
     const framePaths: string[] = [];
     for (const frame of frames) {
       if (!frame.path) continue;
@@ -159,17 +155,14 @@ export class VideoQueues {
     await this.em.flush();
   }
 
-  @Queue('VIDEO_GENERATE_TIMELINE', {
-    parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
+  @Queue("VIDEO_GENERATE_TIMELINE", {
+    parentType: "VIDEO_EXTRACT_SCREENSHOTS",
     targetConcurrency: 1,
     fileFilter: {
       timeline: null,
     },
   })
-  async generateTimeline(
-    file: FileEntity,
-    { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>,
-  ) {
+  async generateTimeline(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
     let layerIndex = 0;
@@ -192,13 +185,13 @@ export class VideoQueues {
       width = result.info.width;
     }
 
-    const timelinePreviewPath = join(file.assetFolder, 'timeline.webp');
+    const timelinePreviewPath = join(file.assetFolder, "timeline.webp");
     const compositeWidth = width! * layerIndex;
     const composite = sharp({
       create: {
         width: compositeWidth,
         height: height,
-        background: '#000000',
+        background: "#000000",
         channels: 4,
       },
     }).composite(layers);
@@ -210,10 +203,10 @@ export class VideoQueues {
       // todo: a better approach would be to have multiple rows of images, which
       // may also help with compression.
       outputInfo = await composite.jpeg({ quality: 60 }).toFile(timelinePreviewPath);
-      mimeType = 'image/jpeg';
+      mimeType = "image/jpeg";
     } else {
       outputInfo = await composite.webp({ quality: 60 }).toFile(timelinePreviewPath);
-      mimeType = 'image/webp';
+      mimeType = "image/webp";
     }
 
     const timeline = this.fileTimelineRepo.create({
@@ -227,28 +220,28 @@ export class VideoQueues {
     await this.em.persistAndFlush(timeline);
   }
 
-  @Queue('VIDEO_PICK_THUMBNAIL', {
-    parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
+  @Queue("VIDEO_PICK_THUMBNAIL", {
+    parentType: "VIDEO_EXTRACT_SCREENSHOTS",
     targetConcurrency: 1,
     fileFilter: {
       thumbnail: null,
     },
   })
-  async pickThumbnail(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>) {
+  async pickThumbnail(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {
     const firstFrameWithPath = frames.find((frame) => frame.path);
     if (!firstFrameWithPath) {
-      throw new Error('Expected at least one frame to been written to disk');
+      throw new Error("Expected at least one frame to been written to disk");
     }
 
     const thumbnail = this.fileThumbnailRepo.create({
       file: file,
       width: file.info.width!,
       height: file.info.height!,
-      mimeType: 'image/webp',
+      mimeType: "image/webp",
     });
 
     const meta = await sharp(firstFrameWithPath.path)
-      .resize(1280, 720, { fit: 'inside' })
+      .resize(1280, 720, { fit: "inside" })
       .webp({ quality: 80 })
       .toFile(thumbnail.path);
 
@@ -257,14 +250,14 @@ export class VideoQueues {
     await this.em.persistAndFlush(thumbnail);
   }
 
-  @Queue('VIDEO_PICK_POSTER', {
-    parentType: 'VIDEO_EXTRACT_SCREENSHOTS',
+  @Queue("VIDEO_PICK_POSTER", {
+    parentType: "VIDEO_EXTRACT_SCREENSHOTS",
     targetConcurrency: 1,
     fileFilter: {
       poster: null,
     },
   })
-  async pickPoster(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues['extractScreenshots']>>) {
+  async pickPoster(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {
     // generate a poster by finding the largest (aka, hopefully most detailed) frame.
     // this approach should ignore things like intros/outros that are mostly black.
     let largestFrame: { frame: MergedFrame; data: Buffer; info: OutputInfo } | null = null;
@@ -276,7 +269,7 @@ export class VideoQueues {
       // for now this works.
       if (!frame.path) continue;
       const result = await sharp(frame.path)
-        .resize(1280, 720, { fit: 'inside' })
+        .resize(1280, 720, { fit: "inside" })
         .webp({ quality: 80 })
         .toBuffer({ resolveWithObject: true });
 
@@ -295,7 +288,7 @@ export class VideoQueues {
         file: file,
         width: largestFrame.info.width,
         height: largestFrame.info.height,
-        mimeType: 'image/webp',
+        mimeType: "image/webp",
         generated: true,
         fromMs: largestFrame.frame.fromMs,
       });
@@ -308,9 +301,9 @@ export class VideoQueues {
     }
   }
 
-  @Queue('VIDEO_GENERATE_PHASH', {
+  @Queue("VIDEO_GENERATE_PHASH", {
     targetConcurrency: 2,
-    populate: ['poster'],
+    populate: ["poster"],
     fileFilter: {
       poster: { $ne: null },
       preview: null,
@@ -321,7 +314,7 @@ export class VideoQueues {
     },
   })
   async generateThumbhash(file: FileEntity) {
-    if (!file.poster) throw new Error('Missing poster');
+    if (!file.poster) throw new Error("Missing poster");
     const poster = file.poster.getEntity();
     const { resizedSize, rgba } = await this.imageService.loadImageAndConvertToRgba(poster.path);
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);

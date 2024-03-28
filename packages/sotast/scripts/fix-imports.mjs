@@ -1,6 +1,6 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import { globSync } from 'glob';
-import path from 'path';
+import path from 'node:path';
 
 // https://github.com/timostamm/protobuf-ts/pull/233#issuecomment-1289053379
 const protoRoot = process.argv[2];
@@ -19,7 +19,7 @@ for (const file of files) {
     )
     .join('\n');
 
-  const DISABLE_COMMENT = '/* eslint-disable */\n';
+  const DISABLE_COMMENT = '\n';
   if (!content.startsWith(DISABLE_COMMENT)) content = DISABLE_COMMENT + content;
   fs.writeFileSync(file, content);
 }

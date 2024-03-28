@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
-import { once } from 'events';
-import { createReadStream, createWriteStream } from 'fs';
-import { mkdir, opendir, stat, unlink } from 'fs/promises';
+import { once } from 'node:events';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { mkdir, opendir, stat, unlink } from 'node:fs/promises';
 import ms from 'ms';
-import { join } from 'path';
+import { join } from 'node:path';
 import { config } from '../../config';
 import { CACHE_OPTIONS_KEY, type CacheOptions } from './cache-options.interface';
 
@@ -120,7 +120,6 @@ export class CacheService implements OnModuleInit {
       while (this.totalSize > this.options.maxSize * 0.9 || this.files.size > this.options.maxItems * 0.9) {
         const [name, info] = sortedByLastAccessedAsc.shift()!;
         const filePath = join(this.rootDir, name);
-        // eslint-disable-next-line no-await-in-loop
         await unlink(filePath);
         this.files.delete(name);
         this.totalSize -= info.size;
