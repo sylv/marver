@@ -1,4 +1,4 @@
-import { phashVideo, type MergedFrame } from "@marver/ephyra";
+import { phashVideo, type MergedFrame } from "@ryanke/ephyra";
 import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable } from "@nestjs/common";
@@ -132,7 +132,10 @@ export class VideoQueues {
     parentType: "VIDEO_EXTRACT_SCREENSHOTS",
     targetConcurrency: 1,
   })
-  async generateClipVector(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {
+  async generateClipVector(
+    file: FileEntity,
+    { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>,
+  ) {
     const framePaths: string[] = [];
     for (const frame of frames) {
       if (!frame.path) continue;
@@ -162,7 +165,10 @@ export class VideoQueues {
       timeline: null,
     },
   })
-  async generateTimeline(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {
+  async generateTimeline(
+    file: FileEntity,
+    { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>,
+  ) {
     const framesWithPaths = frames.filter((frame) => frame.path);
     const layers = [];
     let layerIndex = 0;

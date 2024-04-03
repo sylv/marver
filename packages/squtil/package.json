@@ -1,5 +1,5 @@
 {
-  "name": "@marver/squtil",
+  "name": "@ryanke/squtil",
   "scripts": {
     "build": "cargo build --release"
   }

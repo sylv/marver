@@ -1,5 +1,5 @@
 {
-  "name": "@marver/sotast",
+  "name": "@ryanke/sotast",
   "version": "0.0.1",
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "@hapi/accept": "^6.0.3",
     "@jenyus-org/graphql-utils": "^1.5.0",
     "@libsql/client": "^0.6.0",
-    "@marver/ephyra": "workspace:^",
+    "@ryanke/ephyra": "workspace:^",
     "@mercuriusjs/gateway": "^2.2.0",
     "@mikro-orm/better-sqlite": "^6.1.6",
     "@mikro-orm/core": "^6.1.6",
