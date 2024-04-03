@@ -1,10 +1,10 @@
-import { Entity, ManyToOne, Property, type Ref } from '@mikro-orm/better-sqlite';
-import { Field, ObjectType } from '@nestjs/graphql';
-import { FileEntity } from './file.entity.js';
-import { TagEntity } from './tag.entity.js';
+import { Entity, ManyToOne, Property, type Ref } from "@mikro-orm/better-sqlite";
+import { Field, ObjectType } from "@nestjs/graphql";
+import { FileEntity } from "./file.entity.js";
+import { TagEntity } from "./tag.entity.js";
 
-@Entity({ tableName: 'file_tags' })
-@ObjectType('FileTag')
+@Entity({ tableName: "taggings" })
+@ObjectType("FileTag")
 export class FileTagEntity {
   @ManyToOne(() => TagEntity, { primary: true })
   @Field(() => TagEntity)

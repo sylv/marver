@@ -1,40 +1,23 @@
-import {
-  ArrayType,
-  Collection,
-  Entity,
-  OneToMany,
-  OneToOne,
-  OptionalProps,
-  PrimaryKey,
-  Property,
-  type Ref,
-} from '@mikro-orm/core';
-import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { TagEntity } from '../../file/entities/tag.entity.js';
-import { FaceEntity } from './face.entity.js';
+import { ArrayType, Check, Collection, Entity, OneToMany, OneToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/core";
+import { Field, ID, ObjectType } from "@nestjs/graphql";
+import { TagEntity } from "../../file/entities/tag.entity.js";
+import { FaceEntity } from "./face.entity.js";
 
-/**
- * This entity represents people.
- * That includes, but is not limited to:
- * - Family members
- * - Friends
- * - Artists
- * - Actors
- * - Directors
- * - Writers
- * - Producers
- * - Musicians
- */
-@Entity({ tableName: 'people' })
-@ObjectType('Person')
+@Entity({ tableName: "people" })
+@ObjectType("Person")
+@Check<PersonEntity>({
+  // require that the tag is non-nullable if the person has a name
+  // todo: test that this actually works
+  expression: (columns) => `${columns.name} IS NULL OR ${columns.tag} IS NOT NULL`,
+})
 export class PersonEntity {
   @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
   id: number;
 
-  @Property()
-  @Field()
-  name: string;
+  @Property({ nullable: true })
+  @Field({ nullable: true })
+  name?: string;
 
   @Property({ type: ArrayType })
   @Field(() => String)
@@ -52,12 +35,15 @@ export class PersonEntity {
   @Field({ nullable: true })
   deathDate?: Date;
 
-  @OneToMany(() => FaceEntity, (face) => face.person)
+  @OneToMany(
+    () => FaceEntity,
+    (face) => face.person,
+  )
   faces = new Collection<FaceEntity>(this);
 
-  @OneToOne(() => TagEntity, { ref: true })
-  @Field(() => TagEntity)
-  tag: Ref<TagEntity>;
+  @OneToOne(() => TagEntity, { ref: true, nullable: true })
+  @Field(() => TagEntity, { nullable: true })
+  tag?: Ref<TagEntity>;
 
-  [OptionalProps]: 'aliases';
+  [OptionalProps]: "aliases";
 }

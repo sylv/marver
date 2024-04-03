@@ -58,3 +58,9 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - `STL/OBJ/3D` files should have a rendered interactive view and have thumbnails
   - PDFs, markdown, and other text-based files should be viewable with thumbnails
   - Index text from text-based files (pdfs, markdown, txt)
+- Option to store data in EXIF
+  - We should use the standard format for data whenever possible
+  - If the user adds a location to an image, or updates its tags, we should have an option to add that to the image EXIF data.
+  - Ideally, we want all the data we store to be replaceable. The files themselves are what's important, not the .sqlite file indexing them.
+  - This should not be default
+  - Anything we can write to EXIF we should be able to pull back out

@@ -1,9 +1,9 @@
-import { Embeddable, Property } from '@mikro-orm/better-sqlite';
-import { Field, ObjectType } from '@nestjs/graphql';
-import type { BoundingBox } from '../../../@generated/core.js';
+import { Embeddable, Property } from "@mikro-orm/better-sqlite";
+import { Field, ObjectType } from "@nestjs/graphql";
+import type { BoundingBox } from "../../../@generated/core.js";
 
 @Embeddable()
-@ObjectType('BoundingBox')
+@ObjectType("BoundingBox")
 export class BoundingBoxEmbeddable implements BoundingBox {
   @Property()
   @Field()
