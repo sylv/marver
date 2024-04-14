@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { useQuery } from 'urql';
 import { graphql } from '../../@generated';
-import { type FilesQueryVariables } from '../../@generated/graphql';
+import type { FilesQueryVariables } from '../../@generated/graphql';
 import { cn } from '../../helpers/cn';
 import { FilePreview } from './file-preview';
 
@@ -77,7 +77,7 @@ export const FilePage = memo<FilePageProps>(
           // this is the margin that the observer will use to determine if the element is in the viewport.
           // so 300% here means it has to be off screen by 300% of the screen height to be considered off screen.
           // the 200% buffer here is to try prevent flickering when scrolling. it could be higher/lower, 300% seems fine for perf+ux balance.
-          rootMargin: `300% 0px 300% 0px`,
+          rootMargin: "300% 0px 300% 0px",
         },
       );
 
@@ -95,15 +95,19 @@ export const FilePage = memo<FilePageProps>(
       >
         <div className="flex flex-wrap gap-2">
           {!unloadWithHeight &&
-            data?.files.edges.map(({ node: file }) => {
+            data?.files.edges.map(({ node: file }, index) => {
               if (!file.info.height || !file.info.width || !file.thumbnailUrl) return null;
               const aspectRatio = file.info.width / file.info.height;
+              const isLast = index === data.files.edges.length - 1;
               return (
                 <FilePreview
                   key={file.id}
                   file={file}
                   style={{
-                    width: aspectRatio * targetWidth,
+                    // the min here is to prevent high res images taking up the whole screen width.
+                    // todo: this could be done far more elegantly, the "isLast" check feels bad
+                    // but otherwise images are too small on the last row and it leaves space.
+                    width: isLast ? aspectRatio * targetWidth : `min(${aspectRatio * targetWidth}px, 30vw)`,
                     flexGrow: aspectRatio * targetWidth,
                     height: rowHeight,
                   }}
