@@ -28,7 +28,7 @@ scalar DateTime
 type Face {
   boundingBox: BoundingBox!
   id: ID!
-  person: Person
+  person: Person!
 }
 
 type File {
@@ -187,8 +187,8 @@ type Person {
   deathDate: DateTime
   description: String
   id: ID!
-  name: String!
-  tag: Tag!
+  name: String
+  tag: Tag
 }
 
 type Query {

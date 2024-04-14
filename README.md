@@ -9,7 +9,7 @@
 
 marver scours your files and makes them all pretty and viewable, pulling as much information as possible.
 
-### ideas/todo
+### ideas
 
 - Search
   - If someone searches for `pink clouds` and a `clouds` tag exists, add the `clouds` tag to the file filter.
@@ -64,3 +64,15 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - Ideally, we want all the data we store to be replaceable. The files themselves are what's important, not the .sqlite file indexing them.
   - This should not be default
   - Anything we can write to EXIF we should be able to pull back out
+
+### todo
+
+- Storing thumbnails, screenshots, timeline previews, etc in sqlite may make sense for large libraries.
+  - [For <100KB files with the right page size, sqlite can outperform storing file paths](https://www.sqlite.org/intern-v-extern-blob.html)
+  - It makes manageament of metadata far easier
+  - It should be separate from the main database and everything in it should regenerate if deleted, to make cleanup easy.
+- Sign imgproxy/vidproxy/etc urls to prevent tampering/access to files that shoudlnt be allowed
+- Setup auth/acl, doing it earlier will be better
+- SigLIP may be better than CLIP
+- Show similarity scores on related images
+- Thresholds for things like face matching should be tested against a real dataset so we can find optimal thresholds for a target accuracy, and provide a table for users to pick what they'd rather.

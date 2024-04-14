@@ -1,15 +1,15 @@
-import { ArrayType, Check, Collection, Entity, OneToMany, OneToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/core";
+import { ArrayType, Collection, Entity, OneToMany, OneToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/core";
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 import { TagEntity } from "../../file/entities/tag.entity.js";
 import { FaceEntity } from "./face.entity.js";
 
 @Entity({ tableName: "people" })
 @ObjectType("Person")
-@Check<PersonEntity>({
-  // require that the tag is non-nullable if the person has a name
-  // todo: test that this actually works
-  expression: (columns) => `${columns.name} IS NULL OR ${columns.tag} IS NOT NULL`,
-})
+// todo: require that the tag is non-nullable when the person has a name
+// that can't be done now because sqlite doesn't like constaints.
+// @Check<PersonEntity>({
+//   expression: (columns) => `${columns.name} IS NULL OR ${columns.tag} IS NOT NULL`,
+// })
 export class PersonEntity {
   @PrimaryKey({ autoincrement: true })
   @Field(() => ID)

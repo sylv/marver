@@ -1,4 +1,4 @@
-
+/* eslint-disable */
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -42,7 +42,7 @@ export type Face = {
   __typename?: 'Face';
   boundingBox: BoundingBox;
   id: Scalars['ID']['output'];
-  person?: Maybe<Person>;
+  person: Person;
 };
 
 export type File = {
@@ -225,8 +225,8 @@ export type Person = {
   deathDate?: Maybe<Scalars['DateTime']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  tag: Tag;
+  name?: Maybe<Scalars['String']['output']>;
+  tag?: Maybe<Tag>;
 };
 
 export type Query = {

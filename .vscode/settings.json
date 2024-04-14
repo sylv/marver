@@ -3,6 +3,7 @@
   "npm.scriptExplorerExclude": ["^((?!watch|generate:watch).)*$"],
   "typescript.preferences.importModuleSpecifier": "relative",
   "graphql-config.load.rootDir": "packages/blahaj/",
+  "rust-analyzer.procMacro.ignored": { "napi-derive": ["napi"] },
   "tailwindCSS.experimental.classRegex": [
     ["clsx\\(([^)]*)\\)", "'([^']*)'", "\"([^']*)\""],
     [":\\s*?[\"'`]([^\"'`]*).*?,"],

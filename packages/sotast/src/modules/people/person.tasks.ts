@@ -1,28 +1,29 @@
 import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
 import { InjectRepository } from "@mikro-orm/nestjs";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { IMAGE_EXTENSIONS } from "../../constants.js";
 import { embeddingToBuffer } from "../../helpers/embedding.js";
 import { FileEntity } from "../file/entities/file.entity.js";
 import { Queue } from "../queue/queue.decorator.js";
-import { RehoboamService } from "../rehoboam/rehoboam.service.js";
 import { FaceEntity } from "./entities/face.entity.js";
-import type { PersonService } from "./person.service.js";
 import { PersonEntity } from "./entities/person.entity.js";
+import { FaceService } from "./face.service.js";
+import { PersonService } from "./person.service.js";
 
 @Injectable()
 export class PersonTasks {
   @InjectRepository(FaceEntity) private faceRepo: EntityRepository<FaceEntity>;
   @InjectRepository(PersonEntity) private personRepo: EntityRepository<PersonEntity>;
+  private logger = new Logger(PersonTasks.name);
 
   constructor(
-    private rehoboamService: RehoboamService,
     private personService: PersonService,
+    private faceService: FaceService,
     private em: EntityManager,
   ) {}
 
   @Queue("IMAGE_DETECT_FACES", {
-    targetConcurrency: 1,
+    targetConcurrency: 2,
     fileFilter: {
       extension: {
         $in: [...IMAGE_EXTENSIONS],
@@ -34,29 +35,37 @@ export class PersonTasks {
     },
   })
   async detectFaces(file: FileEntity) {
-    const faces = await this.rehoboamService.detectFaces(file);
+    // const faces = await this.rehoboamService.detectFaces(file);
+    const faces = await this.faceService.detectFaces(file.path);
     if (!faces[0]) {
       file.info.hasFaces = false;
       await this.em.persistAndFlush(file);
       return;
     }
 
+    this.logger.debug(`Detected ${faces.length} faces in ${file.path}`);
     file.info.hasFaces = true;
     for (const face of faces) {
       if (!face.embedding) throw new Error("Face embedding expected");
-      const embeddingBuffer = embeddingToBuffer(face.embedding!);
+      const embeddingBuffer = embeddingToBuffer({
+        value: face.embedding,
+      });
 
-      let person: PersonEntity | number | null = await this.personService.findPersonFromFace(embeddingBuffer);
-      if (!person) {
-        person = this.personRepo.create({});
+      let personOrPersonId: PersonEntity | number | null =
+        await this.personService.findPersonFromFace(embeddingBuffer);
+
+      if (!personOrPersonId) {
+        personOrPersonId = this.personRepo.create({});
+      } else {
+        this.logger.debug(`Matched face to person ${personOrPersonId}`);
       }
 
       this.faceRepo.create(
         {
           file: file,
-          boundingBox: face.bounding_box!,
+          boundingBox: face.prediction.bbox,
           embedding: embeddingBuffer,
-          person: person,
+          person: personOrPersonId,
         },
         { persist: true },
       );

@@ -96,9 +96,9 @@ export interface Embedding {
      */
     value: number[];
     /**
-     * @generated from protobuf field: int32 source = 2;
+     * @generated from protobuf field: optional string source = 2;
      */
-    source: number;
+    source?: string;
 }
 /**
  * @generated from protobuf message me.sylver.marver.core.Subtitle
@@ -387,13 +387,12 @@ class Embedding$Type extends MessageType<Embedding> {
     constructor() {
         super("me.sylver.marver.core.Embedding", [
             { no: 1, name: "value", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 2 /*ScalarType.FLOAT*/ },
-            { no: 2, name: "source", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 2, name: "source", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Embedding>): Embedding {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.value = [];
-        message.source = 0;
         if (value !== undefined)
             reflectionMergePartial<Embedding>(this, message, value);
         return message;
@@ -410,8 +409,8 @@ class Embedding$Type extends MessageType<Embedding> {
                     else
                         message.value.push(reader.float());
                     break;
-                case /* int32 source */ 2:
-                    message.source = reader.int32();
+                case /* optional string source */ 2:
+                    message.source = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -432,9 +431,9 @@ class Embedding$Type extends MessageType<Embedding> {
                 writer.float(message.value[i]);
             writer.join();
         }
-        /* int32 source = 2; */
-        if (message.source !== 0)
-            writer.tag(2, WireType.Varint).int32(message.source);
+        /* optional string source = 2; */
+        if (message.source !== undefined)
+            writer.tag(2, WireType.LengthDelimited).string(message.source);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

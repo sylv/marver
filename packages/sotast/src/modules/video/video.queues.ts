@@ -144,12 +144,10 @@ export class VideoQueues {
 
     const embeddings = await this.clipService.encodeImageBatch(framePaths);
     for (const embedding of embeddings) {
-      // todo: biggest frame in the first ~20% should be primary
       this.fileEmbeddingRepo.create(
         {
           data: embeddingToBuffer(embedding),
           file: file,
-          primary: false,
         },
         { persist: true },
       );
@@ -163,6 +161,11 @@ export class VideoQueues {
     targetConcurrency: 1,
     fileFilter: {
       timeline: null,
+      info: {
+        durationSeconds: {
+          $gte: 180,
+        },
+      },
     },
   })
   async generateTimeline(
@@ -261,6 +264,11 @@ export class VideoQueues {
     targetConcurrency: 1,
     fileFilter: {
       poster: null,
+      info: {
+        durationSeconds: {
+          $gte: 120,
+        },
+      },
     },
   })
   async pickPoster(file: FileEntity, { frames }: Awaited<ReturnType<VideoQueues["extractScreenshots"]>>) {

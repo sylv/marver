@@ -1,5 +1,5 @@
-import { EntityRepository, sql, wrap, type FilterQuery, type QueryOrderMap } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository, sql, wrap, type FilterQuery, type QueryOrderMap } from "@mikro-orm/better-sqlite";
+import { InjectRepository } from "@mikro-orm/nestjs";
 import {
   Args,
   ArgsType,
@@ -11,32 +11,32 @@ import {
   ResolveField,
   Resolver,
   registerEnumType,
-} from '@nestjs/graphql';
-import bytes from 'bytes';
-import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-import { createConnection } from 'nest-graphql-utils';
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../constants.js';
-import { AutoPopulate, inferPopulate } from '../../helpers/autoloader.js';
-import { embeddingToBuffer } from '../../helpers/embedding.js';
-import { PaginationArgs } from '../../pagination.js';
-import { CLIPService } from '../clip/clip.service.js';
-import { ImageService } from '../image/image.service.js';
-import { FileConnection, FileEntity } from './entities/file.entity.js';
+} from "@nestjs/graphql";
+import bytes from "bytes";
+import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from "class-validator";
+import { createConnection } from "nest-graphql-utils";
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "../../constants.js";
+import { AutoPopulate, inferPopulate } from "../../helpers/autoloader.js";
+import { embeddingToBuffer } from "../../helpers/embedding.js";
+import { PaginationArgs } from "../../pagination.js";
+import { CLIPService } from "../clip/clip.service.js";
+import { ImageService } from "../image/image.service.js";
+import { FileConnection, FileEntity } from "./entities/file.entity.js";
 
 enum FileType {
-  Image,
-  Video,
+  Image = 0,
+  Video = 1,
 }
 
-registerEnumType(FileType, { name: 'FileType' });
+registerEnumType(FileType, { name: "FileType" });
 
 enum SimilarityType {
-  Related,
-  Similar,
-  SameFolder,
-  SameType,
-  Images,
-  Videos,
+  Related = 0,
+  Similar = 1,
+  SameFolder = 2,
+  SameType = 3,
+  Images = 4,
+  Videos = 5,
 }
 
 @ArgsType()
@@ -46,22 +46,22 @@ class SimilarFilter extends PaginationArgs {
   type?: SimilarityType;
 }
 
-registerEnumType(SimilarityType, { name: 'SimilarityType' });
+registerEnumType(SimilarityType, { name: "SimilarityType" });
 
 enum FileSort {
-  DiskCreated,
-  Size,
-  Name,
-  Path,
+  DiskCreated = 0,
+  Size = 1,
+  Name = 2,
+  Path = 3,
 }
 
 enum FileSortDirection {
-  ASC = 'ASC',
-  DESC = 'DESC',
+  ASC = "ASC",
+  DESC = "DESC",
 }
 
-registerEnumType(FileSort, { name: 'FileSort' });
-registerEnumType(FileSortDirection, { name: 'FileSortDirection' });
+registerEnumType(FileSort, { name: "FileSort" });
+registerEnumType(FileSortDirection, { name: "FileSortDirection" });
 
 @ArgsType()
 class FileFilter extends PaginationArgs {
@@ -106,8 +106,8 @@ export class FileResolver {
   ) {}
 
   @Query(() => FileEntity, { nullable: true })
-  async file(@Args('id') fileId: string, @Info() info: any) {
-    const populate = inferPopulate(FileEntity, 'file', info);
+  async file(@Args("id") fileId: string, @Info() info: any) {
+    const populate = inferPopulate(FileEntity, "file", info);
     return this.fileRepo.findOne(fileId, {
       populate,
     });
@@ -119,7 +119,7 @@ export class FileResolver {
       paginationArgs: filter,
       defaultPageSize: 25,
       paginate: async (args) => {
-        const populate = inferPopulate(FileEntity, 'files.edges.node', info);
+        const populate = inferPopulate(FileEntity, "files.edges.node", info);
         const orderBy: QueryOrderMap<FileEntity> = {};
         const filters: FilterQuery<FileEntity>[] = [
           {
@@ -145,8 +145,8 @@ export class FileResolver {
           const serialized = embeddingToBuffer(embedding);
           const qb = this.fileRepo
             .createQueryBuilder()
-            .select('*')
-            .leftJoin('embeddings', 'embeddings')
+            .select("*")
+            .leftJoin("embeddings", "embeddings")
             .where({
               $and: filters,
               embeddings: { $ne: null },
@@ -164,7 +164,7 @@ export class FileResolver {
             .orderBy({
               [sql`similarity`]: filter.direction,
             })
-            .groupBy('id')
+            .groupBy("id")
             .limit(args.limit)
             .offset(args.offset);
 
@@ -330,7 +330,7 @@ export class FileResolver {
   @ResolveField(() => String, { nullable: true })
   previewBase64(@Parent() file: FileEntity) {
     if (!file.preview) return null;
-    return file.preview.toString('base64');
+    return file.preview.toString("base64");
   }
 
   @ResolveField(() => FileType, { nullable: true })
@@ -347,7 +347,7 @@ export class FileResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  @AutoPopulate(['poster', 'thumbnail'])
+  @AutoPopulate(["poster", "thumbnail"])
   async thumbnailUrl(@Parent() _fileRef: { id: string }) {
     // graphql requires the @Query(() => File) or whatever be serialized
     // so it can validate fields exist, then the serialized object is passed to
@@ -358,7 +358,7 @@ export class FileResolver {
     // todo: this is genuinely bad and unreliable.
     const media = this.fileRepo.getReference(_fileRef.id);
     if (!wrap(media).isInitialized()) {
-      throw new Error('File was expected to be in the cache and initialized.');
+      throw new Error("File was expected to be in the cache and initialized.");
     }
 
     return this.imageService.createMediaProxyUrl(media as any);

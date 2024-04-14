@@ -1,36 +1,38 @@
+use super::detection::FacePrediction;
+use crate::util::crop_with_alignment;
 use image::{imageops::FilterType, DynamicImage};
 use ndarray::{Array, Array4, CowArray, IxDyn};
-use ort::{tensor::OrtOwnedTensor, Environment, Session, SessionBuilder, Value};
-use std::{path::PathBuf, sync::Arc};
+use ort::{inputs, GraphOptimizationLevel, Session};
 
-use super::{retinaface::FacePrediction, util::crop_with_alignment};
-
-pub struct ArcFace {
+/// Implementation of ArcFace
+/// It takes cropped images of aligned faces and returns embeddings.
+pub struct FaceEmbedding {
     session: Session,
 }
 
-impl ArcFace {
-    pub async fn init(environment: Arc<Environment>, model_path: PathBuf) -> anyhow::Result<Self> {
-        let session = SessionBuilder::new(&environment)?.with_model_from_file(model_path)?;
+impl FaceEmbedding {
+    pub fn new(model_path: String) -> anyhow::Result<Self> {
+        let session = Session::builder()?
+            .with_optimization_level(GraphOptimizationLevel::Level1)?
+            .commit_from_file(model_path)?;
+
         Ok(Self { session })
     }
 
     pub fn predict(
         &self,
-        image_bytes: &[u8],
+        image: &DynamicImage,
         faces: Vec<FacePrediction>,
     ) -> anyhow::Result<Vec<(FacePrediction, Vec<f32>)>> {
         let session = &self.session;
-        let image = image::load_from_memory(image_bytes)?;
         let mut embeddings: Vec<(FacePrediction, Vec<f32>)> = Vec::new();
 
         for face in faces.iter() {
             // todo: batch inference
             let input_tensor = Self::preprocess(&image, face.clone())?;
-            let input = Value::from_array(session.allocator(), &input_tensor)?;
-            let outputs = session.run(vec![input])?;
+            let outputs = session.run(inputs![&input_tensor]?)?;
 
-            let embedding: OrtOwnedTensor<f32, _> = outputs[0].try_extract()?;
+            let embedding = outputs[0].try_extract_tensor::<f32>()?;
             let embedding = embedding.view();
             let embedding = embedding.to_slice().unwrap().to_vec();
             let embedding = Self::normalize_embedding(embedding);
@@ -51,7 +53,7 @@ impl ArcFace {
         image: &DynamicImage,
         face: FacePrediction,
     ) -> anyhow::Result<CowArray<f32, IxDyn>> {
-        let image = crop_with_alignment(image, &face);
+        let image = crop_with_alignment(image, &face, None);
         let image = image.resize_exact(112, 112, FilterType::CatmullRom);
 
         let image = image.to_rgb8();

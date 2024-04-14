@@ -38,7 +38,8 @@
       "complexity": {
         "useOptionalChain": "off",
         "noBannedTypes": "off",
-        "useLiteralKeys": "off"
+        "useLiteralKeys": "off",
+        "noUselessSwitchCase": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "off"

@@ -1,8 +1,15 @@
 {
   "name": "@ryanke/rehoboam",
   "version": "0.0.1",
+  "main": "index.js",
+  "typings": "index.d.ts",
   "scripts": {
-    "watch": "cargo watch -x run",
-    "build": "cargo build --release"
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release --strip"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.1",
+    "@types/node": "^20.12.7",
+    "esbuild": "^0.20.2"
   }
 }

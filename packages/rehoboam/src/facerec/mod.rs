@@ -1,85 +1,57 @@
-use std::path::PathBuf;
+use self::{detection::FaceDetection, embedding::FaceEmbedding, face::Face};
+use crate::error::handle_result;
+use napi_derive::napi;
+use std::sync::Arc;
 
-use crate::util::{ensure_zip, get_models_dir};
+pub mod detection;
+mod embedding;
+mod face;
 
-pub mod arcface;
-pub mod retinaface;
-mod util;
-
-#[derive(Debug, Clone)]
-pub struct BoundBox {
-    pub x1: f32,
-    pub y1: f32,
-    pub x2: f32,
-    pub y2: f32,
+#[napi(object)]
+pub struct FaceRecognitionOptions {
+    pub detection_model_path: String,
+    pub embedding_model_path: String,
 }
 
-impl BoundBox {
-    pub fn to_xyxy(&self, width: u32, height: u32) -> (u32, u32, u32, u32) {
-        let x1 = (self.x1 * width as f32) as u32;
-        let y1 = (self.y1 * height as f32) as u32;
-        let x2 = (self.x2 * width as f32) as u32;
-        let y2 = (self.y2 * height as f32) as u32;
-        (x1, y1, x2, y2)
-    }
+#[napi]
+pub struct FaceRecognition {
+    // todo: these keep the models in memory, they should be lazy loaded/unloaded like clip
+    detection: Arc<FaceDetection>,
+    embedding: Arc<FaceEmbedding>,
 }
 
-impl TryInto<BoundBox> for &[f32] {
-    type Error = anyhow::Error;
+#[napi]
+impl FaceRecognition {
+    #[napi(constructor)]
+    pub fn new(options: FaceRecognitionOptions) -> anyhow::Result<Self> {
+        let detection = FaceDetection::new(options.detection_model_path)?;
+        let embedding = FaceEmbedding::new(options.embedding_model_path)?;
 
-    fn try_into(self) -> Result<BoundBox, Self::Error> {
-        if self.len() != 4 {
-            return Err(anyhow::anyhow!(
-                "Expected 4 elements in slice, got {}",
-                self.len()
-            ));
-        }
-
-        Ok(BoundBox {
-            x1: self[0],
-            y1: self[1],
-            x2: self[2],
-            y2: self[3],
+        Ok(Self {
+            detection: Arc::new(detection),
+            embedding: Arc::new(embedding),
         })
     }
-}
 
-// todo: should be configurable
-const MODEL_ZIP_MD5: &str = "6c0e929fd3b6ab517170b732ced18c68";
-const MODEL_ZIP_URL: &str =
-    "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip";
+    #[napi]
+    /// Predict faces in an image, returning the faces and embeddings.
+    pub async fn predict(&self, image_path: String) -> napi::Result<Vec<Face>> {
+        let face_det = self.detection.clone();
+        let face_emb = self.embedding.clone();
+        let task = tokio::spawn(async move {
+            let image = image::io::Reader::open(image_path)?.decode()?;
+            let faces = face_det.predict(&image)?;
+            let embeddings = face_emb.predict(&image, faces)?;
 
-pub async fn download_models() -> anyhow::Result<(PathBuf, PathBuf)> {
-    let mut base = get_models_dir();
-    base.push("facerec");
-    base.push("buffalo_l");
+            Ok(embeddings
+                .into_iter()
+                .map(|(prediction, embedding)| Face {
+                    prediction,
+                    embedding: embedding.into_iter().map(|v| v as f64).collect(),
+                })
+                .collect())
+        });
 
-    let files = ensure_zip(MODEL_ZIP_URL, &base, Some(MODEL_ZIP_MD5), |f| {
-        let file_name = f.file_name().unwrap().to_str().unwrap();
-        file_name.starts_with("det_") || file_name.starts_with("w600k_")
-    })
-    .await?;
-
-    let det_model = files
-        .iter()
-        .find(|f| f.file_name().unwrap().to_str().unwrap().starts_with("det_"))
-        .unwrap();
-    let rec_model = files
-        .iter()
-        .find(|f| {
-            f.file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .starts_with("w600k_")
-        })
-        .unwrap();
-
-    if !det_model.exists() || !rec_model.exists() {
-        return Err(anyhow::anyhow!(
-            "Missing expected model files in unzipped package"
-        ));
+        handle_result(task).await
     }
-
-    Ok((det_model.clone(), rec_model.clone()))
 }

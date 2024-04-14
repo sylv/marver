@@ -12,30 +12,30 @@ import {
   Property,
   Unique,
   type Ref,
-} from '@mikro-orm/better-sqlite';
-import { Field, ID, ObjectType } from '@nestjs/graphql';
-import mime from 'mime-types';
-import { Connection } from 'nest-graphql-utils';
-import { extname, join } from 'node:path';
-import { ulid } from 'ulid';
-import { config } from '../../../config.js';
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../../../constants.js';
-import { AutoPopulate } from '../../../helpers/autoloader.js';
-import { CollectionEntity } from '../../collection/collection.entity.js';
-import { FaceEntity } from '../../people/entities/face.entity.js';
-import { JobStateEntity } from '../../queue/job-state.entity.js';
-import { FilePosterEntity } from './assets/file-poster.entity.js';
-import { FileThumbnailEntity } from './assets/file-thumbnail.entity.js';
-import { FileTimelineEntity } from './assets/file-timeline.entity.js';
-import { FileEmbeddingEntity } from './file-embedding.entity.js';
-import { FileExifDataEntity } from './file-exif.entity.js';
-import { FileInfoEmbeddable } from './file-info.entity.js';
-import { FilePerceptualHashEntity } from './file-perceptual-hash.entity.js';
-import { FileTagEntity } from './file-tag.entity.js';
-import { FileTextEntity } from './file-text.entity.js';
+} from "@mikro-orm/better-sqlite";
+import { Field, ID, ObjectType } from "@nestjs/graphql";
+import mime from "mime-types";
+import { Connection } from "nest-graphql-utils";
+import { extname, join } from "node:path";
+import { ulid } from "ulid";
+import { config } from "../../../config.js";
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "../../../constants.js";
+import { AutoPopulate } from "../../../helpers/autoloader.js";
+import { CollectionEntity } from "../../collection/collection.entity.js";
+import { FaceEntity } from "../../people/entities/face.entity.js";
+import { JobStateEntity } from "../../queue/job-state.entity.js";
+import { FilePosterEntity } from "./assets/file-poster.entity.js";
+import { FileThumbnailEntity } from "./assets/file-thumbnail.entity.js";
+import { FileTimelineEntity } from "./assets/file-timeline.entity.js";
+import { FileEmbeddingEntity } from "./file-embedding.entity.js";
+import { FileExifDataEntity } from "./file-exif.entity.js";
+import { FileInfoEmbeddable } from "./file-info.entity.js";
+import { FilePerceptualHashEntity } from "./file-perceptual-hash.entity.js";
+import { FileTagEntity } from "./file-tag.entity.js";
+import { FileTextEntity } from "./file-text.entity.js";
 
-@Entity({ tableName: 'files' })
-@ObjectType('File')
+@Entity({ tableName: "files" })
+@ObjectType("File")
 export class FileEntity {
   @PrimaryKey()
   @Field(() => ID)
@@ -73,7 +73,7 @@ export class FileEntity {
 
   /** Thumbhash-computed preview */
   // todo: this should be lazy-loaded, only if graphql requests it.
-  @Property({ type: 'blob', nullable: true })
+  @Property({ type: "blob", nullable: true })
   preview?: Buffer;
 
   @Property()
@@ -96,51 +96,88 @@ export class FileEntity {
   @Field(() => FileInfoEmbeddable)
   info: FileInfoEmbeddable;
 
-  @OneToMany(() => FileTagEntity, (tag) => tag.file)
+  @OneToMany(
+    () => FileTagEntity,
+    (tag) => tag.file,
+  )
   tags = new Collection<FileTagEntity>(this);
 
   @AutoPopulate()
-  @OneToOne(() => FileThumbnailEntity, (thumbnail) => thumbnail.file, { ref: true, nullable: true })
+  @OneToOne(
+    () => FileThumbnailEntity,
+    (thumbnail) => thumbnail.file,
+    { ref: true, nullable: true },
+  )
   @Field(() => FileThumbnailEntity)
   thumbnail?: Ref<FileThumbnailEntity>;
 
   @AutoPopulate()
-  @OneToOne(() => FilePosterEntity, (poster) => poster.file, { ref: true, nullable: true })
+  @OneToOne(
+    () => FilePosterEntity,
+    (poster) => poster.file,
+    { ref: true, nullable: true },
+  )
   @Field(() => FilePosterEntity)
   poster?: Ref<FilePosterEntity>;
 
   @AutoPopulate()
-  @OneToOne(() => FileTimelineEntity, (timeline) => timeline.file, { ref: true, nullable: true })
+  @OneToOne(
+    () => FileTimelineEntity,
+    (timeline) => timeline.file,
+    { ref: true, nullable: true },
+  )
   @Field(() => FileTimelineEntity)
   timeline?: Ref<FileTimelineEntity>;
 
   @AutoPopulate()
-  @OneToOne(() => FileExifDataEntity, (exif) => exif.file, { ref: true, nullable: true })
+  @OneToOne(
+    () => FileExifDataEntity,
+    (exif) => exif.file,
+    { ref: true, nullable: true },
+  )
   @Field(() => FileExifDataEntity, { nullable: true })
   exifData?: Ref<FileExifDataEntity>;
 
-  @OneToMany(() => FilePerceptualHashEntity, (phash) => phash.file)
+  @OneToMany(
+    () => FilePerceptualHashEntity,
+    (phash) => phash.file,
+  )
   perceptualHashes = new Collection<FilePerceptualHashEntity>(this);
 
-  @OneToMany(() => FileEmbeddingEntity, (embedding) => embedding.file)
+  @OneToMany(
+    () => FileEmbeddingEntity,
+    (embedding) => embedding.file,
+  )
   embeddings = new Collection<FileEmbeddingEntity>(this);
 
   @AutoPopulate()
-  @ManyToMany(() => CollectionEntity, (collection) => collection.files)
+  @ManyToMany(
+    () => CollectionEntity,
+    (collection) => collection.files,
+  )
   @Field(() => [CollectionEntity])
   collections = new Collection<CollectionEntity>(this);
 
   @AutoPopulate()
-  @OneToMany(() => FaceEntity, (face) => face.file)
+  @OneToMany(
+    () => FaceEntity,
+    (face) => face.file,
+  )
   @Field(() => [FaceEntity])
   faces = new Collection<FaceEntity>(this);
 
   @AutoPopulate()
-  @OneToMany(() => FileTextEntity, (text) => text.file)
+  @OneToMany(
+    () => FileTextEntity,
+    (text) => text.file,
+  )
   @Field(() => [FileTextEntity])
   texts = new Collection<FileTextEntity>(this);
 
-  @OneToMany(() => JobStateEntity, (jobState) => jobState.file)
+  @OneToMany(
+    () => JobStateEntity,
+    (jobState) => jobState.file,
+  )
   @AutoPopulate()
   @Field(() => [JobStateEntity])
   jobStates = new Collection<JobStateEntity>(this);
@@ -149,7 +186,7 @@ export class FileEntity {
   @Field(() => String, { nullable: true })
   get mimeType() {
     if (!this.path) return;
-    if (this.path.endsWith('jfif')) return 'image/jpeg';
+    if (this.path.endsWith("jfif")) return "image/jpeg";
     return mime.lookup(this.path) || null;
   }
 
@@ -183,27 +220,24 @@ export class FileEntity {
     return false;
   }
 
-  getPrimaryEmbedding() {
-    return this.embeddings.getItems().find((embedding) => embedding.primary);
+  tryGetRelativePath() {
+    const source = config.source_dirs.find((dir) => this.path.startsWith(dir));
+    if (source) {
+      return this.path.slice(source.length);
+    }
+
+    return this.path;
   }
 
   static getAssetFolder(id: string) {
     const lastTwoChars = id.slice(-2);
-    return join(config.metadata_dir, 'file_metadata', lastTwoChars, id);
+    return join(config.metadata_dir, "file_metadata", lastTwoChars, id);
   }
 
-  [OptionalProps]:
-    | 'name'
-    | 'assetFolder'
-    | 'directory'
-    | 'isSupportedMimeType'
-    | 'corrupted'
-    | 'unavailable'
-    | 'checkedAt'
-    | 'indexedAt';
+  [OptionalProps]: "name" | "assetFolder" | "directory" | "isSupportedMimeType" | "corrupted" | "unavailable" | "checkedAt" | "indexedAt";
 }
 
 @ObjectType()
 export class FileConnection extends Connection(FileEntity, {
-  edgeName: 'FileEdge',
+  edgeName: "FileEdge",
 }) {}

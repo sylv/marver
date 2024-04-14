@@ -1,65 +1,61 @@
-use super::util::{distance2bbox, distance2kps, hard_nms, transpose_rgb};
-use super::BoundBox;
+use crate::types::{BoundBox, Landmark};
+use crate::util::{distance2bbox, distance2kps, hard_nms, transpose_rgb};
 use image::{imageops::FilterType, DynamicImage, GenericImageView, ImageBuffer, Rgba};
+use napi_derive::napi;
 use ndarray::{Array3, Axis};
-use ort::{Environment, Session, SessionBuilder, Value};
+use ort::{inputs, GraphOptimizationLevel, Session, SessionOutputs};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::Arc;
 
-const NMS_THRESHOLD: f32 = 0.4;
+const NMS_THRESHOLD: f64 = 0.4;
 const DET_THRESHOLD: f32 = 0.5;
 const INPUT_MEAN: f32 = 127.5;
 const INPUT_STD: f32 = 128.0;
 const INPUT_SIZE: usize = 640;
 
-pub struct RetinaFace {
+#[derive(Debug, Clone)]
+#[napi(object)]
+pub struct FacePrediction {
+    pub score: f64,
+    pub bbox: BoundBox,
+    pub landmarks: Vec<Landmark>,
+}
+
+impl FacePrediction {
+    pub fn landmarks_as_pixels(&self, image_size: (u32, u32)) -> Vec<Landmark> {
+        self.landmarks
+            .iter()
+            .map(|landmark| Landmark {
+                x: landmark.x * image_size.0 as f64,
+                y: landmark.y * image_size.1 as f64,
+            })
+            .collect()
+    }
+}
+
+/// Implementation of RetinaFace
+/// It finds faces in images, returning a bounding box and key points (eyes, mouth, etc)
+pub struct FaceDetection {
     session: Session,
     fmc: usize,
     feat_stride_fpn: Vec<usize>,
     num_anchors: usize,
 }
 
-#[derive(Debug, Clone)]
-pub struct FacePrediction {
-    pub score: f32,
-    pub bbox: BoundBox,
-    pub landmarks: Vec<[f32; 2]>,
-}
+impl FaceDetection {
+    pub(crate) fn new(model_path: String) -> anyhow::Result<Self> {
+        let session = Session::builder()?
+            .with_optimization_level(GraphOptimizationLevel::Level1)?
+            .commit_from_file(model_path)?;
 
-impl FacePrediction {
-    pub fn landmarks_as_pixels(&self, image_size: (u32, u32)) -> Vec<[f32; 2]> {
-        self.landmarks
-            .iter()
-            .map(|[x, y]| [x * image_size.0 as f32, y * image_size.1 as f32])
-            .collect()
-    }
-}
-
-impl RetinaFace {
-    pub async fn init(environment: Arc<Environment>, model_path: PathBuf) -> anyhow::Result<Self> {
-        let session = SessionBuilder::new(&environment)?.with_model_from_file(model_path)?;
         let outputs = &session.outputs;
         match outputs.len() {
-            6 => Ok(Self {
+            6 | 9 => Ok(Self {
                 session,
                 fmc: 3,
                 feat_stride_fpn: vec![8, 16, 32],
                 num_anchors: 2,
             }),
-            9 => Ok(Self {
-                session,
-                fmc: 3,
-                feat_stride_fpn: vec![8, 16, 32],
-                num_anchors: 2,
-            }),
-            12 => Ok(Self {
-                session,
-                fmc: 5,
-                feat_stride_fpn: vec![8, 16, 32, 64, 128],
-                num_anchors: 1,
-            }),
-            15 => Ok(Self {
+            12 | 15 => Ok(Self {
                 session,
                 fmc: 5,
                 feat_stride_fpn: vec![8, 16, 32, 64, 128],
@@ -69,24 +65,22 @@ impl RetinaFace {
         }
     }
 
-    pub fn predict(&self, image_bytes: &[u8]) -> anyhow::Result<Vec<FacePrediction>> {
+    pub(crate) fn predict(&self, image: &DynamicImage) -> anyhow::Result<Vec<FacePrediction>> {
         let session = &self.session;
-        let image = image::load_from_memory(image_bytes)?;
+
         let image_size = image.dimensions();
         let (input_tensor, scaled_size) = Self::preprocess(&image)?;
 
+        // todo: support batching
         let batched_tensor = input_tensor.insert_axis(Axis(0));
-        let batched_tensor = batched_tensor.into_dyn().into();
-
-        let input = Value::from_array(session.allocator(), &batched_tensor)?;
-        let outputs = session.run(vec![input])?;
+        let outputs = session.run(inputs![batched_tensor]?)?;
 
         self.postprocess(outputs, image_size, scaled_size)
     }
 
     fn postprocess(
         &self,
-        outputs: Vec<Value>,
+        outputs: SessionOutputs,
         original_size: (u32, u32),
         scaled_size: (u32, u32),
     ) -> anyhow::Result<Vec<FacePrediction>> {
@@ -98,18 +92,18 @@ impl RetinaFace {
         let scale = f32::max(scale_x, scale_y);
 
         for (idx, stride) in self.feat_stride_fpn.iter().enumerate() {
-            let scores = outputs[idx].try_extract()?;
+            let scores = outputs[idx].try_extract_tensor()?;
             let scores = scores.view();
-            let scores = scores.as_slice().unwrap();
+            let scores: &[f32] = scores.as_slice().unwrap();
 
-            let mut bbox_preds = outputs[idx + self.fmc]
-                .try_extract()?
+            let mut bbox_preds: Vec<f32> = outputs[idx + self.fmc]
+                .try_extract_tensor()?
                 .view()
                 .as_slice()
                 .unwrap()
                 .to_vec();
-            let mut kps_preds = outputs[idx + self.fmc * 2]
-                .try_extract()?
+            let mut kps_preds: Vec<f32> = outputs[idx + self.fmc * 2]
+                .try_extract_tensor()?
                 .view()
                 .as_slice()
                 .unwrap()
@@ -131,7 +125,7 @@ impl RetinaFace {
                 let mut centers = Vec::with_capacity(height * width * self.num_anchors);
                 for i in 0..height {
                     for j in 0..width {
-                        for k in 0..self.num_anchors {
+                        for _ in 0..self.num_anchors {
                             centers.push([j as f32 * *stride as f32, i as f32 * *stride as f32]);
                         }
                     }
@@ -156,20 +150,18 @@ impl RetinaFace {
                 let original_height = original_size.1 as f32;
 
                 predictions.push(FacePrediction {
-                    score: scores[ind],
+                    score: scores[ind] as f64,
                     bbox: BoundBox {
-                        x1: (bbox[0] * scale) / original_width,
-                        y1: (bbox[1] * scale) / original_height,
-                        x2: (bbox[2] * scale) / original_width,
-                        y2: (bbox[3] * scale) / original_height,
+                        x1: ((bbox[0] * scale) / original_width) as f64,
+                        y1: ((bbox[1] * scale) / original_height) as f64,
+                        x2: ((bbox[2] * scale) / original_width) as f64,
+                        y2: ((bbox[3] * scale) / original_height) as f64,
                     },
                     landmarks: kps
                         .chunks_exact(2)
-                        .map(|kps| {
-                            [
-                                (kps[0] * scale) / original_width,
-                                (kps[1] * scale) / original_height,
-                            ]
+                        .map(|kps| Landmark {
+                            x: ((kps[0] * scale) / original_width) as f64,
+                            y: ((kps[1] * scale) / original_height) as f64,
                         })
                         .collect(),
                 });

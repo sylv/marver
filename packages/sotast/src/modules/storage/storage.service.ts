@@ -1,14 +1,13 @@
-import { EntityManager } from '@mikro-orm/better-sqlite';
-import { type EntityRepository } from '@mikro-orm/core';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { RawImage } from '@xenova/transformers';
-import { once } from 'node:events';
-import { createReadStream, type ReadStream } from 'node:fs';
-import { readFile } from 'node:fs/promises';
-import { FileEntity } from '../file/entities/file.entity';
+import { once } from "node:events";
+import { type ReadStream, createReadStream } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { EntityManager } from "@mikro-orm/better-sqlite";
+import { type EntityRepository } from "@mikro-orm/core";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { FileEntity } from "../file/entities/file.entity";
 
-const UNAVAILBLE_ERROR_CODES = new Set(['ENOENT', 'EACCES', 'EISDIR']);
+const UNAVAILBLE_ERROR_CODES = new Set(["ENOENT", "EACCES", "EISDIR"]);
 
 type CreateReadStreamOptions = Parameters<typeof createReadStream>[1];
 
@@ -27,7 +26,7 @@ export class StorageService {
   ): Promise<ReadStream | null> {
     try {
       const stream = createReadStream(file.path, options);
-      await once(stream, 'open');
+      await once(stream, "open");
       return stream;
     } catch (error: any) {
       if (UNAVAILBLE_ERROR_CODES.has(error.code)) {
@@ -49,7 +48,7 @@ export class StorageService {
     options?: CreateReadStreamOptions,
   ): Promise<ReadStream> {
     const stream = await this.createReadStream(file, options);
-    if (!stream) throw new BadRequestException('File is unavailable');
+    if (!stream) throw new BadRequestException("File is unavailable");
     return stream;
   }
 
@@ -70,16 +69,5 @@ export class StorageService {
 
       throw error;
     }
-  }
-
-  /**
-   * The same as StorageService.readFile but returns a RawImage.
-   */
-  async readImage(file: { id: string; path: string }): Promise<RawImage | null> {
-    // todo: instead of this, we should lazy-load the image when it's requested.
-    // probably imitate the RawImage class. keep a sharp instance based on the path, not the image bytes.
-    const buffer = await this.readFile(file);
-    if (!buffer) return null;
-    return RawImage.fromBlob(new Blob([buffer]));
   }
 }

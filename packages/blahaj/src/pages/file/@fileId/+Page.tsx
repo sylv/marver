@@ -61,11 +61,11 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
                 height={data.file?.info.height || undefined}
                 width={data.file?.info.width || undefined}
                 durationSeconds={data.file.info.durationSeconds || undefined}
-                className="max-h-[60vh] h-full w-full bg-black"
+                className="max-h-[80vh] h-full w-full bg-black"
               />
             )}
             {data.file.type === FileType.Image && data.file.thumbnailUrl && (
-              <Image file={data.file} className="max-h-[60vh] bg-black object-contain w-full" />
+              <Image file={data.file} className="max-h-[80vh] bg-black object-contain w-full" />
             )}
           </Card>
         </div>

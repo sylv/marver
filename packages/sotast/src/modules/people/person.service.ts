@@ -1,12 +1,9 @@
-import { sql, type EntityRepository } from "@mikro-orm/better-sqlite";
-import { InjectRepository } from "@mikro-orm/nestjs";
+import { EntityManager, RequestContext } from "@mikro-orm/better-sqlite";
 import { Injectable } from "@nestjs/common";
-import { PersonEntity } from "./entities/person.entity";
+import { config } from "../../config";
 
 @Injectable()
 export class PersonService {
-  @InjectRepository(PersonEntity) private personRepo: EntityRepository<PersonEntity>;
-
   /**
    * Given a face, find a person that matches the face based on known faces.
    *
@@ -14,16 +11,25 @@ export class PersonService {
    * return person with highest avg sim or null if below threshold.
    */
   async findPersonFromFace(faceEmbedding: Buffer): Promise<number | null> {
-    const personId = await this.personRepo.getEntityManager().execute(sql`
-        SELECT id, AVG(cosine_similarity(faces.embedding, ${faceEmbedding})) as avg_sim
+    const em = RequestContext.getEntityManager() as EntityManager;
+    const result = await em.execute(
+      `
+        SELECT people.id, AVG(cosine_similarity(faces.embedding, ?)) as avg_sim
         FROM people
         JOIN faces ON people.id = faces.person_id
         GROUP BY people.id
         ORDER BY avg_sim DESC
         LIMIT 1
-    `);
+    `,
+      [faceEmbedding],
+    );
 
-    console.log({ personId });
+    // console.log({ personId });
+    const person = result[0];
+    if (person && person.avg_sim > config.face_detection.min_person_score) {
+      return person.id;
+    }
+
     return null;
   }
 }

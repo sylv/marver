@@ -7,27 +7,15 @@ import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { RehoboamService } from "./rehoboam.js";
 import type { ExtractSubtitlesReply } from "./rehoboam.js";
 import type { ExtractSubtitlesRequest } from "./rehoboam.js";
+import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { ExtractFacesReply } from "./rehoboam.js";
 import type { ExtractFacesRequest } from "./rehoboam.js";
-import type { EncodeTextReply } from "./rehoboam.js";
-import type { EncodeTextRequest } from "./rehoboam.js";
-import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { EncodeImageReply } from "./rehoboam.js";
-import type { EncodeImageRequest } from "./rehoboam.js";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
  * @generated from protobuf service me.sylver.marver.rehoboam.RehoboamService
  */
 export interface IRehoboamServiceClient {
-    /**
-     * @generated from protobuf rpc: EncodeImage(me.sylver.marver.rehoboam.EncodeImageRequest) returns (me.sylver.marver.rehoboam.EncodeImageReply);
-     */
-    encodeImage(input: EncodeImageRequest, options?: RpcOptions): UnaryCall<EncodeImageRequest, EncodeImageReply>;
-    /**
-     * @generated from protobuf rpc: EncodeText(me.sylver.marver.rehoboam.EncodeTextRequest) returns (me.sylver.marver.rehoboam.EncodeTextReply);
-     */
-    encodeText(input: EncodeTextRequest, options?: RpcOptions): UnaryCall<EncodeTextRequest, EncodeTextReply>;
     /**
      * @generated from protobuf rpc: ExtractFaces(me.sylver.marver.rehoboam.ExtractFacesRequest) returns (me.sylver.marver.rehoboam.ExtractFacesReply);
      */
@@ -47,31 +35,17 @@ export class RehoboamServiceClient implements IRehoboamServiceClient, ServiceInf
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: EncodeImage(me.sylver.marver.rehoboam.EncodeImageRequest) returns (me.sylver.marver.rehoboam.EncodeImageReply);
-     */
-    encodeImage(input: EncodeImageRequest, options?: RpcOptions): UnaryCall<EncodeImageRequest, EncodeImageReply> {
-        const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<EncodeImageRequest, EncodeImageReply>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: EncodeText(me.sylver.marver.rehoboam.EncodeTextRequest) returns (me.sylver.marver.rehoboam.EncodeTextReply);
-     */
-    encodeText(input: EncodeTextRequest, options?: RpcOptions): UnaryCall<EncodeTextRequest, EncodeTextReply> {
-        const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<EncodeTextRequest, EncodeTextReply>("unary", this._transport, method, opt, input);
-    }
-    /**
      * @generated from protobuf rpc: ExtractFaces(me.sylver.marver.rehoboam.ExtractFacesRequest) returns (me.sylver.marver.rehoboam.ExtractFacesReply);
      */
     extractFaces(input: ExtractFacesRequest, options?: RpcOptions): UnaryCall<ExtractFacesRequest, ExtractFacesReply> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<ExtractFacesRequest, ExtractFacesReply>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ExtractSubtitles(me.sylver.marver.rehoboam.ExtractSubtitlesRequest) returns (me.sylver.marver.rehoboam.ExtractSubtitlesReply);
      */
     extractSubtitles(input: ExtractSubtitlesRequest, options?: RpcOptions): UnaryCall<ExtractSubtitlesRequest, ExtractSubtitlesReply> {
-        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<ExtractSubtitlesRequest, ExtractSubtitlesReply>("unary", this._transport, method, opt, input);
     }
 }

@@ -10,4 +10,7 @@ export default defineConfig({
   splitting: true,
   minify: false,
   sourcemap: true,
+  define: {
+    'import.meta.vitest': 'undefined',
+  }
 });

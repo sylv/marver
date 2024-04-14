@@ -1,15 +1,15 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable } from '@nestjs/common';
-import bytes from 'bytes';
-import { rgbaToThumbHash } from 'thumbhash-node';
-import { IMAGE_EXTENSIONS } from '../../constants.js';
-import { embeddingToBuffer } from '../../helpers/embedding.js';
-import { CLIPService } from '../clip/clip.service.js';
-import { FileEmbeddingEntity } from '../file/entities/file-embedding.entity.js';
-import { FileEntity } from '../file/entities/file.entity.js';
-import { Queue } from '../queue/queue.decorator.js';
-import { ImageService } from './image.service.js';
+import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { Injectable } from "@nestjs/common";
+import bytes from "bytes";
+import { rgbaToThumbHash } from "thumbhash-node";
+import { IMAGE_EXTENSIONS } from "../../constants.js";
+import { embeddingToBuffer } from "../../helpers/embedding.js";
+import { CLIPService } from "../clip/clip.service.js";
+import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
+import { FileEntity } from "../file/entities/file.entity.js";
+import { Queue } from "../queue/queue.decorator.js";
+import { ImageService } from "./image.service.js";
 
 @Injectable()
 export class ImageTasks {
@@ -21,7 +21,7 @@ export class ImageTasks {
     private em: EntityManager,
   ) {}
 
-  @Queue('IMAGE_EXTRACT_EXIF', {
+  @Queue("IMAGE_EXTRACT_EXIF", {
     targetConcurrency: 4,
     fileFilter: {
       exifData: null,
@@ -29,7 +29,7 @@ export class ImageTasks {
         height: { $ne: null },
       },
       size: {
-        $lte: bytes('50mb'),
+        $lte: bytes("50mb"),
       },
     },
   })
@@ -46,11 +46,11 @@ export class ImageTasks {
     }
   }
 
-  @Queue('CREATE_IMAGE_MEDIA', {
+  @Queue("CREATE_IMAGE_MEDIA", {
     targetConcurrency: 4,
     fileFilter: {
       extension: { $in: [...IMAGE_EXTENSIONS] },
-      size: { $lte: bytes('100mb') },
+      size: { $lte: bytes("100mb") },
       info: {
         height: null,
         width: null,
@@ -88,15 +88,15 @@ export class ImageTasks {
     await this.em.persistAndFlush(file);
   }
 
-  @Queue('IMAGE_GENERATE_CLIP_EMBEDDING', {
+  @Queue("IMAGE_GENERATE_CLIP_EMBEDDING", {
     targetConcurrency: 1,
-    batchSize: 20,
+    batchSize: 50,
     fileFilter: {
       info: { height: { $ne: null } },
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
-      size: { $lte: bytes('10mb') },
+      size: { $lte: bytes("10mb") },
     },
   })
   async generateClipEmbeddings(files: FileEntity[]) {
@@ -104,7 +104,6 @@ export class ImageTasks {
     for (const [i, element] of embedding.entries()) {
       const file = files[i];
       const embedding = this.embeddingRepo.create({
-        primary: true,
         data: embeddingToBuffer(element),
         file: file,
       });

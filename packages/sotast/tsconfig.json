@@ -11,9 +11,6 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
-    "paths": {
-      "onnxruntime-node": ["./node_modules/onnxruntime-node/lib/index.ts"]
-    }
+    "baseUrl": "."
   }
 }

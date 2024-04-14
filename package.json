@@ -1,10 +1,11 @@
 {
   "name": "marver",
   "version": "0.0.0",
+  "homepage": "https://github.com/sylv/marver",
   "devDependencies": {
-    "@biomejs/biome": "^1.6.3",
-    "turbo": "^1.12.4",
-    "typescript": "^5.3.3"
+    "@biomejs/biome": "^1.6.4",
+    "turbo": "^1.13.2",
+    "typescript": "^5.4.5"
   },
   "pnpm": {
     "patchedDependencies": {

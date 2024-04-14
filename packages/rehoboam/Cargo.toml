@@ -2,27 +2,29 @@
 name = "rehoboam"
 version = "0.1.0"
 edition = "2021"
+exclude = ["index.node"]
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
-ort = { version = "1.16.2", features = ["tensorrt"] }
-anyhow = "1.0.75"
-futures-util = "0.3.28"
-image = "0.24.7"
-itertools = "0.11.0"
-md5 = "0.7.0"
-ndarray = "0.15.6"
-reqwest = { version = "0.11.22", features = ["stream"] }
-tokenizers = "0.14.1"
-tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
-tonic = "0.10"
-prost = "0.12"
-dirs = "5.0.1"
-imageproc = "0.23.0"
-zip = "0.6.6"
-whisper-rs = "0.8.0"
-hound = "3.5.1"
+anyhow = "1.0"
+image = "0.25"
+md5 = "0.7"
+ndarray = "0.15"
+tokenizers = "0.15"
+imageproc = "0.24"
+whisper-rs = "0.11"
+hound = "3.5"
+napi = { version = "2", features = ["async", "anyhow", "tokio_rt"] }
+napi-derive = "2"
+itertools = "0.12.1"
+tokio = "1.37.0"
+lazy_rc = "0.1.3"
+
+[dependencies.ort]
+version = "2.0.0-rc.1"
+features = ["load-dynamic", "cuda", "tensorrt"]
 
 [build-dependencies]
-prost-build = "0.12"
-tonic-build = "0.10"
+napi-build = "2"

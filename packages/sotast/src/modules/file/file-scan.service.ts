@@ -1,17 +1,17 @@
-import { CreateRequestContext, EntityManager, EntityRepository, type Loaded } from '@mikro-orm/better-sqlite';
-import { MikroORM } from '@mikro-orm/core';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
-import { CronExpression } from '@nestjs/schedule';
-import { opendir, stat } from 'node:fs/promises';
-import PQueue from 'p-queue';
-import { basename, join } from 'node:path';
-import { performance } from 'perf_hooks';
-import { config } from '../../config.js';
-import { shouldCreateCollection } from '../../helpers/should-create-collection.js';
-import { CollectionEntity } from '../collection/collection.entity.js';
-import { PublicCron } from '../task/public-cron.decorator.js';
-import { FileEntity } from './entities/file.entity.js';
+import { CreateRequestContext, EntityManager, EntityRepository, type Loaded } from "@mikro-orm/better-sqlite";
+import { MikroORM } from "@mikro-orm/core";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { Injectable, Logger, type OnApplicationBootstrap } from "@nestjs/common";
+import { CronExpression } from "@nestjs/schedule";
+import { opendir, stat } from "node:fs/promises";
+import PQueue from "p-queue";
+import { basename, join } from "node:path";
+import { performance } from "node:perf_hooks";
+import { config } from "../../config.js";
+import { shouldCreateCollection } from "../../helpers/should-create-collection.js";
+import { CollectionEntity } from "../collection/collection.entity.js";
+import { PublicCron } from "../task/public-cron.decorator.js";
+import { FileEntity } from "./entities/file.entity.js";
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()
@@ -33,14 +33,14 @@ export class FileScanService implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     const fileCount = await this.fileRepo.count();
     if (fileCount === 0) {
-      this.log.log('No files found, starting scan');
+      this.log.log("No files found, starting scan");
       this.scan();
     }
   }
 
   @PublicCron(CronExpression.EVERY_12_HOURS, {
-    name: 'Scan Files',
-    description: 'Index new files and mark missing files as unavailable',
+    name: "Scan Files",
+    description: "Index new files and mark missing files as unavailable",
   })
   @CreateRequestContext()
   async scan() {
@@ -87,7 +87,7 @@ export class FileScanService implements OnApplicationBootstrap {
     const existingFiles = await this.fileRepo.find(
       { directory: dirPath },
       {
-        fields: ['id', 'path', 'info', 'unavailable', 'checkedAt'],
+        fields: ["id", "path", "info", "unavailable", "checkedAt"],
         filters: false,
       },
     );
@@ -114,8 +114,6 @@ export class FileScanService implements OnApplicationBootstrap {
       }
     }
 
-    console.log({ collection });
-
     for await (const dirent of dir) {
       const path = join(dirPath ?? config.source_dirs, dirent.name);
 
@@ -135,7 +133,7 @@ export class FileScanService implements OnApplicationBootstrap {
   private async scanFile(
     collection: CollectionEntity | undefined,
     path: string,
-    existingFiles: Loaded<FileEntity, never, 'id' | 'path' | 'info' | 'unavailable' | 'checkedAt'>[],
+    existingFiles: Loaded<FileEntity, never, "id" | "path" | "info" | "unavailable" | "checkedAt">[],
   ) {
     const existing = existingFiles.find((file) => file.path === path);
     if (existing) {

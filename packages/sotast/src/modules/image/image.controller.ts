@@ -1,36 +1,36 @@
-import Accept from '@hapi/accept';
-import { BadRequestException, Controller, Get, Param, Query, Request, Response } from '@nestjs/common';
-import bytes from 'bytes';
-import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
-import { createHash } from 'crypto';
-import { type FastifyReply, type FastifyRequest } from 'fastify';
-import { type ReadStream } from 'node:fs';
-import sharp, { type FitEnum, type FormatEnum } from 'sharp';
-import { CacheService } from '../cache/cache.service.js';
-import { StorageService } from '../storage/storage.service.js';
-import { ImageService, type ProxyableImage } from './image.service.js';
+import Accept from "@hapi/accept";
+import { BadRequestException, Controller, Get, Param, Query, Request, Response } from "@nestjs/common";
+import bytes from "bytes";
+import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from "class-validator";
+import { createHash } from "crypto";
+import { type FastifyReply, type FastifyRequest } from "fastify";
+import { type ReadStream } from "node:fs";
+import sharp, { type FitEnum, type FormatEnum } from "sharp";
+import { CacheService } from "../cache/cache.service.js";
+import { StorageService } from "../storage/storage.service.js";
+import { ImageService, type ProxyableImage } from "./image.service.js";
 
-const FIT = ['cover', 'contain', 'fill', 'inside', 'outside'] as (keyof FitEnum)[];
+const FIT = ["cover", "contain", "fill", "inside", "outside"] as (keyof FitEnum)[];
 // Image formats that can be animated by sharp
-const ANIMATED_FORMATS = new Set(['image/gif', 'image/webp', 'image/apng']);
+const ANIMATED_FORMATS = new Set(["image/gif", "image/webp", "image/apng"]);
 const IMAGE_TYPES = new Map<string, keyof FormatEnum>([
-  ['image/webp', 'webp'],
-  ['image/png', 'png'],
-  ['image/jpeg', 'jpeg'],
-  ['image/avif', 'avif'],
-  ['image/gif', 'gif'],
+  ["image/webp", "webp"],
+  ["image/png", "png"],
+  ["image/jpeg", "jpeg"],
+  ["image/avif", "avif"],
+  ["image/gif", "gif"],
 ]);
 
 const IMAGE_MIMES_BY_PRIORITY = [
   // webp is relatively fast to encode and gives the best results, and supports transparency
-  'image/webp',
+  "image/webp",
   // jpeg is fast to encode and compact
-  'image/jpeg',
+  "image/jpeg",
   // png is big but supports transparency
-  'image/png',
+  "image/png",
   // avif is fantastic but extremely slow to encode, so its the worst option.
-  'image/avif',
-  'image/gif',
+  "image/avif",
+  "image/gif",
 ];
 
 class ImageProxyQuery {
@@ -55,17 +55,17 @@ class ImageProxyQuery {
 
 @Controller()
 export class ImageController {
-  private static readonly FORCE_PROCESS_SIZE = bytes('5MB');
+  private static readonly FORCE_PROCESS_SIZE = bytes("5MB");
   constructor(
     private imageService: ImageService,
     private storageService: StorageService,
     private cache: CacheService,
   ) {}
 
-  @Get('/files/:fileId/imgproxy/:data')
+  @Get("/files/:fileId/imgproxy/:data")
   async imageProxy(
-    @Param('fileId') fileId: string,
-    @Param('data') data: string,
+    @Param("fileId") fileId: string,
+    @Param("data") data: string,
     @Query() query: ImageProxyQuery,
     @Request() req: FastifyRequest,
     @Response({ passthrough: false }) reply: FastifyReply,
@@ -77,11 +77,11 @@ export class ImageController {
 
     let contentDisposition: string | undefined;
     let stream: sharp.Sharp | ReadStream;
-    let cacheStatus = 'BYPASS';
+    let cacheStatus = "BYPASS";
 
     const extension = IMAGE_TYPES.get(formatMime)!;
     if (shouldProcess) {
-      const suffix = query.height || query.width ? 'resized' : 'processed';
+      const suffix = query.height || query.width ? "resized" : "processed";
       contentDisposition = `inline; filename="${cleanFileName}_${suffix}.${extension}"`;
 
       const cacheKey = this.getCacheKey(fileId, data, query);
@@ -89,9 +89,9 @@ export class ImageController {
 
       if (cachedStream) {
         stream = cachedStream;
-        cacheStatus = 'HIT';
+        cacheStatus = "HIT";
       } else {
-        cacheStatus = 'MISS';
+        cacheStatus = "MISS";
         const transformer = sharp({ animated: true }).toFormat(formatKey, {
           progressive: true,
           quality: 80,
@@ -111,27 +111,27 @@ export class ImageController {
       stream = await this.storageService.createReadStreamHttp({ id: fileId, path: image.path });
       contentDisposition = `inline; filename="${cleanFileName}.${extension}"`;
       if (image.size) {
-        reply.header('Content-Length', image.size);
+        reply.header("Content-Length", image.size);
       }
     }
 
     return reply
       .headers({
-        'cache-control': 'public, max-age=31536000',
-        'content-type': formatMime,
-        'content-disposition': contentDisposition,
-        'x-marver-original-type': image.mimeType?.toString(),
-        'x-marver-cache': cacheStatus,
+        "cache-control": "public, max-age=31536000",
+        "content-type": formatMime,
+        "content-disposition": contentDisposition,
+        "x-marver-original-type": image.mimeType?.toString(),
+        "x-marver-cache": cacheStatus,
       })
       .send(stream);
   }
 
   private getCacheKey(fileId: string, data: string, query: ImageProxyQuery) {
-    const hash = createHash('sha256');
+    const hash = createHash("sha256");
     hash.update(fileId);
     hash.update(data);
     hash.update(JSON.stringify(query));
-    return hash.digest('hex');
+    return hash.digest("hex");
   }
 
   /**
@@ -139,7 +139,7 @@ export class ImageController {
    * @example the browser doesn't support webp, but does support avif, this will return "avif"
    */
   private async detectBestMimeType(query: ImageProxyQuery, file: ProxyableImage, req: FastifyRequest) {
-    if (!file.mimeType) throw new BadRequestException('File is not an image');
+    if (!file.mimeType) throw new BadRequestException("File is not an image");
     if (query.format) {
       return {
         formatMime: query.format,
@@ -148,7 +148,7 @@ export class ImageController {
     }
 
     const acceptedMediaTypes = Accept.mediaTypes(req.headers.accept);
-    const doesAcceptAll = acceptedMediaTypes.includes('*/*');
+    const doesAcceptAll = acceptedMediaTypes.includes("*/*");
 
     const willBeForcedToProcess = file.size && file.size > ImageController.FORCE_PROCESS_SIZE;
     const preferredFormats = IMAGE_MIMES_BY_PRIORITY.filter((mime) => {
@@ -165,7 +165,7 @@ export class ImageController {
       // gifs are a bad format, they are only included so we don't always convert gifs to webp
       // if the image isnt animated, we ignore the gif format
       // if the image will be processed, we ignore the gif format
-      if (mime === 'image/gif' && (!file.isAnimated || willBeForcedToProcess)) {
+      if (mime === "image/gif" && (!file.isAnimated || willBeForcedToProcess)) {
         return false;
       }
 
@@ -189,7 +189,7 @@ export class ImageController {
     }
 
     // if we can't find a format that the browser supports and we support, we're out of luck
-    throw new BadRequestException('Your browser does not support any of the image formats we support');
+    throw new BadRequestException("Your browser does not support any of the image formats we support");
   }
 
   /**

@@ -28,7 +28,7 @@ message BoundingBox {
 
 message Embedding {
     repeated float value = 1;
-    optional int32 source = 2;
+    optional string source = 2;
 }
 
 message Subtitle {

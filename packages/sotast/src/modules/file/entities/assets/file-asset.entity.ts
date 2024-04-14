@@ -1,6 +1,6 @@
-import { Entity, OneToOne, OptionalProps, Property, type Ref } from '@mikro-orm/better-sqlite';
-import { Field, ObjectType } from '@nestjs/graphql';
-import { FileEntity } from '../file.entity.js';
+import { Entity, OneToOne, OptionalProps, Property, type Ref } from "@mikro-orm/better-sqlite";
+import { Field, ObjectType } from "@nestjs/graphql";
+import { FileEntity } from "../file.entity.js";
 
 @Entity({ abstract: true })
 @ObjectType({ isAbstract: true })
@@ -20,5 +20,5 @@ export abstract class FileAssetEntity {
   @Field()
   height: number;
 
-  [OptionalProps]: 'path';
+  [OptionalProps]: "path";
 }

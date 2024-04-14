@@ -1,10 +1,10 @@
-import { EntityRepository, sql } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Args, Info, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import { IMAGE_EXTENSIONS } from '../../constants';
-import { inferPopulate } from '../../helpers/autoloader';
-import { FileEntity } from '../file/entities/file.entity';
-import { CollectionEntity } from './collection.entity';
+import { EntityRepository, sql } from "@mikro-orm/better-sqlite";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { Args, Info, Parent, Query, ResolveField, Resolver } from "@nestjs/graphql";
+import { IMAGE_EXTENSIONS } from "../../constants";
+import { inferPopulate } from "../../helpers/autoloader";
+import { FileEntity } from "../file/entities/file.entity";
+import { CollectionEntity } from "./collection.entity";
 
 @Resolver(() => CollectionEntity)
 export class CollectionResolver {
@@ -13,13 +13,13 @@ export class CollectionResolver {
 
   @Query(() => [CollectionEntity])
   async collections(@Info() info: any) {
-    const populate = inferPopulate(CollectionEntity, 'collections', info);
+    const populate = inferPopulate(CollectionEntity, "collections", info);
     return this.collectionRepo.find({ parent: null }, { populate });
   }
 
   @Query(() => CollectionEntity)
-  async collection(@Info() info: any, @Args('id') id: string) {
-    const populate = inferPopulate(CollectionEntity, 'collection', info);
+  async collection(@Info() info: any, @Args("id") id: string) {
+    const populate = inferPopulate(CollectionEntity, "collection", info);
     return this.collectionRepo.findOneOrFail({ id }, { populate });
   }
 
@@ -43,7 +43,6 @@ export class CollectionResolver {
 
     const em = this.collectionRepo.getEntityManager();
     const childCollectionIds = await em.execute(childCollectionQueryIds.sql, childCollectionQueryIds.params);
-    console.log({ childCollectionIds });
 
     return this.fileRepo.find(
       {

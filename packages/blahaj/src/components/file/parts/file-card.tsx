@@ -15,6 +15,7 @@ export const FileCardToggle: FC<{ children: ReactNode; title: string }> = ({ chi
   const [open, setOpen] = useState(false);
   return (
     <button
+      type="button"
       className="rounded-lg border bg-card text-card-foreground shadow-sm bg-zinc-900 p-3 w-full"
       onClick={() => setOpen(!open)}
     >

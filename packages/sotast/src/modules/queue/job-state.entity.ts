@@ -1,46 +1,25 @@
-import {
-  BeforeCreate,
-  BeforeUpdate,
-  Entity,
-  Enum,
-  Index,
-  ManyToOne,
-  OptionalProps,
-  Property,
-  type Ref,
-} from '@mikro-orm/better-sqlite';
-import ms from 'ms';
-import { FileEntity } from '../file/entities/file.entity.js';
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { BeforeCreate, BeforeUpdate, Entity, Enum, Index, ManyToOne, OptionalProps, Property, type Ref } from "@mikro-orm/better-sqlite";
+import ms from "ms";
+import { FileEntity } from "../file/entities/file.entity.js";
+import { Field, ObjectType, registerEnumType } from "@nestjs/graphql";
 
 // Tasks that have not started will not have task entities associated with them.
 export enum State {
-  Failed,
-  Completed,
+  Failed = 0,
+  Completed = 1,
 }
 
-registerEnumType(State, { name: 'State' });
+registerEnumType(State, { name: "State" });
 
-const RETRY_DELAYS = [
-  ms('1m'),
-  ms('5m'),
-  ms('15m'),
-  ms('30m'),
-  ms('1h'),
-  ms('4h'),
-  ms('8h'),
-  ms('16h'),
-  ms('1d'),
-  ms('5d'),
-];
+const RETRY_DELAYS = [ms("1m"), ms("5m"), ms("15m"), ms("30m"), ms("1h"), ms("4h"), ms("8h"), ms("16h"), ms("1d"), ms("5d")];
 
-@Entity({ tableName: 'job_states' })
-@ObjectType('JobState')
+@Entity({ tableName: "job_states" })
+@ObjectType("JobState")
 export class JobStateEntity {
   @ManyToOne(() => FileEntity, { primary: true, ref: true })
   file: Ref<FileEntity>;
 
-  @Property({ primary: true, type: 'text' })
+  @Property({ primary: true, type: "text" })
   @Field()
   @Index()
   type: string;
@@ -50,7 +29,7 @@ export class JobStateEntity {
   @Index()
   state: State;
 
-  @Property({ type: 'jsonb', nullable: true })
+  @Property({ type: "jsonb", nullable: true })
   result?: unknown;
 
   @Property({ nullable: true })
@@ -71,7 +50,7 @@ export class JobStateEntity {
 
   // some of these are actually required, but are marked optional so we can
   // create the entity without them set and add them later before persisting.
-  [OptionalProps]: 'state';
+  [OptionalProps]: "state";
 
   @BeforeCreate()
   @BeforeUpdate()

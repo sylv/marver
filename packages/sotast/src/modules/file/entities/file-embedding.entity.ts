@@ -1,8 +1,7 @@
-import { Entity, ManyToOne, PrimaryKey, Property, Unique, type Ref } from '@mikro-orm/core';
-import { FileEntity } from './file.entity';
+import { Entity, ManyToOne, PrimaryKey, Property, type Ref } from "@mikro-orm/core";
+import { FileEntity } from "./file.entity";
 
-@Entity({ tableName: 'file_embedding' })
-@Unique({ properties: ['file', 'primary'] })
+@Entity({ tableName: "file_embedding" })
 export class FileEmbeddingEntity {
   @PrimaryKey({ autoincrement: true })
   id: number;
@@ -10,9 +9,9 @@ export class FileEmbeddingEntity {
   @ManyToOne(() => FileEntity, { ref: true })
   file: Ref<FileEntity>;
 
-  @Property()
-  primary: boolean;
+  @Property({ type: "text", nullable: true })
+  source?: string;
 
-  @Property({ type: 'blob' })
+  @Property({ type: "blob" })
   data: Buffer;
 }

@@ -1,193 +1,149 @@
-use anyhow::anyhow;
-use futures_util::stream::StreamExt;
-use reqwest::header::{HeaderValue, RANGE};
-use reqwest::Client;
-use std::fs;
-use std::io::{Read, Seek, SeekFrom, Write};
-use std::path::PathBuf;
-use zip::ZipArchive;
+use crate::{facerec::detection::FacePrediction, types::BoundBox};
+use image::{imageops::crop_imm, DynamicImage, GenericImageView, Rgba};
+use imageproc::geometric_transformations::{rotate, Interpolation};
 
-use std::fs::File;
-use std::io::BufReader;
+fn area_of(bbox: &BoundBox) -> f64 {
+    let x1 = bbox.x1;
+    let y1 = bbox.y1;
+    let x2 = bbox.x2;
+    let y2 = bbox.y2;
 
-async fn check_hash(path: &PathBuf, md5sum: &str) -> Result<bool, anyhow::Error> {
-    println!("Validating MD5 hash of {}", path.display());
-    let f = File::open(path)?;
-    let len = f.metadata()?.len();
-    let buf_len = len.min(1_000_000) as usize;
-    let mut buf = BufReader::with_capacity(buf_len, f);
-    let mut context = md5::Context::new();
-    let mut buffer = vec![0; buf_len];
-    while let Ok(n) = buf.read(&mut buffer) {
-        if n == 0 {
-            break;
-        }
-        context.consume(&buffer[..n]);
-    }
-    let digest = context.compute();
-    Ok(format!("{:x}", digest) == md5sum)
+    (x2 - x1) * (y2 - y1)
 }
 
-/// Ensure a file exists on disk:
-/// - if it does not, download it to the given path and validate its checksum.
-/// - if it does, do nothing.
-pub async fn ensure_file(url: &str, path: &PathBuf, md5sum: Option<&str>) -> anyhow::Result<()> {
-    // If path exists on disk, check md5sum, if matches return
-    if path.exists() {
-        // if let Some(md5sum) = md5sum {
-        //     if !check_hash(path, md5sum).await? {
-        //         return Err(anyhow!("MD5 mismatch on {}", path.display()));
-        //     }
-        // }
+fn iou_of(bbox1: &BoundBox, bbox2: &BoundBox, eps: f64) -> f64 {
+    let x1 = bbox1.x1.max(bbox2.x1);
+    let y1 = bbox1.y1.max(bbox2.y1);
+    let x2 = bbox1.x2.min(bbox2.x2);
+    let y2 = bbox1.y2.min(bbox2.y2);
 
-        println!(
-            "File {} already exists, assuming correct and skipping download",
-            path.display()
-        );
-        return Ok(());
-    }
+    let intersection = (x2 - x1).max(0.0) * (y2 - y1).max(0.0);
+    let union = area_of(bbox1) + area_of(bbox2) - intersection;
 
-    let mut tmp_path = path.clone().into_os_string();
-    tmp_path.push(".filepart");
-    let tmp_path: PathBuf = tmp_path.into();
+    intersection / (union + eps)
+}
 
-    // Create or open a file
-    fs::create_dir_all(path.parent().unwrap())?;
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(&tmp_path)?;
+pub(crate) fn hard_nms(
+    faces: &[FacePrediction],
+    iou_threshold: f64,
+    candidate_size: usize,
+) -> Vec<FacePrediction> {
+    let mut picked: Vec<FacePrediction> = Vec::new();
 
-    let client = Client::new();
+    let mut faces = faces.to_vec();
+    faces.sort_by(|a, b| a.score.partial_cmp(&b.score).unwrap().reverse());
 
-    // try resume partial download
-    let downloaded = file.metadata()?.len();
-    if downloaded != 0 {
-        file.seek(SeekFrom::Start(downloaded))?;
-        println!(
-            "Resuming download of {} from {} bytes",
-            path.display(),
-            downloaded
-        );
-    }
+    while !faces.is_empty() {
+        let max_box = &faces[0].bbox;
+        picked.push(faces[0].clone());
 
-    let range = format!("bytes={}-", downloaded);
-    let response = client
-        .get(url)
-        .header(RANGE, HeaderValue::from_str(&range)?)
-        .send()
-        .await?;
+        if faces.is_empty() {
+            break;
+        }
 
-    let status = response.status().as_u16();
-    if status == 416 {
-        println!(
-            "File {} already fully downloaded, skipping download",
-            path.display()
-        );
-    } else if status != 206 && status != 200 {
-        return Err(anyhow!("Invalid server response {} on {}", status, url));
-    } else {
-        let size = response
-            .headers()
-            .get("content-length")
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .parse::<u64>()
-            .unwrap()
-            + downloaded;
-
-        let mut stream = response.bytes_stream();
-        let mut check = 0;
-        while let Some(item) = stream.next().await {
-            let chunk = item?;
-            file.write_all(&chunk)?;
-            check += 1;
-            if check % 100 == 0 {
-                let len = file.metadata()?.len();
-                println!("Downloaded {}/{} ({}%) bytes", len, size, len * 100 / size);
+        let mut rest: Vec<FacePrediction> = Vec::new();
+        for face in faces.iter().skip(1) {
+            let iou = iou_of(&face.bbox, max_box, 1e-5);
+            if iou <= iou_threshold {
+                rest.push(face.clone());
             }
         }
 
-        if file.metadata()?.len() != size {
-            return Err(anyhow!("Downloaded file size mismatch"));
+        if rest.len() < candidate_size {
+            faces = rest;
+        } else {
+            faces = rest[0..candidate_size].to_vec();
         }
     }
 
-    if let Some(md5sum) = md5sum {
-        if !check_hash(&tmp_path, md5sum).await? {
-            return Err(anyhow!("MD5 mismatch on {}", path.display()));
-        }
-    }
-
-    // Rename tmp file to target path
-    fs::rename(tmp_path, path)?;
-    Ok(())
+    picked
 }
 
-/// Ensure a zip file exists on disk and is unzipped in the given directory.
-/// Returns a list of unzipped files.
-/// `file_filter` can be used to filter which files are unzipped if only a subset is needed.
-pub async fn ensure_zip(
-    url: &str,
-    dir: &PathBuf,
-    md5sum: Option<&str>,
-    file_filter: fn(&PathBuf) -> bool,
-) -> anyhow::Result<Vec<PathBuf>> {
-    // If path exists on disk, check md5sum, if matches return
-    if dir.exists() {
-        // ensure the directory has all files in file_filter
-        let files = fs::read_dir(dir)?
-            .filter_map(|f| f.ok())
-            .map(|f| f.path())
-            .collect::<Vec<_>>();
-
-        println!(
-            "Directory {} already exists, skipping download",
-            dir.display()
-        );
-        return Ok(files);
-    }
-
-    let mut tmp_path = dir.clone().into_os_string();
-    tmp_path.push(".zippart");
-    let tmp_path: PathBuf = tmp_path.into();
-    ensure_file(url, &tmp_path, md5sum).await?;
-
-    // unzip
-    println!("Unzipping {} to {}", tmp_path.display(), dir.display());
-    let file = File::open(&tmp_path)?;
-    let mut archive = ZipArchive::new(file)?;
-    fs::create_dir_all(dir)?;
-
-    let mut files = vec![];
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i)?;
-
-        let mut path = dir.clone();
-        path.push(file.name());
-
-        let keep = file_filter(&path);
-        if !keep {
-            continue;
-        }
-
-        let mut outfile = fs::File::create(&path)?;
-        std::io::copy(&mut file, &mut outfile)?;
-
-        files.push(path);
-    }
-
-    // delete temp file
-    fs::remove_file(&tmp_path)?;
-
-    Ok(files)
+pub(crate) fn distance2bbox(points: &[[f32; 2]], distance: &[f32]) -> Vec<Vec<f32>> {
+    points
+        .iter()
+        .enumerate()
+        .map(|(i, &point)| {
+            vec![
+                point[0] - distance[i * 4],
+                point[1] - distance[i * 4 + 1],
+                point[0] + distance[i * 4 + 2],
+                point[1] + distance[i * 4 + 3],
+            ]
+        })
+        .collect()
 }
 
-pub fn get_models_dir() -> PathBuf {
-    // todo: this should be configurable, especially in docker
-    let mut path = dirs::home_dir().unwrap();
-    path.push(".rehoboam");
-    path.push("models");
-    path
+pub(crate) fn distance2kps(points: &[[f32; 2]], distance: &[f32]) -> Vec<Vec<f32>> {
+    points
+        .iter()
+        .enumerate()
+        .map(|(i, &point)| {
+            (0..10)
+                .map(|j| {
+                    let idx = j % 2;
+                    point[idx] + distance[i * 10 + j]
+                })
+                .collect()
+        })
+        .collect()
+}
+
+pub(crate) fn transpose_rgb(rgbs: Vec<f32>) -> Vec<f32> {
+    let channel_length = rgbs.len() / 3;
+    let mut out = vec![0.0; rgbs.len()];
+    for i in 0..channel_length {
+        out[i] = rgbs[i * 3];
+        out[i + channel_length] = rgbs[i * 3 + 1];
+        out[i + 2 * channel_length] = rgbs[i * 3 + 2];
+    }
+    out
+}
+
+/// Given a face, align it so it is "flat" based on the landmarks, then
+/// crop based on the bounding box for that face.
+pub(crate) fn crop_with_alignment(
+    image: &DynamicImage,
+    face: &FacePrediction,
+    padding: Option<u32>,
+) -> DynamicImage {
+    let padding = padding.unwrap_or(0);
+
+    let (width, height) = image.dimensions();
+    let landmarks = face.landmarks_as_pixels((width, height));
+
+    let left_eye = &landmarks[0];
+    let right_eye = &landmarks[1];
+    let angle = (right_eye.y - left_eye.y).atan2(right_eye.x - left_eye.x) as f32;
+
+    let bbox_center = (
+        ((face.bbox.x1 + face.bbox.x2) / 2.0 * width as f64) as f32,
+        ((face.bbox.y1 + face.bbox.y2) / 2.0 * height as f64) as f32,
+    );
+
+    let image = image.to_rgba8();
+    let image = rotate(
+        &image,
+        bbox_center,
+        -angle,
+        Interpolation::Bilinear,
+        Rgba([0, 0, 0, 255]),
+    );
+
+    let (width, height) = image.dimensions();
+    let x1 = (face.bbox.x1 * width as f64) as u32;
+    let y1 = (face.bbox.y1 * height as f64) as u32;
+    let x2 = (face.bbox.x2 * width as f64) as u32;
+    let y2 = (face.bbox.y2 * height as f64) as u32;
+
+    let sub_image = crop_imm(
+        &image,
+        x1 - padding,
+        y1 - padding,
+        x2 + padding,
+        y2 + padding,
+    );
+
+    let image = sub_image.to_image();
+    DynamicImage::ImageRgba8(image)
 }

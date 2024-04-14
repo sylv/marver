@@ -9,24 +9,31 @@ pub mod core {
 use core::Embedding;
 use prost::Message;
 
-pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f32 {
-    if vec_a.is_empty() || vec_b.is_empty() {
-        return 0.0;
-    }
-
-    // hash_a and hash_b are Vectors which we have to decode
+pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> Result<f32> {
     let embedding_a = Embedding::decode(vec_a).expect("could not decode vec_a");
     let embedding_b = Embedding::decode(vec_b).expect("could not decode vec_b");
 
-    assert_eq!(
-        embedding_a.value.len(),
-        vec_b.len(),
-        "vectors must be of equal length"
-    );
-    assert_eq!(
-        embedding_a.source, embedding_b.source,
-        "cannot compare vectors from different models"
-    );
+    if embedding_a.value.is_empty() || embedding_b.value.is_empty() {
+        return Ok(0.0);
+    }
+
+    if embedding_a.source != embedding_b.source {
+        return Err(format!(
+            "cannot compare embeddings from different models: {} and {}",
+            embedding_a.source.unwrap_or("<unknown>".to_owned()),
+            embedding_b.source.unwrap_or("<unknown>".to_owned())
+        )
+        .into());
+    }
+
+    if embedding_a.value.len() != embedding_b.value.len() {
+        return Err(format!(
+            "embeddings must be of equal length, got {} and {}",
+            embedding_a.value.len(),
+            embedding_b.value.len()
+        )
+        .into());
+    }
 
     let mut dot_product = 0.0;
     let mut a_norm = 0.0;
@@ -37,7 +44,7 @@ pub fn cosine_similarity(vec_a: &[u8], vec_b: &[u8]) -> f32 {
         b_norm += embedding_b.value[i] * embedding_b.value[i];
     }
 
-    dot_product / (a_norm.sqrt() * b_norm.sqrt())
+    Ok(dot_product / (a_norm.sqrt() * b_norm.sqrt()))
 }
 
 pub fn hamming_distance(hash_a: &[u8], hash_b: &[u8]) -> i64 {
@@ -58,7 +65,7 @@ pub fn sql_cosine_similarity(
     let b = api::value_blob(values.get(1).expect("missing second argument"));
     let a = a.to_vec();
     let b = b.to_vec();
-    let result = cosine_similarity(&a, &b);
+    let result = cosine_similarity(&a, &b)?;
     api::result_double(ctx, result as f64);
     Ok(())
 }

@@ -1,12 +1,12 @@
-import { EntityRepository } from '@mikro-orm/better-sqlite';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import avro from 'avsc';
-import ExifReader from 'exifreader';
-import sharp from 'sharp';
-import { IMAGE_EXTENSIONS } from '../../constants.js';
-import { FileExifDataEntity } from '../file/entities/file-exif.entity.js';
-import { type FileEntity } from '../file/entities/file.entity.js';
+import { EntityRepository } from "@mikro-orm/better-sqlite";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import avro from "avsc";
+import ExifReader from "exifreader";
+import sharp from "sharp";
+import { IMAGE_EXTENSIONS } from "../../constants.js";
+import { FileExifDataEntity } from "../file/entities/file-exif.entity.js";
+import { type FileEntity } from "../file/entities/file.entity.js";
 
 export interface ProxyableImage {
   fileName: string;
@@ -19,16 +19,16 @@ export interface ProxyableImage {
 }
 
 const proxyableImageSchema = avro.Type.forSchema({
-  type: 'record',
-  name: 'ProxyableImage',
+  type: "record",
+  name: "ProxyableImage",
   fields: [
-    { name: 'fileName', type: 'string' },
-    { name: 'path', type: 'string' },
-    { name: 'height', type: ['null', 'int'] },
-    { name: 'width', type: ['null', 'int'] },
-    { name: 'size', type: ['null', 'long'] },
-    { name: 'mimeType', type: ['null', 'string'] },
-    { name: 'isAnimated', type: 'boolean' },
+    { name: "fileName", type: "string" },
+    { name: "path", type: "string" },
+    { name: "height", type: ["null", "int"] },
+    { name: "width", type: ["null", "int"] },
+    { name: "size", type: ["null", "long"] },
+    { name: "mimeType", type: ["null", "string"] },
+    { name: "isAnimated", type: "boolean" },
   ],
 });
 
@@ -39,12 +39,12 @@ export class ImageService {
   private log = new Logger(ImageService.name);
 
   parseImageProxyPayload(payload: string): ProxyableImage {
-    const buffer = Buffer.from(payload, 'base64url');
+    const buffer = Buffer.from(payload, "base64url");
     try {
       return proxyableImageSchema.fromBuffer(buffer);
     } catch (error: any) {
-      if (error.message.includes('truncated')) {
-        throw new BadRequestException('Invalid image proxy payload');
+      if (error.message.includes("truncated")) {
+        throw new BadRequestException("Invalid image proxy payload");
       }
 
       throw error;
@@ -53,7 +53,7 @@ export class ImageService {
 
   createImageProxyUrl(fileId: string, image: ProxyableImage) {
     const payload = proxyableImageSchema.toBuffer(image);
-    return `/api/files/${fileId}/imgproxy/${payload.toString('base64url')}`;
+    return `/api/files/${fileId}/imgproxy/${payload.toString("base64url")}`;
   }
 
   createMediaProxyUrl(file: FileEntity) {
@@ -66,7 +66,7 @@ export class ImageService {
         size: file.size,
         height: file.info.height,
         width: file.info.width,
-        isAnimated: file.info.isAnimated || file.mimeType === 'image/gif',
+        isAnimated: file.info.isAnimated || file.mimeType === "image/gif",
       });
     }
 
@@ -111,7 +111,7 @@ export class ImageService {
       .resize({
         width: maxSize,
         height: maxSize,
-        fit: 'inside',
+        fit: "inside",
       })
       .raw()
       .ensureAlpha()
@@ -153,7 +153,7 @@ export class ImageService {
 
       return exif;
     } catch (error: any) {
-      if (error.name === 'MetadataMissingError') {
+      if (error.name === "MetadataMissingError") {
         return null;
       }
 
@@ -163,18 +163,18 @@ export class ImageService {
 
   private getLatLongFromExif(exifData: ExifReader.Tags): [number, number] | null {
     // In Exif data, the full GPS information is split into two different tags for each direction: the coordinate value (GPSLatitude, GPSLongitude) and the reference value (GPSLatitudeRef, GPSLongitudeRef). Use the references to know whether the coordinate is north/south and east/west. Often you will see north and east represented as positive values, and south and west represented as negative values (e.g. in Google Maps). This setup is also used for the altitude using GPSAltitude and GPSAltitudeRef where the latter specifies if it's above sea level (positive) or below sea level (negative). If you don't want to calculate the final values yourself, see the section on GPS for pre-calculated ones.
-    if (!exifData['GPSLatitude']) return null;
-    if (!exifData['GPSLatitudeRef']) return null;
-    if (!exifData['GPSLongitude']) return null;
-    if (!exifData['GPSLongitudeRef']) return null;
+    if (!exifData["GPSLatitude"]) return null;
+    if (!exifData["GPSLatitudeRef"]) return null;
+    if (!exifData["GPSLongitude"]) return null;
+    if (!exifData["GPSLongitudeRef"]) return null;
 
-    const lat = exifData['GPSLatitude'].description;
-    const long = exifData['GPSLongitude'].description;
-    const latRef = (exifData['GPSLatitudeRef'].value as string[])[0];
+    const lat = exifData["GPSLatitude"].description;
+    const long = exifData["GPSLongitude"].description;
+    const latRef = (exifData["GPSLatitudeRef"].value as string[])[0];
 
-    let latVal;
-    let longVal;
-    if (latRef === 'S') {
+    let latVal: number;
+    let longVal: number;
+    if (latRef === "S") {
       // return [Number.parseFloat(lat) * -1, Number.parseFloat(long)]
       latVal = Number.parseFloat(lat) * -1;
       longVal = Number.parseFloat(long);
@@ -190,7 +190,7 @@ export class ImageService {
   private parseExifDate(date: string) {
     // exif dates are in the format "YYYY:MM:DD HH:MM:SS", javascript cannot parse
     // that as a date without some trickery.
-    const clean = date.replace(ImageService.EXIF_DATE_FORMAT, '$<year>-$<month>-$<day>');
+    const clean = date.replace(ImageService.EXIF_DATE_FORMAT, "$<year>-$<month>-$<day>");
     const parsed = new Date(clean);
     if (Number.isNaN(parsed.getTime()) || parsed.getTime() === 0) {
       this.log.warn(`Failed to parse date "${date}" into a valid date object`);
