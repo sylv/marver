@@ -64,6 +64,10 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - Ideally, we want all the data we store to be replaceable. The files themselves are what's important, not the .sqlite file indexing them.
   - This should not be default
   - Anything we can write to EXIF we should be able to pull back out
+- Shortcuts
+  - In the sidebar, have a "shortcuts" link at the bottom that opens a little panel showing the shortcuts. Having shortcuts but not showing them is a waste.
+  - `Ctrl + T` to quickly add tags to an image
+  - `Ctrl + D` to show debug layers of images (for example, outlines of detected faces, OCR outlines, etc)
 
 ### todo
 
@@ -76,3 +80,17 @@ marver scours your files and makes them all pretty and viewable, pulling as much
 - SigLIP may be better than CLIP
 - Show similarity scores on related images
 - Thresholds for things like face matching should be tested against a real dataset so we can find optimal thresholds for a target accuracy, and provide a table for users to pick what they'd rather.
+- Face detection/embedding batching
+- Make a package for efficiently storing and comparing embeddigns
+  - Should be a rust crate and nodejs package
+  - Should store embeddings as efficiently as possible
+  - Store quantized and source embeddings along side
+- Refactor queues
+  - Use class inheritance instead of decorators for better type safety
+  - Have type safe batched/unbatched queues
+  - Split into types
+    - `FrameQueue` operates on images and frames from videos
+    - `FileQueue` operates on any file (images, videos, audio)
+- We can use embeddings to filter jobs for images
+  - For example, train a model/create an embedding for "images with faces". We can then use that to filter out images that don't have faces before running face recognition.
+  - This can be done for any "expensive" job that can be represented as an embedding, for example OCR.
