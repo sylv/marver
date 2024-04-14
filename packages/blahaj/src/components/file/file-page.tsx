@@ -1,124 +1,47 @@
-import { memo, useEffect, useRef, useState } from 'react';
-import { useQuery } from 'urql';
-import { graphql } from '../../@generated';
+import { memo, useEffect, useState } from 'react';
 import type { FilesQueryVariables } from '../../@generated/graphql';
-import { cn } from '../../helpers/cn';
-import { FilePreview } from './file-preview';
+import { FilePageSegment } from './file-page-segment';
 
-interface FilePageProps {
-  variables: FilesQueryVariables;
-  isLastPage: boolean;
-  targetWidth?: number;
-  rowHeight?: number;
-  onLoadMore: (cursor: string) => void;
+export interface FilePageProps {
+  variables?: FilesQueryVariables;
 }
 
-const FilesQuery = graphql(`
-  query Files($search: String, $after: String, $first: Float, $collectionId: ID) {
-    files(search: $search, after: $after, first: $first, collectionId: $collectionId) {
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
-      edges {
-        node {
-          id
-          thumbnailUrl
-          info {
-            height
-            width
-          }
-          ...FilePreviewProps
-        }
-      }
-    }
-  }
-`);
+export const FilePage = memo<FilePageProps>(({ variables }) => {
+  const [pageVariables, setPageVariables] = useState<FilesQueryVariables[]>([
+    {
+      ...variables,
+      after: null,
+    },
+  ]);
 
-export const FilePage = memo<FilePageProps>(
-  ({ variables, isLastPage, targetWidth = 250, rowHeight = 200, onLoadMore }) => {
-    const [unloadWithHeight, setUnloadWithHeight] = useState<number | null>(null);
-    const loaderRef = useRef<HTMLDivElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [{ fetching, data }] = useQuery({
-      query: FilesQuery,
-      variables: variables,
-    });
+  useEffect(() => {
+    setPageVariables([
+      {
+        ...variables,
+        after: null,
+      },
+    ]);
+  }, [variables]);
 
-    useEffect(() => {
-      // load more when loaderRef is in viewport
-      if (!loaderRef.current || !isLastPage) return;
-      if (!data || !data.files.pageInfo.hasNextPage) return;
-      const observer = new IntersectionObserver((entries) => {
-        if (!data || fetching) return;
-        if (entries[0].isIntersecting && data.files.pageInfo.hasNextPage) {
-          onLoadMore(data.files.pageInfo.endCursor);
-        }
-      });
-
-      observer.observe(loaderRef.current);
-      return () => observer.disconnect();
-    }, [loaderRef, isLastPage, data, fetching, onLoadMore]);
-
-    useEffect(() => {
-      if (!containerRef.current) return;
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (containerRef.current && !entries[0].isIntersecting && containerRef.current.clientHeight >= 80) {
-            // unload when off screen by a large margin.
-            // helps with performance, though introduces some flickering if you scroll fast.
-            // todo: try reduce flickering.
-            setUnloadWithHeight(containerRef.current.clientHeight);
-          } else {
-            setUnloadWithHeight(null);
-          }
-        },
-        {
-          // this is the margin that the observer will use to determine if the element is in the viewport.
-          // so 300% here means it has to be off screen by 300% of the screen height to be considered off screen.
-          // the 200% buffer here is to try prevent flickering when scrolling. it could be higher/lower, 300% seems fine for perf+ux balance.
-          rootMargin: "300% 0px 300% 0px",
-        },
-      );
-
-      observer.observe(containerRef.current);
-      return () => observer.disconnect();
-    }, [containerRef]);
-
-    return (
-      <div
-        ref={containerRef}
-        className={cn('relative mb-2', isLastPage && 'mb-20')}
-        style={{
-          height: unloadWithHeight || undefined,
-        }}
-      >
-        <div className="flex flex-wrap gap-2">
-          {!unloadWithHeight &&
-            data?.files.edges.map(({ node: file }, index) => {
-              if (!file.info.height || !file.info.width || !file.thumbnailUrl) return null;
-              const aspectRatio = file.info.width / file.info.height;
-              const isLast = index === data.files.edges.length - 1;
-              return (
-                <FilePreview
-                  key={file.id}
-                  file={file}
-                  style={{
-                    // the min here is to prevent high res images taking up the whole screen width.
-                    // todo: this could be done far more elegantly, the "isLast" check feels bad
-                    // but otherwise images are too small on the last row and it leaves space.
-                    width: isLast ? aspectRatio * targetWidth : `min(${aspectRatio * targetWidth}px, 30vw)`,
-                    flexGrow: aspectRatio * targetWidth,
-                    height: rowHeight,
-                  }}
-                />
-              );
-            })}
-        </div>
-        {isLastPage && (
-          <div ref={loaderRef} className="absolute left-0 right-0 bottom-0 h-[125dvh] pointer-events-none" />
-        )}
-      </div>
-    );
-  },
-);
+  return (
+    <div>
+      {pageVariables.map((variables, index) => (
+        <FilePageSegment
+          key={'file-view-' + variables.after}
+          isLastPage={index === pageVariables.length - 1}
+          onLoadMore={(cursor) => {
+            const baseVariables = pageVariables[index];
+            setPageVariables([...pageVariables, { ...baseVariables, after: cursor }]);
+          }}
+          variables={{
+            ...variables,
+            // with ssr, preview data for images adds up quickly. 28 images = 200kb of html.
+            // so the first page is smaller so the user sees it faster, then it ramps up to 100
+            // to make for a smoother scrolling experience.
+            first: index === 0 ? 28 : 100,
+          }}
+        />
+      ))}
+    </div>
+  );
+});
