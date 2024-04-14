@@ -24,7 +24,7 @@ export class CollectionResolver {
   }
 
   @ResolveField(() => [FileEntity])
-  async previewFiles(@Parent() collection: CollectionEntity) {
+  async previewFiles(@Parent() collection: CollectionEntity, @Info() info: any) {
     const childCollectionQueryIds = sql`
       WITH RECURSIVE collection_hierarchy AS (
         SELECT id
@@ -44,6 +44,7 @@ export class CollectionResolver {
     const em = this.collectionRepo.getEntityManager();
     const childCollectionIds = await em.execute(childCollectionQueryIds.sql, childCollectionQueryIds.params);
 
+    const populate = inferPopulate(FileEntity, "previewFiles", info);
     return this.fileRepo.find(
       {
         collections: { $in: childCollectionIds.map((item) => item.id) },
@@ -57,6 +58,7 @@ export class CollectionResolver {
       },
       {
         limit: 4,
+        populate,
       },
     );
   }

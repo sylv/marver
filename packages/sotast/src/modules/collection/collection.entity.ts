@@ -1,11 +1,11 @@
-import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
-import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { ulid } from 'ulid';
-import { FileEntity } from '../file/entities/file.entity';
-import { AutoPopulate } from '../../helpers/autoloader';
+import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core";
+import { Field, ID, ObjectType } from "@nestjs/graphql";
+import { ulid } from "ulid";
+import { FileEntity } from "../file/entities/file.entity";
+import { AutoPopulate } from "../../helpers/autoloader";
 
-@Entity({ tableName: 'collections' })
-@ObjectType('Collection')
+@Entity({ tableName: "collections" })
+@ObjectType("Collection")
 export class CollectionEntity {
   @PrimaryKey()
   @Field(() => ID)
@@ -32,9 +32,16 @@ export class CollectionEntity {
 
   @AutoPopulate()
   @Field(() => [CollectionEntity])
-  @OneToMany(() => CollectionEntity, (collection) => collection.parent)
+  @OneToMany(
+    () => CollectionEntity,
+    (collection) => collection.parent,
+  )
   children?: CollectionEntity[];
 
-  @ManyToMany(() => FileEntity, (file) => file.collections, { owner: true })
+  @ManyToMany(
+    () => FileEntity,
+    (file) => file.collections,
+    { owner: true },
+  )
   files = new Collection<FileEntity>(this);
 }
