@@ -65,6 +65,17 @@ export class FileScanService implements OnApplicationBootstrap {
         checkedAt: { $lt: lastCheckedAt },
       });
 
+    // delete any generated collections with no files and no children
+    // todo: this is sloppy, we should instead only create collections if we know they have files.
+    await this.collectionRepo
+      .createQueryBuilder()
+      .delete()
+      .where({
+        generated: true,
+        children: { $none: {} },
+        files: { $none: {} },
+      });
+
     // todo: reset task cooldowns. when tasks have no files to process, they sleep for awhile.
     // if we reset them it'll feel more responsive when new files are added
     const duration = performance.now() - start;
