@@ -24,9 +24,8 @@ export class PersonService {
       [faceEmbedding],
     );
 
-    // console.log({ personId });
     const person = result[0];
-    if (person && person.avg_sim > config.face_detection.min_person_score) {
+    if (person && person.avg_sim >= config.face_detection.min_person_score) {
       return person.id;
     }
 

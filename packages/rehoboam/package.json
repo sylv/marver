@@ -8,6 +8,7 @@
     "build": "napi build --platform --release --strip"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^0.1.51",
     "@napi-rs/cli": "^2.18.1",
     "@types/node": "^20.12.7",
     "esbuild": "^0.20.2"

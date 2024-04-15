@@ -142,6 +142,7 @@ export class VideoQueues {
       framePaths.push(frame.path);
     }
 
+    // todo: batch into ~100 images at once
     const embeddings = await this.clipService.encodeImageBatch(framePaths);
     for (const embedding of embeddings) {
       this.fileEmbeddingRepo.create(

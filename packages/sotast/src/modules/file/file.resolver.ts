@@ -13,7 +13,7 @@ import {
   registerEnumType,
 } from "@nestjs/graphql";
 import bytes from "bytes";
-import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, MaxLength } from "class-validator";
 import { createConnection } from "nest-graphql-utils";
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "../../constants.js";
 import { AutoPopulate, inferPopulate } from "../../helpers/autoloader.js";
@@ -94,6 +94,11 @@ class FileFilter extends PaginationArgs {
   @IsOptional()
   @Field({ nullable: true })
   afterDate?: Date;
+
+  @IsNumber()
+  @IsOptional()
+  @Field(() => ID, { nullable: true })
+  personId?: number;
 }
 
 @Resolver(() => FileEntity)
@@ -135,6 +140,16 @@ export class FileResolver {
         if (filter.afterDate) filters.push({ createdAt: { $gte: filter.afterDate } });
         if (filter.beforeDate) filters.push({ createdAt: { $lte: filter.beforeDate } });
         if (filter.collectionId) filters.push({ collections: { id: filter.collectionId } });
+
+        if (filter.personId) {
+          filters.push({
+            faces: {
+              person: {
+                id: filter.personId,
+              },
+            },
+          });
+        }
 
         // // we have to do this before the search query or else mikroorm can't
         // // count the files properly. it's a bug in mikroorm.

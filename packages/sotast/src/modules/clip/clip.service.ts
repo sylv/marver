@@ -11,12 +11,12 @@ const CLIP_MODEL = {
   visual_size: 224,
   textual_model: {
     url: "https://clip-as-service.s3.us-east-2.amazonaws.com/models-436c69702d61732d53657276696365/onnx/ViT-B-32/textual.onnx",
-    hash: "55c85d8cbb096023781c1d13c557eb95d26034c111bd001b7360fdb7399eec68",
+    hash: "0af04c287a3be2570eaef7a1ef896d81c1989602df67a8905941afed589e545e",
     path: "ViT-B-32/textual.onnx",
   },
   visual_model: {
-    url: "https://clip-as-service.s3.us-east-2.amazonaws.com/models-436c69702d61732d53657276696365/onnx/ViT-B-32/textual.onnx",
-    hash: "78e896b2c7301d01eda84e280d7c7297299aa6f8bacc0f5f8fe5bd60d42d8aae",
+    url: "https://clip-as-service.s3.us-east-2.amazonaws.com/models-436c69702d61732d53657276696365/onnx/ViT-B-32/visual.onnx",
+    hash: "06395063c0a5c28b1a8d4bd585261501a878c8f52d1216db6c4cbb651f7c13f1",
     path: "ViT-B-32/visual.onnx",
   },
   tokenizer_url: {

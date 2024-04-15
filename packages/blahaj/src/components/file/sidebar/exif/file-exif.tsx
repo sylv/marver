@@ -1,13 +1,13 @@
-import { memo, useMemo } from 'react';
-import type { IconType } from 'react-icons/lib';
-import { graphql, unmask, type FragmentType } from '../../../../@generated';
-import { pascalToLabel } from '../../../../helpers/pascalToLabel';
-import { FileCard } from '../../parts/file-card';
-import { FileLabel } from '../../parts/file-label';
-import { formatExifValue } from './format';
-import { EXIF_ICONS } from './icons';
+import { memo, useMemo } from "react";
+import type { IconType } from "react-icons/lib";
+import { graphql, unmask, type FragmentType } from "../../../../@generated";
+import { pascalToLabel } from "../../../../helpers/pascalToLabel";
+import { FileCard } from "../../parts/file-card";
+import { FileLabel } from "../../parts/file-label";
+import { formatExifValue } from "./format";
+import { EXIF_ICONS } from "./icons";
 
-const IGNORE_VALUES = new Set(['0', '0/0', '0/0/0', '0/0/0/0', 'unknown', 'none']);
+const IGNORE_VALUES = new Set(["0", "0/0", "0/0/0", "0/0/0/0", "unknown", "none"]);
 
 const Fragment = graphql(`
   fragment FileExifProps on File {

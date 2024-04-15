@@ -4,7 +4,7 @@ import { graphql } from '../../../@generated';
 import { useQuery } from 'urql';
 import { SpinnerCenter } from '../../../components/spinner';
 import { CollectionPreview } from '../../../components/collection/collection-preview';
-import { FileList } from '../../../components/file/file-list';
+import { FilePage } from '../../../components/file/file-page';
 
 const CollectionQuery = graphql(`
   query CollectionQuery($collectionId: String!) {
@@ -70,7 +70,7 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
           ))}
         </div>
       )}
-      {data.collection.directFileCount !== 0 && <FileList variables={{ collectionId }} />}
+      {data.collection.directFileCount !== 0 && <FilePage variables={{ collectionId }} />}
     </div>
   );
 };

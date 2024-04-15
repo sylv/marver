@@ -1,26 +1,22 @@
-import { ArrayType, Collection, Entity, OneToMany, OneToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/core";
+import { ArrayType, Collection, Entity, OneToMany, OptionalProps, PrimaryKey, Property } from "@mikro-orm/core";
 import { Field, ID, ObjectType } from "@nestjs/graphql";
-import { TagEntity } from "../../file/entities/tag.entity.js";
+import { Connection } from "nest-graphql-utils";
+import { AutoPopulate } from "../../../helpers/autoloader.js";
 import { FaceEntity } from "./face.entity.js";
 
 @Entity({ tableName: "people" })
 @ObjectType("Person")
-// todo: require that the tag is non-nullable when the person has a name
-// that can't be done now because sqlite doesn't like constaints.
-// @Check<PersonEntity>({
-//   expression: (columns) => `${columns.name} IS NULL OR ${columns.tag} IS NOT NULL`,
-// })
 export class PersonEntity {
   @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
   id: number;
 
-  @Property({ nullable: true })
-  @Field({ nullable: true })
-  name?: string;
+  @Property({ unique: true })
+  @Field()
+  name: string;
 
   @Property({ type: ArrayType })
-  @Field(() => String)
+  @Field(() => [String])
   aliases: string[] = [];
 
   @Property({ nullable: true })
@@ -35,15 +31,22 @@ export class PersonEntity {
   @Field({ nullable: true })
   deathDate?: Date;
 
+  @AutoPopulate()
   @OneToMany(
     () => FaceEntity,
     (face) => face.person,
   )
   faces = new Collection<FaceEntity>(this);
 
-  @OneToOne(() => TagEntity, { ref: true, nullable: true })
-  @Field(() => TagEntity, { nullable: true })
-  tag?: Ref<TagEntity>;
+  // @AutoPopulate()
+  // @OneToOne(() => TagEntity, { ref: true, nullable: true })
+  // @Field(() => TagEntity, { nullable: true })
+  // tag?: Ref<TagEntity>;
 
   [OptionalProps]: "aliases";
 }
+
+@ObjectType()
+export class PersonConnection extends Connection(PersonEntity, {
+  edgeName: "PersonEdge",
+}) {}

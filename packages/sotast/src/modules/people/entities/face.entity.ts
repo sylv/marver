@@ -3,6 +3,7 @@ import { Field, ID, ObjectType } from "@nestjs/graphql";
 import { BoundingBoxEmbeddable } from "./bounding-box.embeddable.js";
 import { FileEntity } from "../../file/entities/file.entity.js";
 import { PersonEntity } from "./person.entity.js";
+import { AutoPopulate } from "../../../helpers/autoloader.js";
 
 @Entity({ tableName: "faces" })
 @ObjectType("Face")
@@ -18,9 +19,11 @@ export class FaceEntity {
   @Field(() => BoundingBoxEmbeddable)
   boundingBox: BoundingBoxEmbeddable;
 
+  @AutoPopulate()
   @ManyToOne(() => FileEntity, { ref: true })
   file: Ref<FileEntity>;
 
+  @AutoPopulate()
   @ManyToOne(() => PersonEntity, { ref: true })
   @Field(() => PersonEntity)
   person: Ref<PersonEntity>;

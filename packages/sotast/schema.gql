@@ -182,20 +182,36 @@ type PageInfo {
 }
 
 type Person {
-  aliases: String!
+  aliases: [String!]!
   birthDate: DateTime
   deathDate: DateTime
   description: String
   id: ID!
-  name: String
-  tag: Tag
+  name: String!
+}
+
+type PersonConnection {
+  edges: [PersonEdge!]!
+  pageInfo: PageInfo!
+
+  """Total number of PersonEntity items"""
+  totalCount: Int!
+}
+
+"""Provides PersonEntity item and a cursor to its position"""
+type PersonEdge {
+  """The position of this PersonEntity item"""
+  cursor: String!
+  node: Person!
 }
 
 type Query {
   collection(id: String!): Collection!
   collections: [Collection!]!
   file(id: String!): File
-  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
+  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, personId: ID, search: String, sort: FileSort): FileConnection!
+  people(after: String, before: String, first: Float, last: Float, offset: Float, search: String): PersonConnection!
+  person(id: ID!): Person!
   serverInfo: ServerInfo!
   tasks: [Task!]!
 }

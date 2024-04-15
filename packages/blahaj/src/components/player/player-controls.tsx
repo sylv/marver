@@ -1,12 +1,12 @@
-import React, { type RefObject, memo, useEffect, useState } from 'react';
-import isEqual from 'react-fast-compare';
+import { memo, useEffect, useState, type RefObject } from "react";
+import isEqual from "react-fast-compare";
 
 interface PlayerControlsProps {
   videoRef: RefObject<HTMLVideoElement>;
 }
 
 export const PlayerControls = memo<PlayerControlsProps>(({ videoRef }) => {
-  const [position, setPosition] = useState(0);
+  const [, setPosition] = useState(0);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -15,12 +15,12 @@ export const PlayerControls = memo<PlayerControlsProps>(({ videoRef }) => {
       setPosition(videoEl.currentTime ?? 0);
     };
 
-    videoEl.addEventListener('timeupdate', listener);
+    videoEl.addEventListener("timeupdate", listener);
     return () => {
-      videoEl.removeEventListener('timeupdate', listener);
+      videoEl.removeEventListener("timeupdate", listener);
     };
   }, [videoRef.current]);
 
   if (!videoRef.current) return null;
-  return <div className="absolute bottom-1 left-1 right-1"></div>;
+  return <div className="absolute bottom-1 left-1 right-1" />;
 }, isEqual);

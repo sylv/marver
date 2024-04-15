@@ -17,7 +17,8 @@ export class FaceService {
 
   async detectFaces(imagePath: string) {
     const faceRec = await this.getFaceRecognition();
-    return faceRec.predict(imagePath);
+    const faces = await faceRec.predict(imagePath);
+    return faces.filter((face) => face.prediction.score >= config.face_detection.min_face_score);
   }
 
   @dedupe

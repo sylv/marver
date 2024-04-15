@@ -9,6 +9,7 @@ import { FaceEntity } from "./entities/face.entity.js";
 import { PersonEntity } from "./entities/person.entity.js";
 import { FaceService } from "./face.service.js";
 import { PersonService } from "./person.service.js";
+import { randomBytes } from "node:crypto";
 
 @Injectable()
 export class PersonTasks {
@@ -55,7 +56,10 @@ export class PersonTasks {
         await this.personService.findPersonFromFace(embeddingBuffer);
 
       if (!personOrPersonId) {
-        personOrPersonId = this.personRepo.create({});
+        const id = randomBytes(4).toString("hex");
+        personOrPersonId = this.personRepo.create({
+          name: `Unknown person ${id}`,
+        });
       } else {
         this.logger.debug(`Matched face to person ${personOrPersonId}`);
       }

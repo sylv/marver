@@ -1,9 +1,9 @@
-import { memo, useEffect, useRef, useState } from 'react';
-import { useQuery } from 'urql';
-import { graphql } from '../../@generated';
-import type { FilesQueryVariables } from '../../@generated/graphql';
-import { cn } from '../../helpers/cn';
-import { FilePreview } from './file-preview';
+import { memo, useEffect, useRef, useState } from "react";
+import { useQuery } from "urql";
+import { graphql } from "../../@generated";
+import type { FilesQueryVariables } from "../../@generated/graphql";
+import { cn } from "../../helpers/cn";
+import { FilePreview } from "./file-preview";
 
 interface FilePageSegmentProps {
   variables: FilesQueryVariables;
@@ -14,8 +14,8 @@ interface FilePageSegmentProps {
 }
 
 const FilesQuery = graphql(`
-  query Files($search: String, $after: String, $first: Float, $collectionId: ID) {
-    files(search: $search, after: $after, first: $first, collectionId: $collectionId) {
+  query Files($search: String, $after: String, $first: Float, $collectionId: ID, $personId: ID) {
+    files(search: $search, after: $after, first: $first, collectionId: $collectionId, personId: $personId) {
       pageInfo {
         endCursor
         hasNextPage
@@ -85,29 +85,28 @@ export const FilePageSegment = memo<FilePageSegmentProps>(
       return () => observer.disconnect();
     }, [containerRef]);
 
+    console.log({ isLastPage });
+
     return (
       <div
         ref={containerRef}
-        className={cn('relative mb-2', isLastPage && 'mb-20')}
+        className={cn("relative mb-2", isLastPage && "mb-20")}
         style={{
           height: unloadWithHeight || undefined,
         }}
       >
         <div className="flex flex-wrap gap-2">
           {!unloadWithHeight &&
-            data?.files.edges.map(({ node: file }, index) => {
+            data?.files.edges.map(({ node: file }) => {
               if (!file.info.height || !file.info.width || !file.thumbnailUrl) return null;
               const aspectRatio = file.info.width / file.info.height;
-              const isLast = index === data.files.edges.length - 1;
+
               return (
                 <FilePreview
                   key={file.id}
                   file={file}
                   style={{
-                    // the min here is to prevent high res images taking up the whole screen width.
-                    // todo: this could be done far more elegantly, the "isLast" check feels bad
-                    // but otherwise images are too small on the last row and it leaves space.
-                    width: isLast ? aspectRatio * targetWidth : `min(${aspectRatio * targetWidth}px, 30vw)`,
+                    width: aspectRatio * targetWidth,
                     flexGrow: aspectRatio * targetWidth,
                     height: rowHeight,
                   }}

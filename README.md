@@ -68,6 +68,7 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - In the sidebar, have a "shortcuts" link at the bottom that opens a little panel showing the shortcuts. Having shortcuts but not showing them is a waste.
   - `Ctrl + T` to quickly add tags to an image
   - `Ctrl + D` to show debug layers of images (for example, outlines of detected faces, OCR outlines, etc)
+- It would be cool to run face detection, then run age detection on the detected faces, then show photos of a person on a timeline of their life.
 
 ### todo
 
@@ -91,6 +92,10 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - Split into types
     - `FrameQueue` operates on images and frames from videos
     - `FileQueue` operates on any file (images, videos, audio)
+    - `AssetQueue` operates on scanned files and generated files
+      - This one I think would be good for things like thumbhash previews, where we ideally want them on everything. But it may require some kind of standardisation of how images are stored for it to be generic enough to work.
+    - Operating on frames in isolation may be problematic for something like "detect faces in a video", where we might want to only consider a face in the video if its in >1 minute of the video, which would require checking after running face detection on multiple frames.
 - We can use embeddings to filter jobs for images
   - For example, train a model/create an embedding for "images with faces". We can then use that to filter out images that don't have faces before running face recognition.
   - This can be done for any "expensive" job that can be represented as an embedding, for example OCR.
+- Thumbhash previews are not generated for videos

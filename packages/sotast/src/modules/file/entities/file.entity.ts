@@ -185,7 +185,7 @@ export class FileEntity {
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
   get mimeType() {
-    if (!this.path) return;
+    if (!this.path) return undefined;
     if (this.path.endsWith("jfif")) return "image/jpeg";
     return mime.lookup(this.path) || null;
   }
@@ -194,7 +194,7 @@ export class FileEntity {
   @Field(() => String, { nullable: true })
   @Index()
   get extension() {
-    if (!this.path) return;
+    if (!this.path) return undefined;
     return extname(this.path).slice(1).toLowerCase() || null;
   }
 

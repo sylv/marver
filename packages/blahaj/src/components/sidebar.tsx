@@ -1,21 +1,28 @@
-import { LucideAlbum, LucideHash, LucideListTodo, LucideTv, type LucideIcon } from 'lucide-react';
-import { memo } from 'react';
-import { ModeToggle } from './theme/theme-switcher';
-import { cn } from '../helpers/cn';
-import { usePageContext } from '../renderer/usePageContext';
+import {
+  LucideAlbum,
+  LucideHash,
+  LucideListTodo,
+  LucideTv,
+  LucideUser2,
+  type LucideIcon,
+} from "lucide-react";
+import { memo } from "react";
+import { cn } from "../helpers/cn";
+import { usePageContext } from "../renderer/usePageContext";
+import { ModeToggle } from "./theme/theme-switcher";
 
-const SIDEBAR_WIDTH = '15rem';
+const SIDEBAR_WIDTH = "15rem";
 
 const SidebarTab = memo<{ href: string; icon: LucideIcon; children: React.ReactNode }>(
   ({ href, icon: Icon, children }) => {
     const { urlParsed } = usePageContext();
-    const isActive = href === '/' ? urlParsed.pathname === href : urlParsed.pathname.startsWith(href);
+    const isActive = href === "/" ? urlParsed.pathname === href : urlParsed.pathname.startsWith(href);
     return (
       <a
         href={href}
         className={cn(
-          'flex gap-2 px-4 py-1.5 rounded-lg items-center text-zinc-200 hover:bg-zinc-700/60 text-[0.9125rem]',
-          isActive && 'bg-zinc-700/60',
+          "flex gap-2 px-4 py-1.5 rounded-lg items-center text-zinc-200 hover:bg-zinc-700/60 text-[0.9125rem]",
+          isActive && "bg-zinc-700/60",
         )}
       >
         <Icon className="h-4 w-4" />
@@ -39,8 +46,11 @@ export const Sidebar = memo(() => {
             <SidebarTab href="/collections" icon={LucideAlbum}>
               Collections
             </SidebarTab>
+            <SidebarTab href="/people" icon={LucideUser2}>
+              People
+            </SidebarTab>
           </div>
-          <div className="text-gray-400 uppercase text-xs mb-2 px-4 mt-4 mb-2">Admin</div>
+          <div className="text-gray-400 uppercase text-xs px-4 mt-4 mb-2">Admin</div>
           <SidebarTab href="/tags" icon={LucideHash}>
             Tags
           </SidebarTab>

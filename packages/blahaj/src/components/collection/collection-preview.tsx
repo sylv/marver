@@ -48,7 +48,7 @@ export const CollectionPreview = memo<{ collection: FragmentType<typeof Fragment
               <h2>{collection.name}</h2>
               {collection.aggregateFileCount && (
                 <div className="flex items-center gap-1 text-xs">
-                  <LuImage className="inline-block h-3.5 h-3.5" />
+                  <LuImage className="inline-block h-3.5" />
                   {collection.aggregateFileCount.toLocaleString()}
                 </div>
               )}
@@ -64,7 +64,7 @@ export const CollectionPreview = memo<{ collection: FragmentType<typeof Fragment
                     key={file.id}
                     className="basis-1/2 flex-grow"
                     style={{
-                      maxHeight: collection.previewFiles.length <= 2 ? '100%' : `50%`,
+                      maxHeight: collection.previewFiles.length <= 2 ? '100%' : "50%",
                     }}
                   >
                     <Image key={file.id} file={file} className="h-full w-full rounded-none object-cover" />
@@ -74,7 +74,7 @@ export const CollectionPreview = memo<{ collection: FragmentType<typeof Fragment
             </div>
           )}
           {!collection.previewFiles[0] && gradient && (
-            <div className="w-full h-full" style={{ backgroundImage: gradient }}></div>
+            <div className="w-full h-full" style={{ backgroundImage: gradient }} />
           )}
         </Card>
       </a>

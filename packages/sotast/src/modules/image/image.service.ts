@@ -153,10 +153,7 @@ export class ImageService {
 
       return exif;
     } catch (error: any) {
-      if (error.name === "MetadataMissingError") {
-        return null;
-      }
-
+      if (error.name === "MetadataMissingError" || error.message === "Invalid image format") return null;
       throw error;
     }
   }

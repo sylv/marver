@@ -1,10 +1,10 @@
-import type { IconType } from 'react-icons/lib';
-import { LuAperture, LuCamera, LuClock, LuFocus, LuSliders, LuSun, LuZap, LuZoomIn } from 'react-icons/lu';
-import type { ExifPartFragment } from '../../../../@generated/graphql';
+import type { IconType } from "react-icons/lib";
+import { LuAperture, LuCamera, LuClock, LuFocus, LuSliders, LuSun, LuZap, LuZoomIn } from "react-icons/lu";
+import type { FileExifPropsFragment } from "../../../../@generated/graphql";
 
 export const EXIF_ICONS: Omit<
-  Record<keyof ExifPartFragment, IconType>,
-  '__typename' | 'longitude' | 'latitude'
+  Record<keyof FileExifPropsFragment["exifData"], IconType>,
+  "__typename" | "longitude" | "latitude"
 > = {
   cameraMake: LuCamera,
   cameraModel: LuCamera,

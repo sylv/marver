@@ -1,4 +1,4 @@
-import { FileList } from '../../components/file/file-list';
+import { FilePage } from '../../components/file/file-page';
 import { Input } from '../../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useDebounced } from '../../hooks/useDebounced';
@@ -20,7 +20,7 @@ export const Page = () => {
           <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search" />
         </div>
         <TabsContent value="all">
-          <FileList variables={{ search: debouncedSearch }} />
+          <FilePage variables={{ search: debouncedSearch }} />
         </TabsContent>
       </Tabs>
     </div>

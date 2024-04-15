@@ -66,7 +66,7 @@ export function Page() {
                 </Button>
               </div>
             </div>
-            <button className="px-4 py-2 bg-muted text-xs text-muted-foreground hover:text-primary transition w-full flex items-center justify-center gap-2">
+            <button type="button" className="px-4 py-2 bg-muted text-xs text-muted-foreground hover:text-primary transition w-full flex items-center justify-center gap-2">
               Show Logs
               <FiChevronDown />
             </button>
