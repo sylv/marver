@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process";
 
 export const getPackageMetadata = async () => {
-  const pkg = await import("../../package.json").then((pkg) => pkg.default);
+  const pkg = await import("../../package.json", { with: { type: "json" } }).then((pkg) => pkg.default);
   const { version, homepage } = pkg;
   if (process.env.BUILD_COMMIT && process.env.BUILD_BRANCH && process.env.BUILD_DATE) {
     return {

@@ -7,7 +7,7 @@
     "watch": "ORT_DYLIB_PATH=../../target/release/libonnxruntime.so.1.17.1 tsup --watch --sourcemap --onSuccess \"node --enable-source-maps ./dist/main.js\"",
     "build": "tsc --noEmit && tsup",
     "test": "vitest run",
-    "mikro-orm": "NODE_OPTIONS=\"--loader ts-node/esm\" mikro-orm",
+    "mikro-orm": "NODE_OPTIONS=\"--no-warnings=ExperimentalWarning --import @swc-node/register/esm-register\" mikro-orm",
     "generate": "protoc --ts_out ./src/@generated --ts_opt optimize_speed,use_proto_field_name --proto_path=../../proto ../../proto/*.proto --experimental_allow_proto3_optional && node ./scripts/fix-imports.mjs ./src/@generated"
   },
   "dependencies": {
@@ -68,6 +68,7 @@
     "@atlasbot/configs": "^10.5.16",
     "@mikro-orm/cli": "^6.2.1",
     "@protobuf-ts/plugin": "^2.9.4",
+    "@swc-node/register": "^1.9.0",
     "@swc/core": "^1.4.13",
     "@types/adm-zip": "^0.5.5",
     "@types/bytes": "^3.1.4",
@@ -84,8 +85,7 @@
     "vitest": "^1.5.0"
   },
   "mikro-orm": {
-    "useTsNode": true,
-    "tsConfigPath": "./tsconfig.json",
+    "alwaysAllowTs": true,
     "configPaths": [
       "./src/orm.config.ts"
     ]

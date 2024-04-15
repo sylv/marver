@@ -1,22 +1,23 @@
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "@mikro-orm/better-sqlite";
+import { Migrator } from "@mikro-orm/migrations";
 import { Logger, NotFoundException } from "@nestjs/common";
 import type { Database } from "better-sqlite3";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 
-const ORM_LOGGER = new Logger("MikroORM");
-const MIGRATIONS_TABLE_NAME = "mikro_orm_migrations";
-const IS_TS = import.meta.url.endsWith(".ts");
+export const ORM_LOGGER = new Logger("MikroORM");
 
 export default defineConfig({
   dbName: join(config.metadata_dir, "core.db"),
-  entities: IS_TS ? ["src/**/*.entity.ts"] : ["dist/**/*.entity.{ts,js}"],
+  extensions: [Migrator],
   persistOnCreate: true,
   debug: config.orm_debug,
+  baseDir: import.meta.dirname,
+  entities: ["**/*.entity.{js,ts}"],
   migrations: {
-    path: join(dirname(fileURLToPath(import.meta.url)), "migrations"),
-    tableName: MIGRATIONS_TABLE_NAME,
+    path: "migrations",
+    tableName: "migrations",
   },
   pool: {
     afterCreate: (...args) => {

@@ -24,6 +24,7 @@ export class FileScanService implements OnApplicationBootstrap {
   private staged = 0;
   private log = new Logger(FileScanService.name);
   private lastPersist = Date.now();
+  private skipped: string[] = [];
 
   constructor(
     protected orm: MikroORM,
@@ -80,6 +81,10 @@ export class FileScanService implements OnApplicationBootstrap {
     // if we reset them it'll feel more responsive when new files are added
     const duration = performance.now() - start;
     this.log.log(`Scanned source in ${duration}ms`);
+    if (this.skipped.length) {
+      this.log.debug(`Skipped ${this.skipped.length} unknown extensions "${this.skipped.join(", ")}"`);
+      this.skipped = [];
+    }
   }
 
   /**
@@ -175,7 +180,8 @@ export class FileScanService implements OnApplicationBootstrap {
 
     // there is no point in tracking files that we don't know how to handle
     if (!file.isSupportedMimeType) {
-      this.log.debug(`Skipping unknown file type: ${path}`);
+      if (!file.extension || this.skipped.length > 100) return;
+      this.skipped.push(file.extension);
       return;
     }
 

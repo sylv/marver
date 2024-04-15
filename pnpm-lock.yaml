@@ -363,6 +363,9 @@ importers:
       '@protobuf-ts/plugin':
         specifier: ^2.9.4
         version: 2.9.4
+      '@swc-node/register':
+        specifier: ^1.9.0
+        version: 1.9.0(@swc/core@1.4.13)(@swc/types@0.1.6)(typescript@5.4.5)
       '@swc/core':
         specifier: ^1.4.13
         version: 1.4.13
@@ -4288,6 +4291,43 @@ packages:
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
+    dev: true
+
+  /@swc-node/core@1.13.0(@swc/core@1.4.13)(@swc/types@0.1.6):
+    resolution: {integrity: sha512-lFPD4nmy4ifAOVMChFjwlpXN5KQXvegqeyuzz1KQz42q1lf+cL3Qux1/GteGuZjh8HC+Rj1RdNrHpE/MCfJSTw==}
+    engines: {node: '>= 10'}
+    peerDependencies:
+      '@swc/core': '>= 1.3'
+      '@swc/types': '>= 0.1'
+    dependencies:
+      '@swc/core': 1.4.13
+      '@swc/types': 0.1.6
+    dev: true
+
+  /@swc-node/register@1.9.0(@swc/core@1.4.13)(@swc/types@0.1.6)(typescript@5.4.5):
+    resolution: {integrity: sha512-i0iYInD4q5v3xQC6bKvs0QtfUxu197CU5qKALmpxEqTYs7sIhQ7KFLe3kP+eAR4gRkJTvAgjQgrokXLN2jZrOw==}
+    peerDependencies:
+      '@swc/core': '>= 1.3'
+      typescript: '>= 4.3'
+    dependencies:
+      '@swc-node/core': 1.13.0(@swc/core@1.4.13)(@swc/types@0.1.6)
+      '@swc-node/sourcemap-support': 0.5.0
+      '@swc/core': 1.4.13
+      colorette: 2.0.20
+      debug: 4.3.4
+      pirates: 4.0.6
+      tslib: 2.6.2
+      typescript: 5.4.5
+    transitivePeerDependencies:
+      - '@swc/types'
+      - supports-color
+    dev: true
+
+  /@swc-node/sourcemap-support@0.5.0:
+    resolution: {integrity: sha512-fbhjL5G0YvFoWwNhWleuBUfotiX+USiA9oJqu9STFw+Hb0Cgnddn+HVS/K5fI45mn92e8V+cHD2jgFjk4w2T9Q==}
+    dependencies:
+      source-map-support: 0.5.21
+      tslib: 2.6.2
     dev: true
 
   /@swc/core-darwin-arm64@1.4.13:

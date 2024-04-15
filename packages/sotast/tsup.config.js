@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/main.ts', 'src/**/*.entity.ts'],
+  entry: ['src/main.ts', 'src/**/*.entity.ts', "src/migrations/*"],
   target: 'node16',
   format: 'esm',
   clean: true,

@@ -10,8 +10,7 @@ import { performance } from "node:perf_hooks";
 import { AppModule } from "./app.module.js";
 import { config } from "./config.js";
 import { MikroOrmSerializerInterceptor } from "./serializer.interceptor.js";
-
-Error.stackTraceLimit = 1000;
+import { configureOrm, migrate } from "./migrate.js";
 
 const start = performance.now();
 const startupTimer = setTimeout(() => {
@@ -23,6 +22,8 @@ const startupTimer = setTimeout(() => {
 
   process.exit(1);
 }, config.startup_timeout);
+
+await migrate();
 
 const logger = new Logger("bootstrap");
 const server = fastify({
@@ -46,11 +47,8 @@ app.useGlobalPipes(
   }),
 );
 
-// temporary during development, auto update db schema
-// this is done before calling listen() so app hooks can run
-// on a fully initialized database
 const orm = app.get(MikroORM) as BetterMikroORM;
-await orm.getSchemaGenerator().updateSchema();
+await configureOrm(orm);
 
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || "127.0.0.1";
