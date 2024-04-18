@@ -1,7 +1,7 @@
 import { ChannelCredentials } from "@grpc/grpc-js";
 import { Injectable } from "@nestjs/common";
 import { GrpcTransport } from "@protobuf-ts/grpc-transport";
-import { readFile } from "node:fs/promises";
+import { readFile } from "fs/promises";
 import { RehoboamServiceClient } from "../../@generated/rehoboam.client.js";
 import { config } from "../../config.js";
 

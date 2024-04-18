@@ -40,25 +40,40 @@ type File {
   exifData: FileExifData
   extension: String
   faces: [Face!]!
+  getMimeType: String
   id: ID!
   indexedAt: DateTime!
   info: FileInfo!
   jobStates: [JobState!]!
-  mimeType: String
   modifiedAt: DateTime!
   name: String!
   path: String!
-  poster: FilePoster!
+  poster: FileAsset!
   previewBase64: String
   similar(after: String, before: String, first: Float, last: Float, offset: Float, type: SimilarityType): FileConnection!
   size: Float!
   sizeFormatted: String!
-  texts: [FileText!]!
-  thumbnail: FileThumbnail!
+  thumbnail: FileAsset!
   thumbnailUrl: String
-  timeline: FileTimeline!
   type: FileType
   unavailable: Boolean!
+}
+
+type FileAsset {
+  assetType: FileAssetType!
+  height: Float!
+  id: ID!
+  mimeType: String!
+
+  """The milliseconds into the file that the asset was generated from"""
+  position: Float
+  width: Float!
+}
+
+enum FileAssetType {
+  Poster
+  Thumbnail
+  Timeline
 }
 
 type FileConnection {
@@ -112,12 +127,6 @@ type FileInfo {
   width: Float
 }
 
-type FilePoster {
-  height: Float!
-  mimeType: String!
-  width: Float!
-}
-
 enum FileSort {
   DiskCreated
   Name
@@ -128,28 +137,6 @@ enum FileSort {
 enum FileSortDirection {
   ASC
   DESC
-}
-
-type FileText {
-  boundingBox: BoundingBox!
-  code: String
-  confidence: Float!
-  id: ID!
-  text: String!
-  timestamp: Float
-  type: Float!
-}
-
-type FileThumbnail {
-  height: Float!
-  mimeType: String!
-  width: Float!
-}
-
-type FileTimeline {
-  height: Float!
-  mimeType: String!
-  width: Float!
 }
 
 enum FileType {
@@ -208,7 +195,7 @@ type PersonEdge {
 type Query {
   collection(id: String!): Collection!
   collections: [Collection!]!
-  file(id: String!): File
+  file(id: String!): File!
   files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, personId: ID, search: String, sort: FileSort): FileConnection!
   people(after: String, before: String, first: Float, last: Float, offset: Float, search: String): PersonConnection!
   person(id: ID!): Person!
@@ -235,10 +222,6 @@ enum SimilarityType {
 enum State {
   Completed
   Failed
-}
-
-type Tag {
-  name: ID!
 }
 
 type Task {

@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execSync } from "child_process";
 
 export const getPackageMetadata = async () => {
   const pkg = await import("../../package.json", { with: { type: "json" } }).then((pkg) => pkg.default);

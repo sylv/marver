@@ -3,15 +3,16 @@ import { MikroORM } from "@mikro-orm/core";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable, Logger, type OnApplicationBootstrap } from "@nestjs/common";
 import { CronExpression } from "@nestjs/schedule";
-import { opendir, stat } from "node:fs/promises";
+import { opendir, stat } from "fs/promises";
 import PQueue from "p-queue";
-import { basename, join } from "node:path";
-import { performance } from "node:perf_hooks";
+import { basename, dirname, extname, join } from "path";
+import { performance } from "perf_hooks";
 import { config } from "../../config.js";
 import { shouldCreateCollection } from "../../helpers/should-create-collection.js";
 import { CollectionEntity } from "../collection/collection.entity.js";
 import { PublicCron } from "../task/public-cron.decorator.js";
 import { FileEntity } from "./entities/file.entity.js";
+import { SUPPORTED_EXTENSIONS } from "../../constants.js";
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()
@@ -24,7 +25,7 @@ export class FileScanService implements OnApplicationBootstrap {
   private staged = 0;
   private log = new Logger(FileScanService.name);
   private lastPersist = Date.now();
-  private skipped: string[] = [];
+  private skipped = new Set<string>();
 
   constructor(
     protected orm: MikroORM,
@@ -81,9 +82,9 @@ export class FileScanService implements OnApplicationBootstrap {
     // if we reset them it'll feel more responsive when new files are added
     const duration = performance.now() - start;
     this.log.log(`Scanned source in ${duration}ms`);
-    if (this.skipped.length) {
-      this.log.debug(`Skipped ${this.skipped.length} unknown extensions "${this.skipped.join(", ")}"`);
-      this.skipped = [];
+    if (this.skipped.size) {
+      this.log.debug(`Skipped ${this.skipped.size} unknown extensions "${[...this.skipped].join(", ")}"`);
+      this.skipped = new Set();
     }
   }
 
@@ -163,11 +164,20 @@ export class FileScanService implements OnApplicationBootstrap {
       return;
     }
 
+    const ext = extname(path).slice(1).toLowerCase();
+    if (!ext) {
+      this.log.debug(`Ignoring file with no extension "${path}"`);
+      return;
+    }
+
     // on WSL birthtime is always 0, so we use mtime instead
     const info = await stat(path);
     const birthtime = info.birthtimeMs === 0 ? info.mtime : info.birthtime;
     const file = this.fileRepo.create({
       path: path,
+      extension: ext,
+      directory: dirname(path),
+      name: basename(path),
       size: info.size,
       modifiedAt: info.mtime,
       createdAt: birthtime,
@@ -179,9 +189,9 @@ export class FileScanService implements OnApplicationBootstrap {
     }
 
     // there is no point in tracking files that we don't know how to handle
-    if (!file.isSupportedMimeType) {
-      if (!file.extension || this.skipped.length > 100) return;
-      this.skipped.push(file.extension);
+    if (!SUPPORTED_EXTENSIONS.has(ext)) {
+      if (this.skipped.size > 100) return;
+      this.skipped.add(ext);
       return;
     }
 

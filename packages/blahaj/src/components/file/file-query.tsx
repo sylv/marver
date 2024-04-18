@@ -1,12 +1,13 @@
-import { memo, useEffect, useState } from 'react';
-import type { FilesQueryVariables } from '../../@generated/graphql';
-import { FilePageSegment } from './file-page-segment';
+import { memo, useEffect, useState } from "react";
+import type { FilesQueryVariables } from "../../@generated/graphql";
+import { FileQuerySegment } from "./file-query-segment";
+import { FileOverlay } from "./overlay/file-overlay";
 
 export interface FilePageProps {
   variables?: FilesQueryVariables;
 }
 
-export const FilePage = memo<FilePageProps>(({ variables }) => {
+export const FileQuery = memo<FilePageProps>(({ variables }) => {
   const [pageVariables, setPageVariables] = useState<FilesQueryVariables[]>([
     {
       ...variables,
@@ -25,9 +26,10 @@ export const FilePage = memo<FilePageProps>(({ variables }) => {
 
   return (
     <div>
+      <FileOverlay />
       {pageVariables.map((variables, index) => (
-        <FilePageSegment
-          key={'file-view-' + variables.after}
+        <FileQuerySegment
+          key={"file-view-" + variables.after}
           isLastPage={index === pageVariables.length - 1}
           onLoadMore={(cursor) => {
             const baseVariables = pageVariables[index];

@@ -1,12 +1,12 @@
+import { dirname } from "path";
 import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable, Logger } from "@nestjs/common";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile } from "fs/promises";
 import ISO6391 from "iso-639-1";
 import LanguageDetect from "languagedetect";
-import { dirname, join } from "node:path";
 import { stripHtml } from "string-strip-html";
-import { parseSync, type Node } from "subtitle";
+import { type Node, parseSync } from "subtitle";
 import { VIDEO_EXTENSIONS } from "../../constants.js";
 import { FfmpegService } from "../ffmpeg/ffmpeg.service.js";
 import { FileEntity } from "../file/entities/file.entity.js";
@@ -55,9 +55,19 @@ export class SubtitlesService {
 
     let madeDir = false;
     for (const subtitleStream of subtitleStreams) {
-      const fileName = `embedded_${subtitleStream.index}.srt`;
-      const outputPath = join(file.assetFolder, "subtitles", fileName);
+      const subtitleEntity = this.subtitleRepo.create(
+        {
+          file: file,
+          name: `embedded_${subtitleStream.index}.srt`,
+          forced: subtitleStream.disposition?.forced === 1,
+          hearingImpaired: subtitleStream.disposition?.hearing_impaired === 1,
+          generated: false,
+          languageIso639_1: "en",
+        },
+        { persist: false },
+      );
 
+      const outputPath = subtitleEntity.getPath();
       if (!madeDir) {
         await mkdir(dirname(outputPath), { recursive: true });
         madeDir = true;
@@ -66,16 +76,8 @@ export class SubtitlesService {
       await this.ffmpegService.extractSubtitles(file.path, outputPath, subtitleStream.index);
 
       const languageName = await this.guessLanguage(outputPath);
-      const fileSupport = this.subtitleRepo.create({
-        file: file,
-        forced: subtitleStream.disposition?.forced === 1,
-        hearingImpaired: subtitleStream.disposition?.hearing_impaired === 1,
-        path: outputPath,
-        generated: false,
-        languageIso639_1: languageName,
-      });
-
-      this.em.persist(fileSupport);
+      subtitleEntity.languageIso639_1 = languageName;
+      this.em.persist(subtitleEntity);
     }
 
     await this.em.flush();

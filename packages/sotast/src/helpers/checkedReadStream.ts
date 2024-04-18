@@ -1,5 +1,5 @@
-import { createReadStream } from "node:fs";
-import { once } from "node:events";
+import { createReadStream } from "fs";
+import { once } from "events";
 
 export const checkedReadStream = async (path: string) => {
   const stream = createReadStream(path);

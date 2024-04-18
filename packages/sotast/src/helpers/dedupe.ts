@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash } from "crypto";
 
 export const dedupe: MethodDecorator = (target, propertyKey, descriptor) => {
   const originalMethod = descriptor.value! as any;

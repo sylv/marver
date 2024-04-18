@@ -1,17 +1,12 @@
-import {
-  Entity,
-  ManyToOne,
-  OptionalProps,
-  PrimaryKey,
-  Property,
-  type Ref,
-} from '@mikro-orm/better-sqlite';
-import { Field, ID, ObjectType } from '@nestjs/graphql';
-import ISO6391 from 'iso-639-1';
-import { FileEntity } from '../file/entities/file.entity.js';
+import { Entity, ManyToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/better-sqlite";
+import { Field, ID, ObjectType } from "@nestjs/graphql";
+import ISO6391 from "iso-639-1";
+import { FileEntity } from "../file/entities/file.entity.js";
+import { join } from "path";
+import { config } from "../../config.js";
 
-@Entity({ tableName: 'file_subtitles' })
-@ObjectType('FileSubtitle')
+@Entity({ tableName: "file_subtitles" })
+@ObjectType("FileSubtitle")
 export class FileSubtitleEntity {
   @PrimaryKey({ autoincrement: true })
   @Field(() => ID)
@@ -27,11 +22,11 @@ export class FileSubtitleEntity {
 
   @Property()
   @Field()
-  forced: boolean;
+  name: string;
 
   @Property()
   @Field()
-  path: string;
+  forced: boolean;
 
   @Property()
   @Field()
@@ -40,31 +35,37 @@ export class FileSubtitleEntity {
   @ManyToOne(() => FileEntity, { ref: true })
   file: Ref<FileEntity>;
 
-  @Property({ persist: false, type: 'string' })
-  @Field(() => String)
-  get languageNameNative() {
+  @Property({ persist: false, type: "string" })
+  @Field(() => String, { name: "languageNameNative" })
+  getLanguageNameNative() {
     return ISO6391.getNativeName(this.languageIso639_1);
   }
 
-  @Property({ persist: false, type: 'string' })
-  @Field(() => String)
-  get languageNameEnglish() {
+  @Property({ persist: false, type: "string" })
+  @Field(() => String, { name: "languageNameEnglish" })
+  getLanguageNameEnglish() {
     return ISO6391.getName(this.languageIso639_1);
   }
 
-  @Property({ persist: false, type: 'string' })
-  @Field(() => String)
-  get displayName() {
-    const parts = [this.languageNameNative];
-    if (this.languageNameNative !== this.languageNameEnglish) {
-      parts.push(`(${this.languageNameEnglish})`);
+  @Property({ persist: false, type: "string" })
+  @Field(() => String, { name: "displayName" })
+  getDisplayName() {
+    const nameNative = this.getLanguageNameNative();
+    const nameEnglish = this.getLanguageNameEnglish();
+    const parts = [nameNative];
+    if (nameNative !== nameEnglish) {
+      parts.push(`(${nameEnglish})`);
     }
 
-    if (this.hearingImpaired) parts.push('(hearing impaired)');
-    else if (this.forced) parts.push('(forced)');
-    if (this.generated) parts.push('(auto)');
-    return parts.join(' ');
+    if (this.hearingImpaired) parts.push("(hearing impaired)");
+    else if (this.forced) parts.push("(forced)");
+    if (this.generated) parts.push("(auto)");
+    return parts.join(" ");
   }
 
-  [OptionalProps]: 'displayName' | 'languageNameNative' | 'languageNameEnglish';
+  getPath() {
+    return join(config.metadata_dir, "subtitles", this.file.id, this.name);
+  }
+
+  [OptionalProps]: "displayName" | "languageNameNative" | "languageNameEnglish";
 }

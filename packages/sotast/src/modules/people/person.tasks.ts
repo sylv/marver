@@ -9,7 +9,7 @@ import { FaceEntity } from "./entities/face.entity.js";
 import { PersonEntity } from "./entities/person.entity.js";
 import { FaceService } from "./face.service.js";
 import { PersonService } from "./person.service.js";
-import { randomBytes } from "node:crypto";
+import { randomBytes } from "crypto";
 
 @Injectable()
 export class PersonTasks {

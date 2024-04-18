@@ -61,12 +61,12 @@ export class ImageService {
     if (file.extension && IMAGE_EXTENSIONS.has(file.extension)) {
       return this.createImageProxyUrl(file.id, {
         fileName: file.name,
-        mimeType: file.mimeType,
+        mimeType: file.getMimeType(),
         path: file.path,
         size: file.size,
         height: file.info.height,
         width: file.info.width,
-        isAnimated: file.info.isAnimated || file.mimeType === "image/gif",
+        isAnimated: file.info.isAnimated || file.getMimeType() === "image/gif",
       });
     }
 
@@ -74,7 +74,7 @@ export class ImageService {
       const poster = file.poster.getEntity();
       return this.createImageProxyUrl(file.id, {
         fileName: `${file.name}_poster`,
-        path: poster?.path,
+        path: poster?.getPath(),
         size: null,
         height: poster?.height,
         mimeType: poster?.mimeType,
@@ -87,7 +87,7 @@ export class ImageService {
       const thumbnail = file.thumbnail.getEntity();
       return this.createImageProxyUrl(file.id, {
         fileName: `${file.name}_thumbnail`,
-        path: thumbnail?.path,
+        path: thumbnail?.getPath(),
         size: null,
         height: thumbnail?.height,
         mimeType: thumbnail?.mimeType,

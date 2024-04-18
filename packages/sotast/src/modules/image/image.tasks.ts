@@ -1,4 +1,4 @@
-import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
+import { EntityManager, EntityRepository, ref } from "@mikro-orm/better-sqlite";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable } from "@nestjs/common";
 import bytes from "bytes";
@@ -46,7 +46,7 @@ export class ImageTasks {
     }
   }
 
-  @Queue("CREATE_IMAGE_MEDIA", {
+  @Queue("INGEST_IMAGE", {
     targetConcurrency: 4,
     fileFilter: {
       extension: { $in: [...IMAGE_EXTENSIONS] },
@@ -62,7 +62,7 @@ export class ImageTasks {
     const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(file.path);
 
     const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
-    file.preview = Buffer.from(hash);
+    file.preview = ref(Buffer.from(hash));
     file.info.height = originalMeta.height;
     file.info.width = originalMeta.width;
 

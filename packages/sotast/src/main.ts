@@ -6,7 +6,7 @@ import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { FastifyAdapter } from "@nestjs/platform-fastify";
 import { fastify } from "fastify";
 import ms from "ms";
-import { performance } from "node:perf_hooks";
+import { performance } from "perf_hooks";
 import { AppModule } from "./app.module.js";
 import { config } from "./config.js";
 import { MikroOrmSerializerInterceptor } from "./serializer.interceptor.js";

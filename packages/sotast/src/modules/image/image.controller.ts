@@ -4,7 +4,7 @@ import bytes from "bytes";
 import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from "class-validator";
 import { createHash } from "crypto";
 import { type FastifyReply, type FastifyRequest } from "fastify";
-import { type ReadStream } from "node:fs";
+import { type ReadStream } from "fs";
 import sharp, { type FitEnum, type FormatEnum } from "sharp";
 import { CacheService } from "../cache/cache.service.js";
 import { StorageService } from "../storage/storage.service.js";

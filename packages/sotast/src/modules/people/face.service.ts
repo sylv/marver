@@ -1,5 +1,5 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync } from "fs";
+import { join } from "path";
 import { Injectable } from "@nestjs/common";
 import { FaceRecognition } from "@ryanke/rehoboam";
 import Zip from "adm-zip";

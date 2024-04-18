@@ -1,6 +1,6 @@
-import { once } from "node:events";
-import { type ReadStream, createReadStream } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { once } from "events";
+import { type ReadStream, createReadStream } from "fs";
+import { readFile } from "fs/promises";
 import { EntityManager } from "@mikro-orm/better-sqlite";
 import { type EntityRepository } from "@mikro-orm/core";
 import { InjectRepository } from "@mikro-orm/nestjs";

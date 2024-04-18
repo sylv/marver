@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { mkdir, open, rename, unlink } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { createHash } from "crypto";
+import { existsSync } from "fs";
+import { mkdir, open, rename, unlink } from "fs/promises";
+import { dirname, join } from "path";
 import { config } from "../../config";
 import { SERVER_INFO } from "../../constants";
 import { dedupe } from "../../helpers/dedupe";

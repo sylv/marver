@@ -1,7 +1,7 @@
-import { Fragment, type FC } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Sidebar } from './components/sidebar';
-import './globals.css';
+import { type FC, Fragment } from "react";
+import { Helmet } from "react-helmet-async";
+import { Sidebar } from "./components/sidebar";
+import "./globals.css";
 
 interface AppProps {
   children: React.ReactNode;

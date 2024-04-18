@@ -110,10 +110,10 @@ export class FileResolver {
     private imageService: ImageService,
   ) {}
 
-  @Query(() => FileEntity, { nullable: true })
+  @Query(() => FileEntity)
   async file(@Args("id") fileId: string, @Info() info: any) {
     const populate = inferPopulate(FileEntity, "file", info);
-    return this.fileRepo.findOne(fileId, {
+    return this.fileRepo.findOneOrFail(fileId, {
       populate,
     });
   }
@@ -345,7 +345,7 @@ export class FileResolver {
   @ResolveField(() => String, { nullable: true })
   previewBase64(@Parent() file: FileEntity) {
     if (!file.preview) return null;
-    return file.preview.toString("base64");
+    return file.preview.unwrap()?.toString("base64");
   }
 
   @ResolveField(() => FileType, { nullable: true })

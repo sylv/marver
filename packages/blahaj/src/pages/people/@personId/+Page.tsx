@@ -2,7 +2,7 @@ import type { FC } from "react";
 import type { PageProps } from "../../../renderer/types";
 import { graphql } from "../../../@generated";
 import { useQuery } from "urql";
-import { FilePage } from "../../../components/file/file-page";
+import { FileQuery } from "../../../components/file/file-query";
 import { SpinnerCenter } from "../../../components/spinner";
 
 const PersonQuery = graphql(`
@@ -29,7 +29,7 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
     <div className="container mx-auto mt-20">
       <h1>{data.person.name}</h1>
       <p>{data.person.aliases}</p>
-      <FilePage variables={{ personId }} />
+      <FileQuery variables={{ personId }} />
     </div>
   );
 };

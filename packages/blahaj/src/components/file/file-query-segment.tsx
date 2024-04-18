@@ -5,7 +5,7 @@ import type { FilesQueryVariables } from "../../@generated/graphql";
 import { cn } from "../../helpers/cn";
 import { FilePreview } from "./file-preview";
 
-interface FilePageSegmentProps {
+interface FileQuerySegmentProps {
   variables: FilesQueryVariables;
   isLastPage: boolean;
   targetWidth?: number;
@@ -35,7 +35,7 @@ const FilesQuery = graphql(`
   }
 `);
 
-export const FilePageSegment = memo<FilePageSegmentProps>(
+export const FileQuerySegment = memo<FileQuerySegmentProps>(
   ({ variables, isLastPage, targetWidth = 250, rowHeight = 200, onLoadMore }) => {
     const [unloadWithHeight, setUnloadWithHeight] = useState<number | null>(null);
     const loaderRef = useRef<HTMLDivElement>(null);
@@ -84,8 +84,6 @@ export const FilePageSegment = memo<FilePageSegmentProps>(
       observer.observe(containerRef.current);
       return () => observer.disconnect();
     }, [containerRef]);
-
-    console.log({ isLastPage });
 
     return (
       <div

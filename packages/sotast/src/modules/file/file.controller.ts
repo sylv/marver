@@ -34,7 +34,7 @@ export class FileController {
     }
 
     reply
-      .header("Content-Type", file.mimeType || "application/octet-stream")
+      .header("Content-Type", file.getMimeType() || "application/octet-stream")
       .header("Content-Disposition", `inline; filename="${encodeURIComponent(file.name)}"`)
       .header("Accept-Ranges", "bytes")
       .send(stream);

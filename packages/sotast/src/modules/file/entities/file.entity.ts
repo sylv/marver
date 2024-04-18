@@ -2,7 +2,6 @@ import {
   Collection,
   Embedded,
   Entity,
-  Formula,
   Index,
   ManyToMany,
   OneToMany,
@@ -16,23 +15,16 @@ import {
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 import mime from "mime-types";
 import { Connection } from "nest-graphql-utils";
-import { extname, join } from "node:path";
 import { ulid } from "ulid";
 import { config } from "../../../config.js";
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "../../../constants.js";
 import { AutoPopulate } from "../../../helpers/autoloader.js";
 import { CollectionEntity } from "../../collection/collection.entity.js";
 import { FaceEntity } from "../../people/entities/face.entity.js";
 import { JobStateEntity } from "../../queue/job-state.entity.js";
-import { FilePosterEntity } from "./assets/file-poster.entity.js";
-import { FileThumbnailEntity } from "./assets/file-thumbnail.entity.js";
-import { FileTimelineEntity } from "./assets/file-timeline.entity.js";
 import { FileEmbeddingEntity } from "./file-embedding.entity.js";
 import { FileExifDataEntity } from "./file-exif.entity.js";
 import { FileInfoEmbeddable } from "./file-info.entity.js";
-import { FilePerceptualHashEntity } from "./file-perceptual-hash.entity.js";
-import { FileTagEntity } from "./file-tag.entity.js";
-import { FileTextEntity } from "./file-text.entity.js";
+import { FileAssetEntity } from "./file-asset.entity.js";
 
 @Entity({ tableName: "files" })
 @ObjectType("File")
@@ -41,13 +33,17 @@ export class FileEntity {
   @Field(() => ID)
   id: string = ulid();
 
-  @Formula((alias) => `path_basename(${alias}.path)`)
+  @Property()
   @Field()
   name: string;
 
-  @Formula((alias) => `path_dirname(${alias}.path)`)
+  @Property()
   @Field()
   directory: string;
+
+  @Property({ nullable: true })
+  @Field({ nullable: true })
+  extension?: string;
 
   @Property()
   @Unique()
@@ -68,13 +64,8 @@ export class FileEntity {
   @Index()
   size: number;
 
-  // @Property({ nullable: true, type: 'blob' })
-  // embedding?: Buffer;
-
-  /** Thumbhash-computed preview */
-  // todo: this should be lazy-loaded, only if graphql requests it.
-  @Property({ type: "blob", nullable: true })
-  preview?: Buffer;
+  @Property({ type: "blob", ref: true, lazy: true, nullable: true })
+  preview?: Ref<Buffer>;
 
   @Property()
   @Field()
@@ -96,53 +87,48 @@ export class FileEntity {
   @Field(() => FileInfoEmbeddable)
   info: FileInfoEmbeddable;
 
-  @OneToMany(
-    () => FileTagEntity,
-    (tag) => tag.file,
-  )
-  tags = new Collection<FileTagEntity>(this);
+  @AutoPopulate()
+  @Field(() => FileAssetEntity)
+  @OneToOne(() => FileAssetEntity, { ref: true, nullable: true })
+  thumbnail?: Ref<FileAssetEntity>;
 
   @AutoPopulate()
-  @OneToOne(
-    () => FileThumbnailEntity,
-    (thumbnail) => thumbnail.file,
-    { ref: true, nullable: true },
-  )
-  @Field(() => FileThumbnailEntity)
-  thumbnail?: Ref<FileThumbnailEntity>;
+  @Field(() => FileAssetEntity)
+  @OneToOne(() => FileAssetEntity, { ref: true, nullable: true })
+  poster?: Ref<FileAssetEntity>;
 
   @AutoPopulate()
-  @OneToOne(
-    () => FilePosterEntity,
-    (poster) => poster.file,
-    { ref: true, nullable: true },
-  )
-  @Field(() => FilePosterEntity)
-  poster?: Ref<FilePosterEntity>;
-
-  @AutoPopulate()
-  @OneToOne(
-    () => FileTimelineEntity,
-    (timeline) => timeline.file,
-    { ref: true, nullable: true },
-  )
-  @Field(() => FileTimelineEntity)
-  timeline?: Ref<FileTimelineEntity>;
-
-  @AutoPopulate()
+  @Field(() => FileExifDataEntity, { nullable: true })
   @OneToOne(
     () => FileExifDataEntity,
     (exif) => exif.file,
     { ref: true, nullable: true },
   )
-  @Field(() => FileExifDataEntity, { nullable: true })
   exifData?: Ref<FileExifDataEntity>;
 
-  @OneToMany(
-    () => FilePerceptualHashEntity,
-    (phash) => phash.file,
+  @AutoPopulate()
+  @Field(() => [CollectionEntity])
+  @ManyToMany(
+    () => CollectionEntity,
+    (collection) => collection.files,
   )
-  perceptualHashes = new Collection<FilePerceptualHashEntity>(this);
+  collections = new Collection<CollectionEntity>(this);
+
+  @AutoPopulate()
+  @Field(() => [FaceEntity])
+  @OneToMany(
+    () => FaceEntity,
+    (face) => face.file,
+  )
+  faces = new Collection<FaceEntity>(this);
+
+  @AutoPopulate()
+  @Field(() => [JobStateEntity])
+  @OneToMany(
+    () => JobStateEntity,
+    (jobState) => jobState.file,
+  )
+  jobStates = new Collection<JobStateEntity>(this);
 
   @OneToMany(
     () => FileEmbeddingEntity,
@@ -150,74 +136,12 @@ export class FileEntity {
   )
   embeddings = new Collection<FileEmbeddingEntity>(this);
 
-  @AutoPopulate()
-  @ManyToMany(
-    () => CollectionEntity,
-    (collection) => collection.files,
-  )
-  @Field(() => [CollectionEntity])
-  collections = new Collection<CollectionEntity>(this);
-
-  @AutoPopulate()
-  @OneToMany(
-    () => FaceEntity,
-    (face) => face.file,
-  )
-  @Field(() => [FaceEntity])
-  faces = new Collection<FaceEntity>(this);
-
-  @AutoPopulate()
-  @OneToMany(
-    () => FileTextEntity,
-    (text) => text.file,
-  )
-  @Field(() => [FileTextEntity])
-  texts = new Collection<FileTextEntity>(this);
-
-  @OneToMany(
-    () => JobStateEntity,
-    (jobState) => jobState.file,
-  )
-  @AutoPopulate()
-  @Field(() => [JobStateEntity])
-  jobStates = new Collection<JobStateEntity>(this);
-
   @Property({ type: () => String, nullable: true })
   @Field(() => String, { nullable: true })
-  get mimeType() {
-    if (!this.path) return undefined;
+  getMimeType() {
+    if (!this.path) return;
     if (this.path.endsWith("jfif")) return "image/jpeg";
-    return mime.lookup(this.path) || null;
-  }
-
-  @Property({ type: () => String, nullable: true })
-  @Field(() => String, { nullable: true })
-  @Index()
-  get extension() {
-    if (!this.path) return undefined;
-    return extname(this.path).slice(1).toLowerCase() || null;
-  }
-
-  /**
-   * The folder where additional resources for this file should be stored.
-   * For example, thumbnails that are generated for this file.
-   */
-  @Property({ persist: false })
-  get assetFolder() {
-    // this.id is the only field guaranteed to be loaded.
-    // all others could be filtered out by the query, or may not
-    // have been set yet, introducing subtle bugs and data being put in the wrong place.
-    const self = this as { id: string };
-    return FileEntity.getAssetFolder(self.id);
-  }
-
-  @Property({ persist: false })
-  get isSupportedMimeType() {
-    const ext = this.extension;
-    if (!ext) return false;
-    if (IMAGE_EXTENSIONS.has(ext)) return true;
-    if (VIDEO_EXTENSIONS.has(ext)) return true;
-    return false;
+    return mime.lookup(this.path) || undefined;
   }
 
   tryGetRelativePath() {
@@ -229,12 +153,7 @@ export class FileEntity {
     return this.path;
   }
 
-  static getAssetFolder(id: string) {
-    const lastTwoChars = id.slice(-2);
-    return join(config.metadata_dir, "file_metadata", lastTwoChars, id);
-  }
-
-  [OptionalProps]: "name" | "assetFolder" | "directory" | "isSupportedMimeType" | "corrupted" | "unavailable" | "checkedAt" | "indexedAt";
+  [OptionalProps]: "corrupted" | "unavailable" | "checkedAt" | "indexedAt";
 }
 
 @ObjectType()

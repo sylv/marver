@@ -1,5 +1,5 @@
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "path";
+import { fileURLToPath } from "url";
 import { defineConfig } from "@mikro-orm/better-sqlite";
 import { Migrator } from "@mikro-orm/migrations";
 import { Logger, NotFoundException } from "@nestjs/common";
