@@ -1,5 +1,5 @@
 {
-  "extends": "@atlasbot/configs/tsconfig/esm.json",
+  "extends": "@atlasbot/configs/tsconfig",
   "compilerOptions": {
     "module": "ES2022",
     "target": "ES2022",

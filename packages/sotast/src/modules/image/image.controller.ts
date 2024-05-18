@@ -1,7 +1,7 @@
 import Accept from "@hapi/accept";
 import { BadRequestException, Controller, Get, Param, Query, Request, Response } from "@nestjs/common";
 import bytes from "bytes";
-import { IsEnum, IsIn, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsIn, IsNumber, IsOptional, IsString } from "class-validator";
 import { createHash } from "crypto";
 import { type FastifyReply, type FastifyRequest } from "fastify";
 import { type ReadStream } from "fs";
@@ -51,6 +51,10 @@ class ImageProxyQuery {
   @IsNumber()
   @IsOptional()
   height?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  thumbnail?: boolean;
 }
 
 @Controller()
@@ -92,7 +96,7 @@ export class ImageController {
         cacheStatus = "HIT";
       } else {
         cacheStatus = "MISS";
-        const transformer = sharp({ animated: true }).toFormat(formatKey, {
+        const transformer = sharp({ animated: !query.thumbnail }).toFormat(formatKey, {
           progressive: true,
           quality: 80,
         });
@@ -201,6 +205,10 @@ export class ImageController {
     if (file.size && file.size > ImageController.FORCE_PROCESS_SIZE) {
       // always force processing on large files, because they're probably just
       // unoptimized garbage and we don't want to waste bandwidth.
+      return true;
+    }
+
+    if (query.thumbnail && file.isAnimated) {
       return true;
     }
 

@@ -1,70 +1,15 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Clip } from "@ryanke/rehoboam";
-import { Embedding } from "../../@generated/core";
-import { dedupe } from "../../helpers/dedupe";
-import { DownloadService } from "../download/download.service";
+import { SigLip } from "@ryanke/rehoboam";
 import ms from "ms";
-
-const CLIP_MODEL = {
-  name: "ViT-B-32::openai",
-  context_length: 77,
-  visual_size: 224,
-  textual_model: {
-    url: "https://clip-as-service.s3.us-east-2.amazonaws.com/models-436c69702d61732d53657276696365/onnx/ViT-B-32/textual.onnx",
-    hash: "0af04c287a3be2570eaef7a1ef896d81c1989602df67a8905941afed589e545e",
-    path: "ViT-B-32/textual.onnx",
-  },
-  visual_model: {
-    url: "https://clip-as-service.s3.us-east-2.amazonaws.com/models-436c69702d61732d53657276696365/onnx/ViT-B-32/visual.onnx",
-    hash: "06395063c0a5c28b1a8d4bd585261501a878c8f52d1216db6c4cbb651f7c13f1",
-    path: "ViT-B-32/visual.onnx",
-  },
-  tokenizer_url: {
-    url: "https://huggingface.co/openai/clip-vit-base-patch32/raw/main/tokenizer.json",
-    hash: "b556ac8c99757ffb677208af34bc8c6721572114111a6e0aaf5fa69ff0b8d842",
-    path: "tokenizer.json",
-  },
-};
+import type { Embedding } from "../../helpers/embedding";
+import { config } from "../../config";
 
 @Injectable()
 export class CLIPService {
   private log = new Logger(CLIPService.name);
-  private _clip?: Clip;
+  private clip = new SigLip(config.use_quantized);
   private _textUnloader?: NodeJS.Timeout;
   private _visualUnloader?: NodeJS.Timeout;
-  constructor(private downloadService: DownloadService) {}
-
-  @dedupe
-  private async getCLIP() {
-    if (this._clip) return this._clip;
-    const [textualPath, visualPath, tokenizerPath] = await this.downloadService.ensureMany([
-      {
-        url: CLIP_MODEL.textual_model.url,
-        hash: CLIP_MODEL.textual_model.hash,
-        path: `clip/${CLIP_MODEL.textual_model.path}`,
-      },
-      {
-        url: CLIP_MODEL.visual_model.url,
-        hash: CLIP_MODEL.visual_model.hash,
-        path: `clip/${CLIP_MODEL.visual_model.path}`,
-      },
-      {
-        url: CLIP_MODEL.tokenizer_url.url,
-        hash: CLIP_MODEL.tokenizer_url.hash,
-        path: `clip/${CLIP_MODEL.tokenizer_url.path}`,
-      },
-    ]);
-
-    this._clip = new Clip({
-      contextLength: CLIP_MODEL.context_length,
-      visionSize: CLIP_MODEL.visual_size,
-      textModelPath: textualPath,
-      visionModelPath: visualPath,
-      tokenizerPath: tokenizerPath,
-    });
-
-    return this._clip;
-  }
 
   async encodeText(text: string): Promise<Embedding> {
     const result = await this.encodeTextBatch([text]);
@@ -79,44 +24,30 @@ export class CLIPService {
   async encodeTextBatch(texts: string[]): Promise<Embedding[]> {
     clearTimeout(this._textUnloader);
 
-    const clip = await this.getCLIP();
     this.log.debug(`Encoding ${texts.length} texts with CLIP textual`);
-    const result = await clip.batchEncodeText(texts);
+    const result = await this.clip.batchEncodeTexts(texts);
 
     clearTimeout(this._textUnloader);
     this._textUnloader = setTimeout(() => {
-      if (!this._clip) return;
       this.log.log("Unloading CLIP textual model");
-      this._clip.unloadTextualSession();
+      this.clip.unloadTextualSession();
     }, ms("5m"));
 
-    return result.map((array) => {
-      return {
-        value: array,
-        source: CLIP_MODEL.name,
-      };
-    });
+    return result;
   }
 
   async encodeImageBatch(imagePaths: string[]): Promise<Embedding[]> {
     clearTimeout(this._visualUnloader);
 
-    const clip = await this.getCLIP();
     this.log.debug(`Encoding ${imagePaths.length} images with CLIP vision`);
-    const result = await clip.batchEncodeImages(imagePaths);
+    const result = await this.clip.batchEncodeImages(imagePaths);
 
     clearTimeout(this._visualUnloader);
     this._visualUnloader = setTimeout(() => {
-      if (!this._clip) return;
       this.log.log("Unloading CLIP visual model");
-      this._clip.unloadVisualSession();
+      this.clip.unloadVisualSession();
     }, ms("5m"));
 
-    return result.map((array) => {
-      return {
-        value: array,
-        source: CLIP_MODEL.name,
-      };
-    });
+    return result;
   }
 }

@@ -1,5 +1,2 @@
 [workspace]
-members = ["packages/squtil", "packages/ephyra", "packages/rehoboam"]
-
-[profile.release]
-lto = true
+members = ["packages/sqlite-cosim", "packages/rehoboam"]

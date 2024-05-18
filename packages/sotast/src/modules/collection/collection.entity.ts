@@ -7,7 +7,7 @@ import { AutoPopulate } from "../../helpers/autoloader";
 @Entity({ tableName: "collections" })
 @ObjectType("Collection")
 export class CollectionEntity {
-  @PrimaryKey()
+  @PrimaryKey({ type: "string" })
   @Field(() => ID)
   id: string = ulid();
 

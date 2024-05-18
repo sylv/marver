@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { FilesQueryVariables } from "../../@generated/graphql";
 import { FileQuerySegment } from "./file-query-segment";
 import { FileOverlay } from "./overlay/file-overlay";
@@ -8,6 +8,7 @@ export interface FilePageProps {
 }
 
 export const FileQuery = memo<FilePageProps>(({ variables }) => {
+  const currentVariables = useRef(variables);
   const [pageVariables, setPageVariables] = useState<FilesQueryVariables[]>([
     {
       ...variables,
@@ -16,6 +17,10 @@ export const FileQuery = memo<FilePageProps>(({ variables }) => {
   ]);
 
   useEffect(() => {
+    // without this, re-renders cause the page to jump to the top because
+    // react does not deep compare variables, so we think it changes on every render.
+    if (JSON.stringify(currentVariables.current) === JSON.stringify(variables)) return;
+    currentVariables.current = variables;
     setPageVariables([
       {
         ...variables,
@@ -30,6 +35,7 @@ export const FileQuery = memo<FilePageProps>(({ variables }) => {
       {pageVariables.map((variables, index) => (
         <FileQuerySegment
           key={"file-view-" + variables.after}
+          isFirstPage={index === 0}
           isLastPage={index === pageVariables.length - 1}
           onLoadMore={(cursor) => {
             const baseVariables = pageVariables[index];
@@ -40,7 +46,7 @@ export const FileQuery = memo<FilePageProps>(({ variables }) => {
             // with ssr, preview data for images adds up quickly. 28 images = 200kb of html.
             // so the first page is smaller so the user sees it faster, then it ramps up to 100
             // to make for a smoother scrolling experience.
-            first: index === 0 ? 28 : 100,
+            first: index === 0 ? 38 : 100,
           }}
         />
       ))}

@@ -1,16 +1,12 @@
-import { defineConfig } from 'tsup';
+import { createTsupConfig } from "../../tsup.config";
 
-export default defineConfig({
-  entry: ['src/main.ts', 'src/**/*.entity.ts', "src/migrations/*"],
-  target: 'node16',
-  format: 'esm',
-  clean: true,
-  platform: 'node',
-  shims: true,
-  splitting: true,
-  minify: false,
-  sourcemap: true,
-  define: {
-    'import.meta.vitest': 'undefined',
-  }
+export default createTsupConfig({
+  entry: [
+    "src/main.ts",
+    "src/orm.config.ts",
+    "src/**/*.entity.ts",
+    "src/migrations/*",
+    "src/worker/*.ts",
+    "src/tasks/**/*.ts",
+  ],
 });

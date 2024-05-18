@@ -1,16 +1,16 @@
-import { memo, useMemo, useState, type CSSProperties } from 'react';
-import { graphql, unmask, type FragmentType } from '../@generated';
-import { cn } from '../helpers/cn';
-import { thumbhashBase64ToDataUri } from '../helpers/thumbhashBase64ToDataUri';
+import { memo, useMemo, useState, type CSSProperties } from "react";
+import { graphql, unmask, type FragmentType } from "../@generated";
+import { cn } from "../helpers/cn";
+import { AnimatePresence, motion } from "framer-motion";
 
-const IMAGE_INNER_CLASSES = 'text-transparent transition-opacity duration-200';
+const IMAGE_INNER_CLASSES = "text-transparent transition-opacity duration-200";
 const SOURCE_SET_SIZES = [800, 1600, 3200];
 
 const Fragment = graphql(`
   fragment ImageProps on File {
     name
     thumbnailUrl
-    previewBase64
+    thumbnailTiny
     info {
       height
       width
@@ -19,24 +19,24 @@ const Fragment = graphql(`
 `);
 
 interface ImageProps {
+  isThumbnail?: boolean;
   file: FragmentType<typeof Fragment>;
   style?: CSSProperties;
   draggable?: boolean;
   className?: string;
 }
 
-export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, style }) => {
+export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(Fragment, fileFrag);
-  const [loaded, setLoaded] = useState(false);
-  const [decoded, setDecoded] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const aspectRatio = useMemo(() => {
     if (!file.info.height || !file.info.width) return null;
     return file.info.width / file.info.height;
   }, [file]);
 
-  const previewUrl = useMemo(() => {
-    if (!file.previewBase64 || !aspectRatio) return null;
-    return thumbhashBase64ToDataUri(file.previewBase64, aspectRatio);
+  const blurredUrl = useMemo(() => {
+    if (!file.thumbnailTiny || !aspectRatio) return null;
+    return `data:image/webp;base64,${file.thumbnailTiny}`;
   }, [file, aspectRatio]);
 
   const sourceSet = useMemo(() => {
@@ -44,23 +44,28 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
     const parts = [];
     for (const size of SOURCE_SET_SIZES) {
       if (size > file.info.width) break;
-      parts.push(`${file.thumbnailUrl}?width=${size} ${size}w`);
+      if (isThumbnail) {
+        parts.push(`${file.thumbnailUrl}?width=${size}&thumbnail=${isThumbnail} ${size}w`);
+      } else {
+        parts.push(`${file.thumbnailUrl}?width=${size} ${size}w`);
+      }
     }
 
-    return parts.join(', ');
+    if (!parts[0]) return undefined;
+    return parts.join(", ");
   }, [file]);
 
   // the hack we use to scale the images slightly larger only works if the image overflow is not visible.
   // with object-cover it is visible and so the scale hack looks weird - the preview is 1.25x larger,
   // so when it swaps to the image, it looks like it shrinks.
-  const scalePreview = !className?.includes('object-contain');
+  const scalePreview = !className?.includes("object-contain");
 
   return (
     <figure
       style={style}
       className={cn(
-        'overflow-hidden', // chrome blurs image edges during transition, this hides it
-        'rounded-md bg-accent relative',
+        "overflow-hidden", // chrome blurs image edges during transition, this hides it
+        "rounded-md bg-accent relative",
         className,
       )}
     >
@@ -71,39 +76,34 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
         alt={file.name}
         height={file.info.height || undefined}
         width={file.info.width || undefined}
-        src={file.thumbnailUrl || undefined}
+        src={
+          (file.thumbnailUrl && (isThumbnail ? `${file.thumbnailUrl}?thumbnail=true` : file.thumbnailUrl)) ||
+          undefined
+        }
         srcSet={sourceSet}
         draggable={draggable}
-        onLoad={() => setLoaded(true)}
         ref={(img) => {
-          // using onLoad() is good, but doesn't fire if the image is cached.
-          // using `image.complete` is good, but using `decoding=async` can cause the preview to hide before the image is loaded.
-          // decode() resolves only when the image is decoded, so it's the best of both worlds.
           if (!img) return;
-          if (img.complete) setLoaded(true);
           img
             .decode()
-            // decode() in firefox with srcSet throws an error, idk why.
-            // thats also why there is `loaded` and `decoded` states,
-            // otherwise it causes jank on firefox.
             .catch(() => null)
             .finally(() => {
-              setDecoded(true);
+              setShowPreview(false);
             });
         }}
       />
-      {previewUrl && (
+      {blurredUrl && (
         <img
           aria-hidden
           alt=""
           height={file.info.height || undefined}
           width={file.info.width || undefined}
-          src={previewUrl}
+          src={blurredUrl}
           className={cn(
             IMAGE_INNER_CLASSES,
-            'absolute top-0 left-0 right-0 bottom-0 pointer-events-none will-change-[opacity]',
-            scalePreview && 'scale-125', // fixes some rendering issues with blurry edges or the preview not covering the image fully.
-            loaded && decoded ? 'opacity-0' : 'opacity-100',
+            "absolute top-0 left-0 right-0 bottom-0 pointer-events-none blur-lg",
+            scalePreview && "scale-[1.3]", // fixes some rendering issues with blurry edges or the preview not covering the image fully.
+            showPreview ? "opacity-100" : "opacity-0",
             className,
           )}
         />

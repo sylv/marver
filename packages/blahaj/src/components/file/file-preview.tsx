@@ -7,8 +7,11 @@ const Fragment = graphql(`
   fragment FilePreviewProps on File {
     id
     name
+    extension
+    thumbnailUrl
     info {
       durationFormatted
+      isAnimated
     }
     ...ImageProps
   }
@@ -40,14 +43,24 @@ export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) =>
           <h3 className="max-w-full truncate">{file.name}</h3>
         </div>
       </div>
-      {file?.info.durationFormatted && (
-        <span className="absolute top-1 left-1 p-1 z-10 text-xs bg-black/70 rounded-lg">
-          {file.info.durationFormatted}
-        </span>
-      )}
-      <div key={file.id} className="h-full w-full overflow-hidden rounded">
-        <Image draggable={false} file={file} className="w-full h-full object-cover" />
+      <div className="absolute top-1 left-1 flex items-center gap-1 flex-wrap">
+        {file.info.isAnimated && file.extension && (
+          <span className="p-1 z-10 text-xs bg-black/70 rounded-lg">{file.extension.toUpperCase()}</span>
+        )}
+        {file?.info.durationFormatted && (
+          <span className="p-1 z-10 text-xs bg-black/70 rounded-lg">{file.info.durationFormatted}</span>
+        )}
       </div>
+      {file.thumbnailUrl && (
+        <div className="h-full w-full overflow-hidden rounded">
+          <Image isThumbnail draggable={false} file={file} className="w-full h-full object-cover" />
+        </div>
+      )}
+      {!file.thumbnailUrl && (
+        <div className="flex items-center justify-center flex-col gap-2 h-full w-full overflow-hidden rounded bg-zinc-900 text-zinc-600 text-center text-sm break-all">
+          {file.name}
+        </div>
+      )}
     </a>
   );
 });

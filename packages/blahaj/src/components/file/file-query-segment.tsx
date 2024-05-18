@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { memo, useEffect, useRef, useState } from "react";
 import { useQuery } from "urql";
 import { graphql } from "../../@generated";
@@ -8,14 +9,15 @@ import { FilePreview } from "./file-preview";
 interface FileQuerySegmentProps {
   variables: FilesQueryVariables;
   isLastPage: boolean;
+  isFirstPage: boolean;
   targetWidth?: number;
   rowHeight?: number;
   onLoadMore: (cursor: string) => void;
 }
 
 const FilesQuery = graphql(`
-  query Files($search: String, $after: String, $first: Float, $collectionId: ID, $personId: ID) {
-    files(search: $search, after: $after, first: $first, collectionId: $collectionId, personId: $personId) {
+  query Files($search: String, $after: String, $first: Float, $collectionId: ID) {
+    files(search: $search, after: $after, first: $first, collectionId: $collectionId) {
       pageInfo {
         endCursor
         hasNextPage
@@ -36,7 +38,7 @@ const FilesQuery = graphql(`
 `);
 
 export const FileQuerySegment = memo<FileQuerySegmentProps>(
-  ({ variables, isLastPage, targetWidth = 250, rowHeight = 200, onLoadMore }) => {
+  ({ variables, isLastPage, isFirstPage, targetWidth = 250, rowHeight = 200, onLoadMore }) => {
     const [unloadWithHeight, setUnloadWithHeight] = useState<number | null>(null);
     const loaderRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -96,8 +98,8 @@ export const FileQuerySegment = memo<FileQuerySegmentProps>(
         <div className="flex flex-wrap gap-2">
           {!unloadWithHeight &&
             data?.files.edges.map(({ node: file }) => {
-              if (!file.info.height || !file.info.width || !file.thumbnailUrl) return null;
-              const aspectRatio = file.info.width / file.info.height;
+              const aspectRatio =
+                file.info.width && file.info.height ? file.info.width / file.info.height : 1;
 
               return (
                 <FilePreview
@@ -113,7 +115,13 @@ export const FileQuerySegment = memo<FileQuerySegmentProps>(
             })}
         </div>
         {isLastPage && (
-          <div ref={loaderRef} className="absolute left-0 right-0 bottom-0 h-[125dvh] pointer-events-none" />
+          <div
+            ref={loaderRef}
+            className={clsx(
+              "absolute left-0 right-0 bottom-0 pointer-events-none",
+              isFirstPage ? "h-1" : "h-[125dvh]", // otherwise we immediately load the next page
+            )}
+          />
         )}
       </div>
     );

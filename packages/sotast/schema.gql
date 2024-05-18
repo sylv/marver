@@ -2,13 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type BoundingBox {
-  x1: Float!
-  x2: Float!
-  y1: Float!
-  y2: Float!
-}
-
 type Collection {
   aggregateFileCount: Float!
   children: [Collection!]!
@@ -25,12 +18,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type Face {
-  boundingBox: BoundingBox!
-  id: ID!
-  person: Person!
-}
-
 type File {
   checkedAt: DateTime!
   collections: [Collection!]!
@@ -39,21 +26,19 @@ type File {
   directory: String!
   exifData: FileExifData
   extension: String
-  faces: [Face!]!
-  getMimeType: String
   id: ID!
   indexedAt: DateTime!
   info: FileInfo!
   jobStates: [JobState!]!
+  mimeType: String
   modifiedAt: DateTime!
   name: String!
   path: String!
-  poster: FileAsset!
-  previewBase64: String
   similar(after: String, before: String, first: Float, last: Float, offset: Float, type: SimilarityType): FileConnection!
   size: Float!
   sizeFormatted: String!
   thumbnail: FileAsset!
+  thumbnailTiny: String
   thumbnailUrl: String
   type: FileType
   unavailable: Boolean!
@@ -71,7 +56,6 @@ type FileAsset {
 }
 
 enum FileAssetType {
-  Poster
   Thumbnail
   Timeline
 }
@@ -168,37 +152,11 @@ type PageInfo {
   startCursor: String!
 }
 
-type Person {
-  aliases: [String!]!
-  birthDate: DateTime
-  deathDate: DateTime
-  description: String
-  id: ID!
-  name: String!
-}
-
-type PersonConnection {
-  edges: [PersonEdge!]!
-  pageInfo: PageInfo!
-
-  """Total number of PersonEntity items"""
-  totalCount: Int!
-}
-
-"""Provides PersonEntity item and a cursor to its position"""
-type PersonEdge {
-  """The position of this PersonEntity item"""
-  cursor: String!
-  node: Person!
-}
-
 type Query {
   collection(id: String!): Collection!
   collections: [Collection!]!
   file(id: String!): File!
-  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, personId: ID, search: String, sort: FileSort): FileConnection!
-  people(after: String, before: String, first: Float, last: Float, offset: Float, search: String): PersonConnection!
-  person(id: ID!): Person!
+  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
   serverInfo: ServerInfo!
   tasks: [Task!]!
 }

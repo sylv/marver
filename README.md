@@ -78,7 +78,6 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - It should be separate from the main database and everything in it should regenerate if deleted, to make cleanup easy.
 - Sign imgproxy/vidproxy/etc urls to prevent tampering/access to files that shoudlnt be allowed
 - Setup auth/acl, doing it earlier will be better
-- SigLIP may be better than CLIP
 - Show similarity scores on related images
 - Thresholds for things like face matching should be tested against a real dataset so we can find optimal thresholds for a target accuracy, and provide a table for users to pick what they'd rather.
 - Face detection/embedding batching
@@ -93,9 +92,9 @@ marver scours your files and makes them all pretty and viewable, pulling as much
     - `FrameQueue` operates on images and frames from videos
     - `FileQueue` operates on any file (images, videos, audio)
     - `AssetQueue` operates on scanned files and generated files
-      - This one I think would be good for things like thumbhash previews, where we ideally want them on everything. But it may require some kind of standardisation of how images are stored for it to be generic enough to work.
     - Operating on frames in isolation may be problematic for something like "detect faces in a video", where we might want to only consider a face in the video if its in >1 minute of the video, which would require checking after running face detection on multiple frames.
 - We can use embeddings to filter jobs for images
   - For example, train a model/create an embedding for "images with faces". We can then use that to filter out images that don't have faces before running face recognition.
   - This can be done for any "expensive" job that can be represented as an embedding, for example OCR.
-- Thumbhash previews are not generated for videos
+- `rehoboam` hub downloads lock up node process
+- Caching should be partially based on the time to compute the value, for example computing a preview for a 100mb image takes 10s and computing one for a 2kb jpeg takes a couple milliseconds. The 100mb image should be cached for longer.

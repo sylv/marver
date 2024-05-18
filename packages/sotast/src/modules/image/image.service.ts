@@ -3,7 +3,6 @@ import { InjectRepository } from "@mikro-orm/nestjs";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import avro from "avsc";
 import ExifReader from "exifreader";
-import sharp from "sharp";
 import { IMAGE_EXTENSIONS } from "../../constants.js";
 import { FileExifDataEntity } from "../file/entities/file-exif.entity.js";
 import { type FileEntity } from "../file/entities/file.entity.js";
@@ -70,19 +69,6 @@ export class ImageService {
       });
     }
 
-    if (file.poster) {
-      const poster = file.poster.getEntity();
-      return this.createImageProxyUrl(file.id, {
-        fileName: `${file.name}_poster`,
-        path: poster?.getPath(),
-        size: null,
-        height: poster?.height,
-        mimeType: poster?.mimeType,
-        width: poster?.width,
-        isAnimated: false,
-      });
-    }
-
     if (file.thumbnail) {
       const thumbnail = file.thumbnail.getEntity();
       return this.createImageProxyUrl(file.id, {
@@ -97,34 +83,6 @@ export class ImageService {
     }
 
     return null;
-  }
-
-  async loadImageAndConvertToRgba(imagePath: string) {
-    // in the past this was done using @napi-rs/canvas but with particularly large images,
-    // it seems like it gives a segmentation fault. canvas is faster but sharp is more reliable.
-    // canvas impl: https://github.com/evanw/thumbhash/issues/2#issuecomment-1481848612
-    const maxSize = 100;
-    const image = sharp(imagePath);
-    const metadata = await image.metadata();
-    const rgba = await image
-      .rotate() // auto-rotate based on exif data
-      .resize({
-        width: maxSize,
-        height: maxSize,
-        fit: "inside",
-      })
-      .raw()
-      .ensureAlpha()
-      .toBuffer({ resolveWithObject: true });
-
-    return {
-      rgba: rgba.data,
-      originalMeta: metadata,
-      resizedSize: {
-        height: rgba.info.height,
-        width: rgba.info.width,
-      },
-    };
   }
 
   async createExifFromFile(file: FileEntity) {

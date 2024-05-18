@@ -9,8 +9,8 @@ export class FileEmbeddingEntity {
   @ManyToOne(() => FileEntity, { ref: true })
   file: Ref<FileEntity>;
 
-  @Property({ type: "text", nullable: true })
-  source?: string;
+  @Property({ nullable: true })
+  position?: number;
 
   @Property({ type: "blob" })
   data: Buffer;

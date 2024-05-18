@@ -19,7 +19,6 @@ import { ulid } from "ulid";
 import { config } from "../../../config.js";
 import { AutoPopulate } from "../../../helpers/autoloader.js";
 import { CollectionEntity } from "../../collection/collection.entity.js";
-import { FaceEntity } from "../../people/entities/face.entity.js";
 import { JobStateEntity } from "../../queue/job-state.entity.js";
 import { FileEmbeddingEntity } from "./file-embedding.entity.js";
 import { FileExifDataEntity } from "./file-exif.entity.js";
@@ -29,7 +28,7 @@ import { FileAssetEntity } from "./file-asset.entity.js";
 @Entity({ tableName: "files" })
 @ObjectType("File")
 export class FileEntity {
-  @PrimaryKey()
+  @PrimaryKey({ type: "string" })
   @Field(() => ID)
   id: string = ulid();
 
@@ -64,9 +63,6 @@ export class FileEntity {
   @Index()
   size: number;
 
-  @Property({ type: "blob", ref: true, lazy: true, nullable: true })
-  preview?: Ref<Buffer>;
-
   @Property()
   @Field()
   checkedAt: Date = new Date();
@@ -92,10 +88,8 @@ export class FileEntity {
   @OneToOne(() => FileAssetEntity, { ref: true, nullable: true })
   thumbnail?: Ref<FileAssetEntity>;
 
-  @AutoPopulate()
-  @Field(() => FileAssetEntity)
-  @OneToOne(() => FileAssetEntity, { ref: true, nullable: true })
-  poster?: Ref<FileAssetEntity>;
+  @Property({ type: "blob", ref: true, lazy: true, nullable: true })
+  thumbnailTiny?: Ref<Buffer>;
 
   @AutoPopulate()
   @Field(() => FileExifDataEntity, { nullable: true })
@@ -115,14 +109,6 @@ export class FileEntity {
   collections = new Collection<CollectionEntity>(this);
 
   @AutoPopulate()
-  @Field(() => [FaceEntity])
-  @OneToMany(
-    () => FaceEntity,
-    (face) => face.file,
-  )
-  faces = new Collection<FaceEntity>(this);
-
-  @AutoPopulate()
   @Field(() => [JobStateEntity])
   @OneToMany(
     () => JobStateEntity,
@@ -136,8 +122,7 @@ export class FileEntity {
   )
   embeddings = new Collection<FileEmbeddingEntity>(this);
 
-  @Property({ type: () => String, nullable: true })
-  @Field(() => String, { nullable: true })
+  @Field(() => String, { nullable: true, name: "mimeType" })
   getMimeType() {
     if (!this.path) return;
     if (this.path.endsWith("jfif")) return "image/jpeg";

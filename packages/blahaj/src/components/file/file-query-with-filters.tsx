@@ -21,7 +21,7 @@ export const FileQueryWithFilters = memo<FilePageProps>(({ variables }) => {
           </TabsList>
           <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search" />
         </div>
-        <TabsContent value="all">
+        <TabsContent value="all" className="mt-2">
           <FileQuery
             variables={{
               ...variables,

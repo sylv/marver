@@ -13,7 +13,7 @@ export const useFileOverlayStore = create<FileOverlayStore>((set) => ({
 export const setFileOverlay = (fileId: string | null) => {
   useFileOverlayStore.setState((state) => {
     if (fileId) {
-      const previousPath = window.location.pathname;
+      const previousPath = window.location.pathname + window.location.search;
       window.history.pushState(null, "", `/file/${fileId}`);
       return { fileId, previousPath };
     } else {

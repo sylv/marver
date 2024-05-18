@@ -175,15 +175,6 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "preview": {
-          "name": "preview",
-          "type": "blob",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "blob"
-        },
         "checked_at": {
           "name": "checked_at",
           "type": "datetime",
@@ -340,6 +331,24 @@
           "primary": false,
           "nullable": true,
           "mappedType": "integer"
+        },
+        "thumbnail_id": {
+          "name": "thumbnail_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "thumbnail_tiny": {
+          "name": "thumbnail_tiny",
+          "type": "blob",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "blob"
         }
       },
       "name": "files",
@@ -375,6 +384,16 @@
           "unique": false
         },
         {
+          "columnNames": [
+            "thumbnail_id"
+          ],
+          "composite": false,
+          "keyName": "files_thumbnail_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
           "keyName": "files_info_height_index",
           "columnNames": [
             "info_height"
@@ -406,7 +425,21 @@
         }
       ],
       "checks": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "files_thumbnail_id_foreign": {
+          "constraintName": "files_thumbnail_id_foreign",
+          "columnNames": [
+            "thumbnail_id"
+          ],
+          "localTableName": "files",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "file_assets",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
       "nativeEnums": {}
     },
     {
@@ -429,14 +462,14 @@
           "nullable": false,
           "mappedType": "text"
         },
-        "source": {
-          "name": "source",
-          "type": "text",
+        "position": {
+          "name": "position",
+          "type": "integer",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "mappedType": "text"
+          "mappedType": "integer"
         },
         "data": {
           "name": "data",
@@ -570,10 +603,10 @@
             "file_id"
           ],
           "composite": false,
-          "keyName": "file_assets_file_id_unique",
-          "constraint": true,
+          "keyName": "file_assets_file_id_index",
+          "constraint": false,
           "primary": false,
-          "unique": true
+          "unique": false
         },
         {
           "keyName": "primary",
@@ -889,6 +922,15 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        },
         "forced": {
           "name": "forced",
           "type": "integer",
@@ -897,15 +939,6 @@
           "primary": false,
           "nullable": false,
           "mappedType": "integer"
-        },
-        "path": {
-          "name": "path",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
         },
         "generated": {
           "name": "generated",
@@ -1098,229 +1131,6 @@
             "id"
           ],
           "referencedTableName": "files",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "aliases": {
-          "name": "aliases",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "birth_date": {
-          "name": "birth_date",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 0,
-          "mappedType": "datetime"
-        },
-        "death_date": {
-          "name": "death_date",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 0,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "people",
-      "indexes": [
-        {
-          "columnNames": [
-            "name"
-          ],
-          "composite": false,
-          "keyName": "people_name_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "primary",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "embedding": {
-          "name": "embedding",
-          "type": "blob",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "blob"
-        },
-        "bounding_box_x1": {
-          "name": "bounding_box_x1",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "bounding_box_y1": {
-          "name": "bounding_box_y1",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "bounding_box_x2": {
-          "name": "bounding_box_x2",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "bounding_box_y2": {
-          "name": "bounding_box_y2",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "file_id": {
-          "name": "file_id",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "person_id": {
-          "name": "person_id",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        }
-      },
-      "name": "faces",
-      "indexes": [
-        {
-          "columnNames": [
-            "file_id"
-          ],
-          "composite": false,
-          "keyName": "faces_file_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "person_id"
-          ],
-          "composite": false,
-          "keyName": "faces_person_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "primary",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "faces_file_id_foreign": {
-          "constraintName": "faces_file_id_foreign",
-          "columnNames": [
-            "file_id"
-          ],
-          "localTableName": "faces",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "files",
-          "updateRule": "cascade"
-        },
-        "faces_person_id_foreign": {
-          "constraintName": "faces_person_id_foreign",
-          "columnNames": [
-            "person_id"
-          ],
-          "localTableName": "faces",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "people",
           "updateRule": "cascade"
         }
       },

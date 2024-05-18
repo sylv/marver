@@ -1,10 +1,10 @@
-import seededGradient from '@privjs/gradients';
-import { memo, useMemo } from 'react';
-import { LuImage } from 'react-icons/lu';
-import { graphql, unmask, type FragmentType } from '../../@generated';
-import { cn } from '../../helpers/cn';
-import { Image } from '../image';
-import { Card } from '../ui/card';
+import seededGradient from "@privjs/gradients";
+import { memo, useMemo } from "react";
+import { LuImage } from "react-icons/lu";
+import { graphql, unmask, type FragmentType } from "../../@generated";
+import { cn } from "../../helpers/cn";
+import { Image } from "../image";
+import { Card } from "../ui/card";
 
 const Fragment = graphql(`
   fragment CollectionPreviewProps on Collection {
@@ -38,10 +38,10 @@ export const CollectionPreview = memo<{ collection: FragmentType<typeof Fragment
         <Card className="h-40 w-full bg-zinc-900 flex flex-col justify-between overflow-hidden rounded-md relative">
           <div
             className={cn(
-              'z-10 p-3 flex justify-between flex-col absolute top-0 left-0 right-0 bottom-0 transition duration-75',
+              "z-10 p-3 flex justify-between flex-col absolute top-0 left-0 right-0 bottom-0 transition duration-75",
               !collection.previewFiles[0] &&
-                'bg-gradient-to-b from-black/70 via-transparent to-black/70 hover:bg-black/30',
-              collection.previewFiles[0] && 'bg-black/50 hover:bg-black/70',
+                "bg-gradient-to-b from-black/70 via-transparent to-black/70 hover:bg-black/30",
+              collection.previewFiles[0] && "bg-black/50 hover:bg-black/70",
             )}
           >
             <div className="flex items-center justify-between gap-1">
@@ -53,7 +53,7 @@ export const CollectionPreview = memo<{ collection: FragmentType<typeof Fragment
                 </div>
               )}
             </div>
-            <p className="text-sm w-full truncate">{collection.description || 'No description'}</p>
+            <p className="text-sm w-full truncate">{collection.description || "No description"}</p>
           </div>
           {collection.previewFiles[0] && (
             <div id="background" className="overflow-hidden h-full w-full flex flex-wrap">
@@ -64,10 +64,15 @@ export const CollectionPreview = memo<{ collection: FragmentType<typeof Fragment
                     key={file.id}
                     className="basis-1/2 flex-grow"
                     style={{
-                      maxHeight: collection.previewFiles.length <= 2 ? '100%' : "50%",
+                      maxHeight: collection.previewFiles.length <= 2 ? "100%" : "50%",
                     }}
                   >
-                    <Image key={file.id} file={file} className="h-full w-full rounded-none object-cover" />
+                    <Image
+                      isThumbnail
+                      key={file.id}
+                      file={file}
+                      className="h-full w-full rounded-none object-cover"
+                    />
                   </div>
                 );
               })}

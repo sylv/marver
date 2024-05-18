@@ -49,7 +49,7 @@ export const FileView = memo<FileViewProps>(({ file: fileFrag, onClickOutside })
           <h1>{file.name}</h1>
         </Card>
         <Card className="bg-black overflow-hidden h-min">
-          {file.type === FileType.Video && file.thumbnailUrl && (
+          {file.type === FileType.Video && (
             <Player
               src={`/api/files/${file.id}/raw`}
               hlsSrc={`/api/files/${file.id}/vidproxy/index.m3u8`}

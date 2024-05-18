@@ -48,7 +48,7 @@ export class CollectionResolver {
     return this.fileRepo.find(
       {
         collections: { $in: childCollectionIds.map((item) => item.id) },
-        preview: { $ne: null },
+        thumbnailTiny: { $ne: null },
         $or: [
           // videos/etc with a thumbnail we can display
           { thumbnail: { $ne: null } },
@@ -67,7 +67,7 @@ export class CollectionResolver {
   async directFileCount(@Parent() collection: CollectionEntity) {
     return this.fileRepo.count({
       collections: collection.id,
-      preview: { $ne: null },
+      thumbnailTiny: { $ne: null },
       $or: [
         // videos/etc with a thumbnail we can display
         { thumbnail: { $ne: null } },

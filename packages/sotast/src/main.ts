@@ -9,7 +9,6 @@ import ms from "ms";
 import { performance } from "perf_hooks";
 import { AppModule } from "./app.module.js";
 import { config } from "./config.js";
-import { MikroOrmSerializerInterceptor } from "./serializer.interceptor.js";
 import { configureOrm, migrate } from "./migrate.js";
 
 const start = performance.now();
@@ -34,7 +33,6 @@ const server = fastify({
 const adapter = new FastifyAdapter(server as any);
 const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
 
-app.useGlobalInterceptors(new MikroOrmSerializerInterceptor());
 app.useGlobalPipes(
   new ValidationPipe({
     transform: true,

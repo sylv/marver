@@ -1,8 +1,8 @@
-import { loadConfig } from '@ryanke/venera';
-import bytes from 'bytes';
-import { resolve } from 'node:path';
-import z from 'zod';
-import ms from 'ms';
+import { loadConfig } from "@ryanke/venera";
+import bytes from "bytes";
+import { resolve } from "node:path";
+import z from "zod";
+import ms from "ms";
 
 const BITS_REGEX = /(?<value>[\d.]+) ?(?<unit>mbps|kbps)/i;
 const parseBits = (input: string) => {
@@ -12,23 +12,24 @@ const parseBits = (input: string) => {
   }
 
   const { value, unit } = match.groups!;
-  const multiplier = unit.toLowerCase() === 'mbps' ? 1000000 : 1000;
+  const multiplier = unit.toLowerCase() === "mbps" ? 1000000 : 1000;
   return Number(value) * multiplier;
 };
 
 const schema = z.object({
   metadata_dir: z.string().transform((dir) => resolve(dir)),
   source_dirs: z.array(z.string()).transform((dirs) => dirs.map((dir) => resolve(dir))),
-  max_hashable_size: z.string().default('100MB').transform(bytes),
+  max_hashable_size: z.string().default("100MB").transform(bytes),
   secret: z.string().transform((secret) => new TextEncoder().encode(secret)),
   disable_tasks: z.boolean().default(false),
   orm_debug: z.boolean().default(false),
+  use_quantized: z.boolean().default(true),
   startup_timeout: z
     .string()
-    .default('30s')
+    .default("30s")
     .transform((value) => ms(value)),
-  is_development: z.boolean().default(process.env.NODE_ENV !== 'production'),
-  is_production: z.boolean().default(process.env.NODE_ENV === 'production'),
+  is_development: z.boolean().default(process.env.NODE_ENV !== "production"),
+  is_production: z.boolean().default(process.env.NODE_ENV === "production"),
   ocr: z
     .object({
       enabled: z.boolean().default(true),
@@ -72,7 +73,7 @@ const schema = z.object({
   }),
 });
 
-const data = loadConfig('marver');
+const data = loadConfig("marver");
 const config = schema.parse(data);
 
 export { config };
@@ -80,8 +81,8 @@ export { config };
 if (import.meta.vitest) {
   const { it, expect } = import.meta.vitest;
 
-  it('should parse bits', () => {
-    expect(parseBits('1mbps')).toBe(1000000);
-    expect(parseBits('1.1mbps')).toBe(1100000);
+  it("should parse bits", () => {
+    expect(parseBits("1mbps")).toBe(1000000);
+    expect(parseBits("1.1mbps")).toBe(1100000);
   });
 }

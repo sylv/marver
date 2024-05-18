@@ -7,7 +7,6 @@ import { config } from "../../../config.js";
 import { FileEntity } from "./file.entity.js";
 
 export enum FileAssetType {
-  Poster = 0,
   Thumbnail = 1,
   Timeline = 2,
 }
@@ -17,7 +16,7 @@ registerEnumType(FileAssetType, { name: "FileAssetType" });
 @Entity({ tableName: "file_assets" })
 @ObjectType("FileAsset")
 export abstract class FileAssetEntity {
-  @PrimaryKey()
+  @PrimaryKey({ type: "string" })
   @Field(() => ID)
   id: string = ulid();
 
@@ -55,8 +54,6 @@ export abstract class FileAssetEntity {
 
   getName(): string {
     switch (this.assetType) {
-      case FileAssetType.Poster:
-        return "poster";
       case FileAssetType.Thumbnail:
         return "thumbnail";
       case FileAssetType.Timeline:

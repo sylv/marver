@@ -18,13 +18,14 @@ export default defineConfig({
   migrations: {
     path: "migrations",
     tableName: "migrations",
+    transactional: true,
   },
   pool: {
     afterCreate: (...args) => {
-      // ensure squtil extension is loaded on each connection
+      // ensure sqlite-cosim extension is loaded on each connection
       const [conn, done] = args as [Database, () => void];
       const dirname = fileURLToPath(new URL(".", import.meta.url));
-      const path = join(dirname, "../../../target/release/libsqutil.so");
+      const path = join(dirname, "../../../target/release/libsqlite_cosim.so");
       conn.loadExtension(path);
 
       done();

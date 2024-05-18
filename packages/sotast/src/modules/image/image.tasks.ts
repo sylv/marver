@@ -2,7 +2,6 @@ import { EntityManager, EntityRepository, ref } from "@mikro-orm/better-sqlite";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable } from "@nestjs/common";
 import bytes from "bytes";
-import { rgbaToThumbHash } from "thumbhash-node";
 import { IMAGE_EXTENSIONS } from "../../constants.js";
 import { embeddingToBuffer } from "../../helpers/embedding.js";
 import { CLIPService } from "../clip/clip.service.js";
@@ -10,6 +9,7 @@ import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
 import { FileEntity } from "../file/entities/file.entity.js";
 import { Queue } from "../queue/queue.decorator.js";
 import { ImageService } from "./image.service.js";
+import sharp from "sharp";
 
 @Injectable()
 export class ImageTasks {
@@ -59,17 +59,19 @@ export class ImageTasks {
     },
   })
   async extractMetadata(file: FileEntity) {
-    const { resizedSize, originalMeta, rgba } = await this.imageService.loadImageAndConvertToRgba(file.path);
+    const image = sharp(file.path);
+    const metadata = await image.metadata();
 
-    const hash = rgbaToThumbHash(resizedSize.width, resizedSize.height, rgba);
-    file.preview = ref(Buffer.from(hash));
-    file.info.height = originalMeta.height;
-    file.info.width = originalMeta.width;
+    const thumbnailTiny = await image.resize(32, 32).webp({ quality: 5 }).toBuffer();
+    file.thumbnailTiny = ref(Buffer.from(thumbnailTiny));
 
-    const isAnimated = originalMeta.pages ? originalMeta.pages > 0 : !!originalMeta.delay;
+    file.info.height = metadata.height;
+    file.info.width = metadata.width;
+
+    const isAnimated = metadata.pages ? metadata.pages > 0 : !!metadata.delay;
     file.info.isAnimated = isAnimated;
-    if (Array.isArray(originalMeta.delay)) {
-      const durationSeconds = originalMeta.delay.reduce((acc, delay) => {
+    if (Array.isArray(metadata.delay)) {
+      const durationSeconds = metadata.delay.reduce((acc, delay) => {
         // most browsers have a minimum delay of 0.05s-ish
         // we have to account for that to have accurate times
         // source: https://stackoverflow.com/questions/21791012
@@ -79,24 +81,24 @@ export class ImageTasks {
       }, 0);
 
       file.info.durationSeconds = durationSeconds;
-      file.info.framerate = originalMeta.delay.length / durationSeconds;
-    } else if (originalMeta.delay && originalMeta.pages) {
-      file.info.durationSeconds = (originalMeta.delay * originalMeta.pages) / 1000;
-      file.info.framerate = originalMeta.pages / file.info.durationSeconds;
+      file.info.framerate = metadata.delay.length / durationSeconds;
+    } else if (metadata.delay && metadata.pages) {
+      file.info.durationSeconds = (metadata.delay * metadata.pages) / 1000;
+      file.info.framerate = metadata.pages / file.info.durationSeconds;
     }
 
     await this.em.persistAndFlush(file);
   }
 
-  @Queue("IMAGE_GENERATE_CLIP_EMBEDDING", {
+  @Queue("IMAGE_GENERATE_EMBEDDING", {
     targetConcurrency: 1,
     batchSize: 50,
     fileFilter: {
       info: { height: { $ne: null } },
+      size: { $lte: bytes("10mb") },
       extension: {
         $in: [...IMAGE_EXTENSIONS],
       },
-      size: { $lte: bytes("10mb") },
     },
   })
   async generateClipEmbeddings(files: FileEntity[]) {
