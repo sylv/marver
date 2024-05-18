@@ -1,4 +1,4 @@
-import { EntityRepository, sql, wrap, type FilterQuery, type QueryOrderMap } from "@mikro-orm/better-sqlite";
+import { EntityRepository, sql, type FilterQuery, type QueryOrderMap } from "@mikro-orm/better-sqlite";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import {
   Args,
@@ -13,12 +13,13 @@ import {
   registerEnumType,
 } from "@nestjs/graphql";
 import bytes from "bytes";
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from "class-validator";
 import { createConnection } from "nest-graphql-utils";
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "../../constants.js";
 import { AutoPopulate, inferPopulate } from "../../helpers/autoloader.js";
 import { embeddingToBuffer } from "../../helpers/embedding.js";
-import { PaginationArgs } from "../../pagination.js";
+import { PaginationArgs } from "../../helpers/pagination.js";
+import { parseSearch } from "../../helpers/parse-search.js";
 import { CLIPService } from "../clip/clip.service.js";
 import { ImageService } from "../image/image.service.js";
 import { FileConnection, FileEntity } from "./entities/file.entity.js";
@@ -30,6 +31,22 @@ enum FileType {
 
 registerEnumType(FileType, { name: "FileType" });
 
+enum FileSort {
+  DiskCreated = 0,
+  Size = 1,
+  Name = 2,
+  Path = 3,
+}
+
+registerEnumType(FileSort, { name: "FileSort" });
+
+enum FileSortDirection {
+  ASC = "ASC",
+  DESC = "DESC",
+}
+
+registerEnumType(FileSortDirection, { name: "FileSortDirection" });
+
 enum SimilarityType {
   Related = 0,
   Similar = 1,
@@ -39,29 +56,14 @@ enum SimilarityType {
   Videos = 5,
 }
 
+registerEnumType(SimilarityType, { name: "SimilarityType" });
+
 @ArgsType()
 class SimilarFilter extends PaginationArgs {
   @Field(() => SimilarityType, { nullable: true })
   @IsEnum(SimilarityType)
   type?: SimilarityType;
 }
-
-registerEnumType(SimilarityType, { name: "SimilarityType" });
-
-enum FileSort {
-  DiskCreated = 0,
-  Size = 1,
-  Name = 2,
-  Path = 3,
-}
-
-enum FileSortDirection {
-  ASC = "ASC",
-  DESC = "DESC",
-}
-
-registerEnumType(FileSort, { name: "FileSort" });
-registerEnumType(FileSortDirection, { name: "FileSortDirection" });
 
 @ArgsType()
 class FileFilter extends PaginationArgs {
@@ -94,11 +96,6 @@ class FileFilter extends PaginationArgs {
   @IsOptional()
   @Field({ nullable: true })
   afterDate?: Date;
-
-  @IsNumber()
-  @IsOptional()
-  @Field(() => ID, { nullable: true })
-  personId?: number;
 }
 
 @Resolver(() => FileEntity)
@@ -133,87 +130,89 @@ export class FileResolver {
           },
         ];
 
-        // const queryBuilder = this.fileRepo
-        //   .createQueryBuilder('file')
-        //   .select('*')
-
         if (filter.afterDate) filters.push({ createdAt: { $gte: filter.afterDate } });
         if (filter.beforeDate) filters.push({ createdAt: { $lte: filter.beforeDate } });
         if (filter.collectionId) filters.push({ collections: { id: filter.collectionId } });
 
-        if (filter.personId) {
-          filters.push({
-            faces: {
-              person: {
-                id: filter.personId,
-              },
-            },
-          });
-        }
-
-        // // we have to do this before the search query or else mikroorm can't
-        // // count the files properly. it's a bug in mikroorm.
-        // const count = await queryBuilder.getCount();
-
         if (filter.search) {
-          const embedding = await this.clipService.encodeText(filter.search);
-          const serialized = embeddingToBuffer(embedding);
-          const qb = this.fileRepo
-            .createQueryBuilder()
-            .select("*")
-            .leftJoin("embeddings", "embeddings")
-            .where({
-              $and: filters,
-              embeddings: { $ne: null },
-            });
-
-          for (const field of populate) {
-            qb.leftJoinAndSelect(field, field);
+          const parsed = parseSearch(filter.search);
+          if (parsed.filters) {
+            filters.push(...parsed.filters);
           }
 
-          // we have to count first, because otherwise mikroorm doesn't count properly.
-          // in the past this produced an error, now it says there is a single file, so..
-          const count = await qb.getCount();
+          if (parsed.semantic_queries[0]) {
+            const embedding = new Float32Array(768);
+            const input = parsed.semantic_queries.map((query) => query.query);
+            const encoded = await this.clipService.encodeTextBatch(input);
+            for (let queryIndex = 0; queryIndex < parsed.semantic_queries.length; queryIndex++) {
+              const semanticQuery = parsed.semantic_queries[queryIndex];
+              const semanticEmbedding = encoded[queryIndex];
+              for (let i = 0; i < 768; i++) {
+                if (semanticQuery.negate) {
+                  embedding[i] -= semanticEmbedding[i];
+                } else {
+                  embedding[i] += semanticEmbedding[i];
+                }
+              }
+            }
 
-          qb.addSelect(sql`MAX(cosine_similarity(embeddings.data, ${serialized})) as similarity`)
-            .orderBy({
-              [sql`similarity`]: filter.direction,
-            })
-            .groupBy("id")
-            .limit(args.limit)
-            .offset(args.offset);
+            const serialized = embeddingToBuffer([...embedding]);
+            const qb = this.fileRepo
+              .createQueryBuilder()
+              .select("*")
+              .leftJoin("embeddings", "embeddings")
+              .where({
+                $and: filters,
+                embeddings: { $ne: null },
+              });
 
-          const result = await qb.getResult();
-          return [result, count];
-        } else {
-          switch (filter.sort) {
-            case FileSort.Size: {
-              orderBy.size = filter.direction;
-              break;
+            // count has to happen before because performance + mikroorm bug returns count=1 every time
+            const count = await qb.getCount();
+
+            qb.addSelect(sql`MAX(cosine_similarity(${serialized}, embeddings.data)) as similarity`)
+              .orderBy({ [sql`similarity`]: filter.direction })
+              .groupBy("id")
+              .limit(args.limit)
+              .offset(args.offset);
+
+            for (const field of populate) {
+              // todo: should be handled properly, not a special case
+              if (field === "thumbnailTiny") qb.addSelect("thumbnailTiny");
+              else qb.leftJoinAndSelect(field, field);
             }
-            case FileSort.Name: {
-              orderBy.name = filter.direction;
-              break;
-            }
-            case FileSort.Path: {
-              orderBy.path = filter.direction;
-              break;
-            }
-            case FileSort.DiskCreated:
-            default: {
-              orderBy.createdAt = filter.direction;
-            }
+
+            const result = await qb.getResult();
+            return [result, count];
           }
-
-          return this.fileRepo.findAndCount(
-            { $and: filters },
-            {
-              limit: args.limit,
-              offset: args.offset,
-              populate: populate,
-            },
-          );
         }
+
+        switch (filter.sort) {
+          case FileSort.Size: {
+            orderBy.size = filter.direction;
+            break;
+          }
+          case FileSort.Name: {
+            orderBy.name = filter.direction;
+            break;
+          }
+          case FileSort.Path: {
+            orderBy.path = filter.direction;
+            break;
+          }
+          case FileSort.DiskCreated:
+          default: {
+            orderBy.createdAt = filter.direction;
+          }
+        }
+
+        return this.fileRepo.findAndCount(
+          { $and: filters },
+          {
+            limit: args.limit,
+            offset: args.offset,
+            populate: populate,
+          },
+        );
       },
     });
   }
@@ -343,9 +342,10 @@ export class FileResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  previewBase64(@Parent() file: FileEntity) {
-    if (!file.preview) return null;
-    return file.preview.unwrap()?.toString("base64");
+  @AutoPopulate(["thumbnailTiny"])
+  thumbnailTiny(@Parent() file: FileEntity) {
+    if (!file.thumbnailTiny) return null;
+    return file.thumbnailTiny.unwrap()?.toString("base64");
   }
 
   @ResolveField(() => FileType, { nullable: true })
@@ -362,20 +362,8 @@ export class FileResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  @AutoPopulate(["poster", "thumbnail"])
-  async thumbnailUrl(@Parent() _fileRef: { id: string }) {
-    // graphql requires the @Query(() => File) or whatever be serialized
-    // so it can validate fields exist, then the serialized object is passed to
-    // the field resolvers. this is problematic because refs are stripped and serialized
-    // as null/the ref value. so this is a hack that just gets the file from mikroorms
-    // cache, which should work for now.
-    // getReference() will return the cached entity instead of just a ref if its in the entity manager already.
-    // todo: this is genuinely bad and unreliable.
-    const media = this.fileRepo.getReference(_fileRef.id);
-    if (!wrap(media).isInitialized()) {
-      throw new Error("File was expected to be in the cache and initialized.");
-    }
-
-    return this.imageService.createMediaProxyUrl(media as any);
+  @AutoPopulate(["thumbnail"])
+  thumbnailUrl(@Parent() file: FileEntity) {
+    return this.imageService.createMediaProxyUrl(file);
   }
 }
