@@ -1,16 +1,48 @@
 {
   "name": "@ryanke/rehoboam",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "index.js",
-  "typings": "index.d.ts",
+  "module": "index.mjs",
+  "files": [
+    "index.d.ts",
+    "index.js"
+  ],
+  "napi": {
+    "name": "rehoboam",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu",
+        "i686-pc-windows-msvc",
+        "armv7-unknown-linux-gnueabihf",
+        "aarch64-apple-darwin",
+        "aarch64-linux-android",
+        "x86_64-unknown-freebsd",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "armv7-linux-androideabi"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "scripts": {
     "artifacts": "napi artifacts",
-    "build": "napi build --platform --release --strip"
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "version": "napi version",
+    "esmify": "esbuild index.js --outfile=index.mjs --format=esm"
   },
   "devDependencies": {
-    "@napi-rs/canvas": "^0.1.51",
-    "@napi-rs/cli": "^2.18.1",
-    "@types/node": "^20.12.7",
-    "esbuild": "^0.20.2"
+    "@napi-rs/cli": "^2.18.3",
+    "@types/node": "^20.12.12",
+    "esbuild": "^0.21.2"
   }
 }
