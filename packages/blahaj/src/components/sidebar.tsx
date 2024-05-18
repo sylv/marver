@@ -1,11 +1,4 @@
-import {
-  LucideAlbum,
-  LucideHash,
-  LucideListTodo,
-  LucideTv,
-  LucideUser2,
-  type LucideIcon,
-} from "lucide-react";
+import { LucideAlbum, LucideHash, LucideListTodo, LucideTv, type LucideIcon } from "lucide-react";
 import { memo } from "react";
 import { cn } from "../helpers/cn";
 import { usePageContext } from "../renderer/usePageContext";
@@ -45,9 +38,6 @@ export const Sidebar = memo(() => {
             </SidebarTab>
             <SidebarTab href="/collections" icon={LucideAlbum}>
               Collections
-            </SidebarTab>
-            <SidebarTab href="/people" icon={LucideUser2}>
-              People
             </SidebarTab>
           </div>
           <div className="text-gray-400 uppercase text-xs px-4 mt-4 mb-2">Admin</div>
