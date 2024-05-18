@@ -1,0 +1,7 @@
+{
+  "extends": "@atlasbot/configs/tsconfig",
+  "include": ["src"],
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@ryanke/video-iterate",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Sylver <ryan@sylver.me>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@atlasbot/configs": "^10.5.12",
+    "@types/node": "20",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "execa": "^8.0.1"
+  }
+}

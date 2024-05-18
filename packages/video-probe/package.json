@@ -1,0 +1,39 @@
+{
+  "name": "@ryanke/video-probe",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Sylver <ryan@sylver.me>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    },
+    "./ffprobe": {
+      "import": "./dist/ffprobe.js",
+      "types": "./src/ffprobe.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@atlasbot/configs": "^10.5.12",
+    "@types/node": "20",
+    "execa": "^8.0.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "unplugin-macros": "^0.9.2",
+    "vite": "^5.1.0",
+    "vitest": "^1.1.0"
+  },
+  "dependencies": {
+    "@ryanke/parsers": "workspace:*",
+    "zod": "^3.22.4"
+  }
+}
