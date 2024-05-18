@@ -10,6 +10,7 @@ import { FileEntity } from "../file/entities/file.entity.js";
 import { Queue } from "../queue/queue.decorator.js";
 import { ImageService } from "./image.service.js";
 import sharp from "sharp";
+import { generatePreview } from "../../helpers/generatePreview.js";
 
 @Injectable()
 export class ImageTasks {
@@ -62,7 +63,7 @@ export class ImageTasks {
     const image = sharp(file.path);
     const metadata = await image.metadata();
 
-    const thumbnailTiny = await image.resize(32, 32).webp({ quality: 5 }).toBuffer();
+    const thumbnailTiny = await generatePreview(file.path);
     file.thumbnailTiny = ref(Buffer.from(thumbnailTiny));
 
     file.info.height = metadata.height;

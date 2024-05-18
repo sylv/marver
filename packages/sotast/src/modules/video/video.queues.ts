@@ -17,6 +17,7 @@ import { FileEntity } from "../file/entities/file.entity.js";
 import { JobError } from "../queue/job.error.js";
 import { Queue } from "../queue/queue.decorator.js";
 import { iterateVideo, type Frame } from "@ryanke/video-iterate";
+import { generatePreview } from "../../helpers/generatePreview.js";
 
 type FrameWithPath = Omit<Frame, "data"> & { path: string; size: number };
 
@@ -202,8 +203,8 @@ export class VideoQueues {
 
       file.thumbnail = ref(thumbnail);
 
-      const tiny = await sharp(largestFrame.path).resize(32, 32).webp({ quality: 5 }).toBuffer();
-      file.thumbnailTiny = ref(Buffer.from(tiny));
+      const thumbnailTiny = await generatePreview(largestFrame.path);
+      file.thumbnailTiny = ref(Buffer.from(thumbnailTiny));
 
       this.em.persist([thumbnail, file]);
       await this.em.flush();

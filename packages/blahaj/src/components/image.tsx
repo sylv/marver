@@ -1,7 +1,6 @@
 import { memo, useMemo, useState, type CSSProperties } from "react";
 import { graphql, unmask, type FragmentType } from "../@generated";
 import { cn } from "../helpers/cn";
-import { AnimatePresence, motion } from "framer-motion";
 
 const IMAGE_INNER_CLASSES = "text-transparent transition-opacity duration-200";
 const SOURCE_SET_SIZES = [800, 1600, 3200];
@@ -29,6 +28,7 @@ interface ImageProps {
 export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(Fragment, fileFrag);
   const [showPreview, setShowPreview] = useState(true);
+  const [unrenderPreview, setUnrenderPreview] = useState(false);
   const aspectRatio = useMemo(() => {
     if (!file.info.height || !file.info.width) return null;
     return file.info.width / file.info.height;
@@ -55,10 +55,9 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
     return parts.join(", ");
   }, [file]);
 
-  // the hack we use to scale the images slightly larger only works if the image overflow is not visible.
-  // with object-cover it is visible and so the scale hack looks weird - the preview is 1.25x larger,
-  // so when it swaps to the image, it looks like it shrinks.
-  const scalePreview = !className?.includes("object-contain");
+  // we want to scale up the image slightly to cover some ugly blurred edges, but
+  // that breaks object-contain so we can't do it if its present.
+  const canScale = !className?.includes("object-contain");
 
   return (
     <figure
@@ -89,10 +88,13 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
             .catch(() => null)
             .finally(() => {
               setShowPreview(false);
+              setTimeout(() => {
+                setUnrenderPreview(true);
+              }, 200);
             });
         }}
       />
-      {blurredUrl && (
+      {blurredUrl && !unrenderPreview && (
         <img
           aria-hidden
           alt=""
@@ -101,9 +103,9 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
           src={blurredUrl}
           className={cn(
             IMAGE_INNER_CLASSES,
-            "absolute top-0 left-0 right-0 bottom-0 pointer-events-none blur-lg",
-            scalePreview && "scale-[1.3]", // fixes some rendering issues with blurry edges or the preview not covering the image fully.
+            "absolute top-0 left-0 right-0 bottom-0 pointer-events-none",
             showPreview ? "opacity-100" : "opacity-0",
+            canScale && "scale-110", // todo: might be a performance issue
             className,
           )}
         />
