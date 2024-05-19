@@ -25,7 +25,7 @@ export const FileQueryWithFilters = memo<FilePageProps>(({ variables }) => {
           <FileQuery
             variables={{
               ...variables,
-              search: debouncedSearch,
+              search: debouncedSearch || null,
             }}
           />
         </TabsContent>

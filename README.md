@@ -1,13 +1,13 @@
-<p align="center">
-  <img src="./assets/logo-large.png" height="128" width="128" />
-</p>
-
 # marver
 
-> **Warning**
-> marver is not ready, there is very little UI and there are no guarantees it won't photoshop all your family photos with clown hats on your uncle. Watch the repo for updates, or come back in a few months.
+  <img src="https://skillicons.dev/icons?i=vite,tailwind,nest,typescript,docker,graphql" />
+  <br/>
 
-marver scours your files and makes them all pretty and viewable, pulling as much information as possible.
+> [!WARNING]
+> marver is not ready, there is very little UI and there are no guarantees it won't photoshop all your family photos with clown hats on your uncle. 
+> Check back in a few months.
+
+marver scours your files and makes them all pretty and viewable, pulling as much information as possible to make finding a needle in a haystack easier.
 
 ### ideas
 
@@ -33,17 +33,17 @@ marver scours your files and makes them all pretty and viewable, pulling as much
     - If a file named `dave ryan.jpg` and `ellie ryan.jpg` exist, we can assume that the name "Ryan" is for the face that is in both photos.
     - If we have enough of these matches we can be fairly confident in the name.
 - OCR
-  - Clean up OCR results automaticaly and/or with a small LLM
+  - A small LLM or vLLM could be used to clean up OCR results
   - Translate OCR results into the user's language
-  - Overlay the bounding box on the image for copy/paste
+  - Overlay a hidden bounding box w/ text on the image for copy/paste
+  - Using CLIP embeddings to filter for images with text and without text would save us running OCR unnecessarily
   - Run OCR on videos
-    - It might be possible to train a small model that takes in CLIP embeddings and determines if a frame has text in it.
     - Only running OCR on frames "different enough" from the last one would be a good optimization
 - Extract metadata from other files
   - If `img_22.png` and `img_22.png.json` (json/xml/csv), try rip data from the json file and use it as metadata.
   - If we find `.sqlite` or `.db` files, a small LLM could check if they contain useful metadata and extract it in bulk if they do.
   - Having some recognised schemas for common formats would be good - tools like `yt-dlp`, `gallery-dl` and others may be common sources of metadata with standard formats we have schemas for.
-  - As a fallback, a small LLM could generate schemas for metadata files we find, which we can then blindly apply to other files just like the preset schemas we might have.
+  - As a fallback, a small LLM could generate strict schemas for metadata files we find, which we can then blindly apply to other files just like the preset schemas we might have.
 - Automatic collections
   - Folders under the source folder should always become a collection, `photos/2021/August` should be in a `August` collection that is a child of the `2021` collection.
   - Look for gallery indexes in file names and generate collections from them
@@ -59,10 +59,9 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - PDFs, markdown, and other text-based files should be viewable with thumbnails
   - Index text from text-based files (pdfs, markdown, txt)
 - Option to store data in EXIF
-  - We should use the standard format for data whenever possible
   - If the user adds a location to an image, or updates its tags, we should have an option to add that to the image EXIF data.
   - Ideally, we want all the data we store to be replaceable. The files themselves are what's important, not the .sqlite file indexing them.
-  - This should not be default
+  - This should not be default, but it should be an obvious option.
   - Anything we can write to EXIF we should be able to pull back out
 - Shortcuts
   - In the sidebar, have a "shortcuts" link at the bottom that opens a little panel showing the shortcuts. Having shortcuts but not showing them is a waste.
@@ -86,13 +85,8 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - Should store embeddings as efficiently as possible
   - Store quantized and source embeddings along side
 - Refactor queues
-  - Use class inheritance instead of decorators for better type safety
-  - Have type safe batched/unbatched queues
-  - Split into types
-    - `FrameQueue` operates on images and frames from videos
-    - `FileQueue` operates on any file (images, videos, audio)
-    - `AssetQueue` operates on scanned files and generated files
-    - Operating on frames in isolation may be problematic for something like "detect faces in a video", where we might want to only consider a face in the video if its in >1 minute of the video, which would require checking after running face detection on multiple frames.
+  - Have type-safe batching and inheritance
+  - Running the GraphQL server on a different thread would be a good idea to stop the UI locking up
 - We can use embeddings to filter jobs for images
   - For example, train a model/create an embedding for "images with faces". We can then use that to filter out images that don't have faces before running face recognition.
   - This can be done for any "expensive" job that can be represented as an embedding, for example OCR.
