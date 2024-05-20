@@ -1,7 +1,6 @@
 # marver
 
-  <img src="https://skillicons.dev/icons?i=vite,tailwind,nest,typescript,docker,graphql" />
-  <br/>
+<img alt="Marver uses Vite, Tailwind, NestJS, TypeScript, Docker and GraphQL" src="https://skillicons.dev/icons?i=vite,tailwind,nest,typescript,docker,graphql" />
 
 > [!WARNING]
 > marver is not ready, there is very little UI and there are no guarantees it won't photoshop all your family photos with clown hats on your uncle. 
