@@ -7,7 +7,7 @@ export type SigLIP = SigLip
 export class SigLip {
   constructor(quantized: boolean)
   batchEncodeImages(imagePaths: Array<string>): Promise<Array<Array<number>>>
-  batchEncodeTexts(texts: Array<string>): Promise<Array<Array<number>>>
+  batchEncodeTexts(texts: Array<string>, cacheResult?: boolean | undefined | null): Promise<Array<Array<number>>>
   unloadTextualSession(): void
   unloadVisualSession(): void
 }

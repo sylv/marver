@@ -11,8 +11,8 @@ export class CLIPService {
   private _textUnloader?: NodeJS.Timeout;
   private _visualUnloader?: NodeJS.Timeout;
 
-  async encodeText(text: string): Promise<Embedding> {
-    const result = await this.encodeTextBatch([text]);
+  async encodeText(text: string, cacheResult: boolean): Promise<Embedding> {
+    const result = await this.encodeTextBatch([text], cacheResult);
     return result[0];
   }
 
@@ -21,11 +21,11 @@ export class CLIPService {
     return result[0];
   }
 
-  async encodeTextBatch(texts: string[]): Promise<Embedding[]> {
+  async encodeTextBatch(texts: string[], cacheResult: boolean): Promise<Embedding[]> {
     clearTimeout(this._textUnloader);
 
     this.log.debug(`Encoding ${texts.length} texts with CLIP textual`);
-    const result = await this.clip.batchEncodeTexts(texts);
+    const result = await this.clip.batchEncodeTexts(texts, cacheResult);
 
     clearTimeout(this._textUnloader);
     this._textUnloader = setTimeout(() => {
