@@ -9,6 +9,7 @@ import sharp, { type FitEnum, type FormatEnum } from "sharp";
 import { CacheService } from "../cache/cache.service.js";
 import { StorageService } from "../storage/storage.service.js";
 import { ImageService, type ProxyableImage } from "./image.service.js";
+import { setTimeout } from "timers/promises";
 
 const FIT = ["cover", "contain", "fill", "inside", "outside"] as (keyof FitEnum)[];
 // Image formats that can be animated by sharp
@@ -74,6 +75,7 @@ export class ImageController {
     @Request() req: FastifyRequest,
     @Response({ passthrough: false }) reply: FastifyReply,
   ) {
+    await setTimeout(5000);
     const image = this.imageService.parseImageProxyPayload(data);
     const { formatMime, formatKey } = await this.detectBestMimeType(query, image, req);
     const shouldProcess = this.shouldProcess(formatMime, query, image);
@@ -88,7 +90,7 @@ export class ImageController {
       const suffix = query.height || query.width ? "resized" : "processed";
       contentDisposition = `inline; filename="${cleanFileName}_${suffix}.${extension}"`;
 
-      const cacheKey = this.getCacheKey(fileId, data, query);
+      const cacheKey = this.getCacheKey(data, query);
       const cachedStream = await this.cache.createReadStream(cacheKey);
 
       if (cachedStream) {
@@ -130,9 +132,8 @@ export class ImageController {
       .send(stream);
   }
 
-  private getCacheKey(fileId: string, data: string, query: ImageProxyQuery) {
+  private getCacheKey(data: string, query: ImageProxyQuery) {
     const hash = createHash("sha256");
-    hash.update(fileId);
     hash.update(data);
     hash.update(JSON.stringify(query));
     return hash.digest("hex");
