@@ -70,6 +70,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -106,4 +107,20 @@
 ::-webkit-scrollbar-thumb {
   background-color: #333033;
   border-color: transparent;
+}
+
+::selection {
+  @apply bg-violet-600;
+}
+
+h1 {
+  @apply text-2xl
+}
+
+h2 {
+  @apply text-xl
+}
+
+h3 {
+  @apply text-lg
 }

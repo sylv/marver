@@ -1,7 +1,7 @@
-import { resolveSelections, type FieldSelections } from '@jenyus-org/graphql-utils';
-import { type AnyEntity } from '@mikro-orm/core';
-import { RESOLVER_NAME_METADATA, TypeMetadataStorage } from '@nestjs/graphql';
-import type { GraphQLResolveInfo } from 'graphql';
+import { resolveSelections, type FieldSelections } from "@jenyus-org/graphql-utils";
+import { type AnyEntity } from "@mikro-orm/core";
+import { RESOLVER_NAME_METADATA, TypeMetadataStorage } from "@nestjs/graphql";
+import type { GraphQLResolveInfo } from "graphql";
 
 const FIELD_STORE = new Map<AnyEntity, FieldSelections[]>();
 
@@ -14,12 +14,12 @@ const FIELD_STORE = new Map<AnyEntity, FieldSelections[]>();
 export const AutoPopulate = (populateList?: string | string[]): PropertyDecorator => {
   return (target: any, propertyKey: string | symbol) => {
     process.nextTick(() => {
-      if (typeof propertyKey === 'symbol') {
-        throw new TypeError('AutoPopulate does not support symbol properties');
+      if (typeof propertyKey === "symbol") {
+        throw new TypeError("AutoPopulate does not support symbol properties");
       }
 
       // the target is either an @Entity() class, or a @Resolver() class
-      let constructor = target.constructor;
+      let targetConstructor = target.constructor;
       const resolverForType = Reflect.getMetadata(RESOLVER_NAME_METADATA, target.constructor) as
         | string
         | undefined;
@@ -33,11 +33,11 @@ export const AutoPopulate = (populateList?: string | string[]): PropertyDecorato
           throw new Error(`Could not find object type for resolver ${resolverForType}`);
         }
 
-        constructor = objectType.target;
+        targetConstructor = objectType.target;
       }
 
       // todo: validate constructor is actually an entity.
-      const fields = FIELD_STORE.get(constructor) ?? [];
+      const fields = FIELD_STORE.get(targetConstructor) ?? [];
       const value = populateList ?? propertyKey;
       if (Array.isArray(value)) {
         for (const populate of value) {
@@ -53,7 +53,7 @@ export const AutoPopulate = (populateList?: string | string[]): PropertyDecorato
         });
       }
 
-      FIELD_STORE.set(constructor, fields);
+      FIELD_STORE.set(targetConstructor, fields);
       return undefined;
     });
   };
@@ -65,6 +65,9 @@ export const AutoPopulate = (populateList?: string | string[]): PropertyDecorato
  * @param entityPath The field in the query that corresponds to the entity.
  * For example, if the query is `file { id }`, then `atField` would be "file".
  * If the query was `files { edges { node { id } } }`, then `atField` would be "files.edges.node".
+ *
+ * Field resolvers can omit the parent fields, for example "similar.edges.node" works even though
+ * its used as "files.edges.node.similar.edges.node" or "file.similar.edges.node".
  */
 export const inferPopulate = (entity: AnyEntity, entityPath: string, info: GraphQLResolveInfo) => {
   const nestedFields = FIELD_STORE.get(entity);
@@ -74,7 +77,7 @@ export const inferPopulate = (entity: AnyEntity, entityPath: string, info: Graph
 
   const fieldTree: FieldSelections[] = [];
   let previousField: FieldSelections | undefined;
-  for (const pathpart of entityPath.split('.')) {
+  for (const pathpart of entityPath.split(".")) {
     const field: FieldSelections = {
       field: pathpart,
       selections: [],

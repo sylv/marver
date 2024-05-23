@@ -75,7 +75,6 @@ export class ImageController {
     @Request() req: FastifyRequest,
     @Response({ passthrough: false }) reply: FastifyReply,
   ) {
-    await setTimeout(5000);
     const image = this.imageService.parseImageProxyPayload(data);
     const { formatMime, formatKey } = await this.detectBestMimeType(query, image, req);
     const shouldProcess = this.shouldProcess(formatMime, query, image);

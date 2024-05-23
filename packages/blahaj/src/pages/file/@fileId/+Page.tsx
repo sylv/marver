@@ -4,12 +4,17 @@ import { graphql } from "../../../@generated";
 import { SpinnerCenter } from "../../../components/spinner";
 import type { PageProps } from "../../../renderer/types";
 import { useMediaStore } from "./media.store";
-import { FileView } from "../../../components/file/file-view";
+import { FileSidebar } from "../../../components/file/file-sidebar";
+import { Card } from "../../../components/ui/card";
+import { FileContent } from "../../../components/file/file-content";
 
 const FileQuery = graphql(`
   query File($fileId: String!) {
     file(id: $fileId) {
-      ...FileViewProps
+      id
+      name
+      ...FileSidebarProps
+      ...FileContentProps
     }
   }
 `);
@@ -29,8 +34,18 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
   if (fetching || !data?.file) return <SpinnerCenter />;
 
   return (
-    <div className="container mx-auto mt-10 space-y-2">
-      <FileView file={data.file} />
+    <div className="m-6">
+      <div className="grid grid-cols-4 gap-3">
+        <div className="col-span-3 space-y-3">
+          <Card className="text-xl font-semibold truncate bg-zinc-900 px-3 py-1">
+            <h1>{data.file.name}</h1>
+          </Card>
+          <Card className="bg-black overflow-hidden h-min">
+            <FileContent file={data.file} className="w-full" imageClassName="object-contain" />
+          </Card>
+        </div>
+        <FileSidebar file={data.file} />
+      </div>
     </div>
   );
 };

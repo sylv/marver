@@ -1,4 +1,4 @@
-import { LucideAlbum, LucideHash, LucideListTodo, LucideTv, type LucideIcon } from "lucide-react";
+import { LucideHash, LucideHeart, LucideListTodo, LucideTv, type LucideIcon } from "lucide-react";
 import { memo } from "react";
 import { cn } from "../helpers/cn";
 import { usePageContext } from "../renderer/usePageContext";
@@ -24,34 +24,29 @@ const SidebarTab = memo<{ href: string; icon: LucideIcon; children: React.ReactN
     );
   },
 );
-export const Sidebar = memo(() => {
-  return (
-    <nav
-      className="min-h-dvh bottom-0 top-0 bg-zinc-100 border-zinc-200 dark:bg-zinc-900 border-r dark:border-zinc-800 relative flex-shrink-0"
-      style={{ width: SIDEBAR_WIDTH }}
-    >
-      <div className="fixed h-dvh flex flex-col justify-between" style={{ width: SIDEBAR_WIDTH }}>
-        <div className="h-full p-2 py-6">
-          <div className="space-y-1">
-            <SidebarTab href="/" icon={LucideTv}>
-              All Media
-            </SidebarTab>
-            <SidebarTab href="/collections" icon={LucideAlbum}>
-              Collections
-            </SidebarTab>
-          </div>
-          <div className="text-gray-400 uppercase text-xs px-4 mt-4 mb-2">Admin</div>
-          <SidebarTab href="/tags" icon={LucideHash}>
-            Tags
+export const Sidebar = memo(() => (
+  <nav className="min-h-dvh bottom-0 top-0 relative flex-shrink-0" style={{ width: SIDEBAR_WIDTH }}>
+    <div className="fixed h-dvh flex flex-col justify-between" style={{ width: SIDEBAR_WIDTH }}>
+      <div className="h-full p-2 py-6">
+        <div className="space-y-1">
+          <SidebarTab href="/" icon={LucideTv}>
+            All Media
           </SidebarTab>
-          <SidebarTab href="/tasks" icon={LucideListTodo}>
-            Tasks
+          <SidebarTab href="/favourites" icon={LucideHeart}>
+            Favourites
           </SidebarTab>
         </div>
-        <div className="bg-zinc-750 min-w-full p-2">
-          <ModeToggle />
-        </div>
+        <div className="text-gray-400 uppercase text-xs px-4 mt-4 mb-2">Admin</div>
+        <SidebarTab href="/tags" icon={LucideHash}>
+          Tags
+        </SidebarTab>
+        <SidebarTab href="/tasks" icon={LucideListTodo}>
+          Tasks
+        </SidebarTab>
       </div>
-    </nav>
-  );
-});
+      <div className="bg-zinc-750 min-w-full p-2">
+        <ModeToggle />
+      </div>
+    </div>
+  </nav>
+));

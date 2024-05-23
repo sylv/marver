@@ -91,3 +91,4 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - This can be done for any "expensive" job that can be represented as an embedding, for example OCR.
 - `rehoboam` hub downloads lock up node process
 - Caching should be partially based on the time to compute the value, for example computing a preview for a 100mb image takes 10s and computing one for a 2kb jpeg takes a couple milliseconds. The 100mb image should be cached for longer.
+- A few places combine embeddings into one by adding the values together. This might result in poor results, there should be a better way.

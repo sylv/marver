@@ -17,11 +17,12 @@ import { IsDateString, IsEnum, IsOptional, IsString, MaxLength } from "class-val
 import { createConnection } from "nest-graphql-utils";
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "../../constants.js";
 import { AutoPopulate, inferPopulate } from "../../helpers/autoloader.js";
-import { embeddingToBuffer } from "../../helpers/embedding.js";
+import { bufferToEmbedding, embeddingToBuffer } from "../../helpers/embedding.js";
 import { PaginationArgs } from "../../helpers/pagination.js";
 import { parseSearch } from "../../helpers/parse-search.js";
 import { CLIPService } from "../clip/clip.service.js";
 import { ImageService } from "../image/image.service.js";
+import { FileEmbeddingEntity } from "./entities/file-embedding.entity.js";
 import { FileConnection, FileEntity } from "./entities/file.entity.js";
 
 enum FileType {
@@ -101,6 +102,7 @@ class FileFilter extends PaginationArgs {
 @Resolver(() => FileEntity)
 export class FileResolver {
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
+  @InjectRepository(FileEmbeddingEntity) private fileEmbeddingRepo: EntityRepository<FileEmbeddingEntity>;
 
   constructor(
     private clipService: CLIPService,
@@ -143,7 +145,7 @@ export class FileResolver {
           if (parsed.semantic_queries[0]) {
             const embedding = new Float32Array(768);
             const input = parsed.semantic_queries.map((query) => query.query);
-            const encoded = await this.clipService.encodeTextBatch(input);
+            const encoded = await this.clipService.encodeTextBatch(input, true);
             for (let queryIndex = 0; queryIndex < parsed.semantic_queries.length; queryIndex++) {
               const semanticQuery = parsed.semantic_queries[queryIndex];
               const semanticEmbedding = encoded[queryIndex];
@@ -218,125 +220,109 @@ export class FileResolver {
   }
 
   @ResolveField(() => FileConnection)
-  async similar(@Parent() _file: FileEntity, @Args() filter: SimilarFilter) {
+  async similar(
+    @Parent() file: FileEntity,
+    @Args() filter: SimilarFilter,
+
+    @Info() info: any,
+  ) {
     return createConnection({
       defaultPageSize: 20,
       paginationArgs: filter,
       paginate: async (args) => {
-        return [[], 0];
-        // // graphql converts the FileEntity into a normal object. this is really annoying,
-        // // but we can hack around it by grabbing the "real" file from the request context.
-        // const file = this.fileRepo.getReference(_file.id);
-        // if (!wrap(file).isInitialized()) {
-        //   throw new Error('file must be a reference');
-        // }
+        const populate = inferPopulate(FileEntity, "similar.edges.node", info);
 
-        // const embedding = await file.getPrimaryEmbedding();
-        // if (!embedding) return [[], 0];
+        // todo: this should be done in sqlite with a window function, but sqlite-loadable doesn't
+        // support that yet.
+        const fileEmbeddings = await this.fileEmbeddingRepo.find({ file }, { fields: ["id", "data"] });
+        const merged = new Float32Array(768);
+        for (const { data } of fileEmbeddings) {
+          const embedding = bufferToEmbedding(data);
+          for (let i = 0; i < 768; i++) {
+            merged[i] += embedding[i];
+          }
+        }
 
-        // const embeddingQuery = this.fileEmbeddingRepo
-        //   .createQueryBuilder()
-        //   .select(['file_id'])
-        //   .addSelect(
-        //     raw(`cosine_similarity(embedding, :embedding) as similarity`, {
-        //       embedding: embedding,
-        //     }),
-        //   )
-        //   .where({
-        //     file: {
-        //       id: { $ne: file.id },
-        //       unavailable: false,
-        //       info: { height: { $ne: null } },
-        //     },
-        //   })
-        //   .orderBy({
-        //     [sql`MAX(similarity)`]: 'DESC',
-        //   })
-        //   .groupBy('file_id');
+        const mergedSerialized = embeddingToBuffer([...merged]);
+        const queryBuilder = this.fileRepo
+          .createQueryBuilder("file")
+          .select("*")
+          .leftJoin("embeddings", "embeddings")
+          .addSelect(sql`MAX(cosine_similarity(${mergedSerialized}, embeddings.data)) as similarity`)
+          .where({
+            embeddings: { $ne: null },
+            id: { $ne: file.id },
+          })
+          .groupBy("id")
+          .limit(args.limit)
+          .offset(args.offset);
 
-        // // essentially we just want to find files that are similar but not too similar.
-        // const queryBuilder = this.fileRepo.createQueryBuilder('file');
-        // queryBuilder
-        //   .select('*')
-        //   .leftJoinAndSelect('poster', 'poster')
-        //   .leftJoinAndSelect('thumbnail', 'thumbnail')
-        //   .leftJoinAndSelect('faces', 'faces')
-        //   .addSelect(
-        //     raw(`cosine_similarity(file.embedding, :embedding) as similarity`, {
-        //       embedding: embedding,
-        //     }),
-        //   )
-        //   .where({
-        //     id: {
-        //       $in: embeddingQuery.getKnexQuery(),
-        //     },
-        //     unavailable: false,
-        //   })
-        //   // dedupe files that are the same
-        //   .groupBy('similarity')
-        //   .limit(args.limit)
-        //   .offset(args.offset);
+        for (const field of populate) {
+          // todo: should be handled properly, not a special case
+          if (field === "thumbnailTiny") queryBuilder.addSelect("thumbnailTiny");
+          else queryBuilder.leftJoinAndSelect(field, field);
+        }
 
-        // if (filter.type === SimilarityType.Similar) {
-        //   queryBuilder
-        //     .andWhere({
-        //       similarity: {
-        //         $gt: 0.85,
-        //       },
-        //     })
-        //     .orderBy({ similarity: 'DESC' });
-        // } else {
-        //   queryBuilder
-        //     .andWhere({
-        //       similarity: {
-        //         // we want to avoid perfect matches or else we just get
-        //         // files from the same set, or duplicates of the same file.
-        //         $lt: 0.85,
-        //         $gt: 0.3,
-        //       },
-        //     })
-        //     .orderBy({ similarity: 'DESC' });
+        if (filter.type === SimilarityType.Similar) {
+          queryBuilder
+            .having({
+              [sql`similarity`]: {
+                $gt: 0.85,
+              },
+            })
+            .orderBy({ [sql`similarity`]: "DESC" });
+        } else {
+          queryBuilder
+            .having({
+              [sql`similarity`]: {
+                // we want to avoid perfect matches or else we just get
+                // files from the same set, or duplicates of the same file.
+                $lt: 0.85,
+                $gt: 0.3,
+              },
+            })
+            .orderBy({ [sql`similarity`]: "DESC" });
 
-        //   switch (filter.type) {
-        //     case SimilarityType.SameFolder: {
-        //       queryBuilder.andWhere({ directory: file.directory });
+          switch (filter.type) {
+            case SimilarityType.SameFolder: {
+              queryBuilder.andWhere({ directory: file.directory });
 
-        //       break;
-        //     }
-        //     case SimilarityType.SameType: {
-        //       // todo: should use similar extensions, but fileType is not accessible here
-        //       // eg if its an mp4 video, it should show all videos, not just mp4s
-        //       queryBuilder.andWhere({ extension: file.extension });
+              break;
+            }
+            case SimilarityType.SameType: {
+              // todo: should use similar extensions, but fileType is not accessible here
+              // eg if its an mp4 video, it should show all videos, not just mp4s
+              queryBuilder.andWhere({ extension: file.extension });
 
-        //       break;
-        //     }
-        //     case SimilarityType.Videos: {
-        //       queryBuilder.andWhere({
-        //         extension: {
-        //           $in: [...VIDEO_EXTENSIONS],
-        //         },
-        //       });
+              break;
+            }
+            case SimilarityType.Videos: {
+              queryBuilder.andWhere({
+                extension: {
+                  $in: [...VIDEO_EXTENSIONS],
+                },
+              });
 
-        //       break;
-        //     }
-        //     case SimilarityType.Images: {
-        //       queryBuilder.andWhere({
-        //         extension: {
-        //           $in: [...IMAGE_EXTENSIONS],
-        //         },
-        //       });
+              break;
+            }
+            case SimilarityType.Images: {
+              queryBuilder.andWhere({
+                extension: {
+                  $in: [...IMAGE_EXTENSIONS],
+                },
+              });
 
-        //       break;
-        //     }
-        //   }
-        // }
+              break;
+            }
+          }
+        }
 
-        // // todo: getResultAndCount() removes the similarity column,
-        // // but then complains that the similarity column does not exist.
-        // // for now, i just disabled pagination, but its likely a mikro bug.
-        // // return queryBuilder.getResultAndCount();
-        // const result = await queryBuilder.getResult();
-        // return [result, result.length];
+        // todo: getResultAndCount() removes the similarity column,
+        // but then complains that the similarity column does not exist.
+        // for now, i just disabled pagination, but its likely a mikro bug.
+        // return queryBuilder.getResultAndCount();
+        const result = await queryBuilder.getResult();
+        return [result, result.length];
       },
     });
   }
