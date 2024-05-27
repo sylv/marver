@@ -6,6 +6,7 @@ import ExifReader from "exifreader";
 import { IMAGE_EXTENSIONS } from "../../constants.js";
 import { FileExifDataEntity } from "../file/entities/file-exif.entity.js";
 import { type FileEntity } from "../file/entities/file.entity.js";
+import { parseExifDate } from "@ryanke/parsers/exif-date";
 
 export interface ProxyableImage {
   fileName: string;
@@ -33,7 +34,6 @@ const proxyableImageSchema = avro.Type.forSchema({
 
 @Injectable()
 export class ImageService {
-  private static readonly EXIF_DATE_FORMAT = /(?<year>\d{4}):(?<month>\d{2}):(?<day>\d{2})/;
   @InjectRepository(FileExifDataEntity) private exifRepo: EntityRepository<FileExifDataEntity>;
   private log = new Logger(ImageService.name);
 
@@ -99,9 +99,16 @@ export class ImageService {
       if (exifData.FNumber) exif.fNumber = exifData.FNumber.description;
       if (exifData.ISOSpeedRatings) exif.iso = +exifData.ISOSpeedRatings.description;
       if (exifData.Flash) exif.flash = exifData.Flash.description;
-      if (exifData.DateTimeOriginal)
-        exif.dateTime = this.parseExifDate(exifData.DateTimeOriginal.description);
-      else if (exifData.DateTime) exif.dateTime = this.parseExifDate(exifData.DateTime.description);
+
+      const dateValue = exifData.DateTimeOriginal || exifData.DateTime;
+      if (dateValue) {
+        const result = parseExifDate(dateValue.description);
+        if (result.error) {
+          this.log.warn(`Could not parse "${dateValue.description}" as a valid exif date`);
+        } else {
+          exif.dateTime = result.date;
+        }
+      }
 
       const location = this.getLatLongFromExif(exifData);
       if (location) {
@@ -140,18 +147,5 @@ export class ImageService {
 
     if (Number.isNaN(latVal) || Number.isNaN(longVal)) return null;
     return [latVal, longVal];
-  }
-
-  private parseExifDate(date: string) {
-    // exif dates are in the format "YYYY:MM:DD HH:MM:SS", javascript cannot parse
-    // that as a date without some trickery.
-    const clean = date.replace(ImageService.EXIF_DATE_FORMAT, "$<year>-$<month>-$<day>");
-    const parsed = new Date(clean);
-    if (Number.isNaN(parsed.getTime()) || parsed.getTime() === 0) {
-      this.log.warn(`Failed to parse date "${date}" into a valid date object`);
-      return undefined;
-    }
-
-    return parsed;
   }
 }
