@@ -43,6 +43,6 @@
   "devDependencies": {
     "@napi-rs/cli": "^2.18.3",
     "@types/node": "^20.12.12",
-    "esbuild": "^0.21.2"
+    "esbuild": "^0.21.3"
   }
 }

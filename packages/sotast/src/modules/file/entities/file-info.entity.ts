@@ -1,9 +1,9 @@
-import { Embeddable, Index, Property } from '@mikro-orm/better-sqlite';
-import { Field, ObjectType } from '@nestjs/graphql';
-import ms from 'ms';
+import { Embeddable, Index, Property } from "@mikro-orm/better-sqlite";
+import { Field, ObjectType } from "@nestjs/graphql";
+import ms from "ms";
 
 @Embeddable()
-@ObjectType('FileInfo')
+@ObjectType("FileInfo")
 export class FileInfoEmbeddable {
   @Property({ nullable: true })
   @Field({ nullable: true })
@@ -38,14 +38,14 @@ export class FileInfoEmbeddable {
   @Property({ nullable: true })
   @Field({
     nullable: true,
-    description: 'Whether no subtitles could be generated from the audio on this video',
+    description: "Whether no subtitles could be generated from the audio on this video",
   })
   nonVerbal?: boolean;
 
   @Property({ nullable: true })
   @Field({
     nullable: true,
-    description: 'Whether text coudl be found in the image or video',
+    description: "Whether text coudl be found in the image or video",
   })
   hasText?: boolean;
 
@@ -65,11 +65,10 @@ export class FileInfoEmbeddable {
   @Field({ nullable: true })
   isAnimated?: boolean;
 
-  @Property({ nullable: true, persist: false, type: 'string' })
-  @Field(() => String, { nullable: true })
-  get durationFormatted() {
+  @Field(() => String, { nullable: true, name: "durationFormatted" })
+  getDurationFormatted() {
     if (!this.durationSeconds) return null;
-    if (this.durationSeconds < 1) return '1s';
+    if (this.durationSeconds < 1) return "1s";
     return ms(Math.round(this.durationSeconds * 1000));
   }
 }

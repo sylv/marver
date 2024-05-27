@@ -19,9 +19,9 @@ export const createTsupConfig = (options?: Partial<Options>) => {
     banner: {
       //https://github.com/evanw/esbuild/issues/1921
       js: `
-      const require = (await import("node:module")).createRequire(import.meta.url);
-      const __filename = (await import("node:url")).fileURLToPath(import.meta.url);
-      const __dirname = (await import("node:path")).dirname(__filename);
+      let require = (await import("node:module")).createRequire(import.meta.url);
+      let __filename = (await import("node:url")).fileURLToPath(import.meta.url);
+      let __dirname = (await import("node:path")).dirname(__filename);
       `,
     },
     ...options,

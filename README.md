@@ -62,6 +62,9 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - Ideally, we want all the data we store to be replaceable. The files themselves are what's important, not the .sqlite file indexing them.
   - This should not be default, but it should be an obvious option.
   - Anything we can write to EXIF we should be able to pull back out
+  - We should never overwrite existing metadata. 
+    - This is tricky, sometimes its okay to overwrite metadata. For example, scanned images will have the date set to the time scanned when they should really be set to the time the photo was taken.
+    - We don't want to destroy metadata and replace it with the wrong data - what if we run OCR on a photo and detect a date, so we put that in the image tags, but it turns out we used month/day instead of day/month formatting and it's wrong?
 - Shortcuts
   - In the sidebar, have a "shortcuts" link at the bottom that opens a little panel showing the shortcuts. Having shortcuts but not showing them is a waste.
   - `Ctrl + T` to quickly add tags to an image

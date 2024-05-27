@@ -64,7 +64,7 @@ export const FileOverlay = memo(() => {
             </button>
           </div>
           <div id="file-container">
-            <FileContent file={data.file} className="max-w-[70dvw] max-h-[80dvh] rounded-md object-contain" />
+            <FileContent file={data.file} className="max-w-[70dvw] max-h-[80dvh] min-w-[30em] rounded-md w-full" />
           </div>
         </div>
         <div className="bg-background border-l border-zinc-900 p-6 flex-shrink-0 w-[25em]" onClick={cancel}>

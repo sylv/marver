@@ -9,7 +9,6 @@ import sharp, { type FitEnum, type FormatEnum } from "sharp";
 import { CacheService } from "../cache/cache.service.js";
 import { StorageService } from "../storage/storage.service.js";
 import { ImageService, type ProxyableImage } from "./image.service.js";
-import { setTimeout } from "timers/promises";
 
 const FIT = ["cover", "contain", "fill", "inside", "outside"] as (keyof FitEnum)[];
 // Image formats that can be animated by sharp
@@ -60,7 +59,7 @@ class ImageProxyQuery {
 
 @Controller()
 export class ImageController {
-  private static readonly FORCE_PROCESS_SIZE = bytes("5MB");
+  private static readonly FORCE_PROCESS_SIZE = bytes("1MB");
   constructor(
     private imageService: ImageService,
     private storageService: StorageService,
@@ -76,8 +75,8 @@ export class ImageController {
     @Response({ passthrough: false }) reply: FastifyReply,
   ) {
     const image = this.imageService.parseImageProxyPayload(data);
-    const { formatMime, formatKey } = await this.detectBestMimeType(query, image, req);
-    const shouldProcess = this.shouldProcess(formatMime, query, image);
+    const shouldProcess = this.shouldProcess(query, image);
+    const { formatMime, formatKey } = this.detectBestMimeType(query, image, req, shouldProcess);
     const cleanFileName = encodeURIComponent(image.fileName);
 
     let contentDisposition: string | undefined;
@@ -85,7 +84,7 @@ export class ImageController {
     let cacheStatus = "BYPASS";
 
     const extension = IMAGE_TYPES.get(formatMime)!;
-    if (shouldProcess) {
+    if (shouldProcess || formatMime !== image.mimeType) {
       const suffix = query.height || query.width ? "resized" : "processed";
       contentDisposition = `inline; filename="${cleanFileName}_${suffix}.${extension}"`;
 
@@ -97,8 +96,9 @@ export class ImageController {
         cacheStatus = "HIT";
       } else {
         cacheStatus = "MISS";
-        const transformer = sharp({ animated: !query.thumbnail }).toFormat(formatKey, {
+        const transformer = sharp({ animated: !query.thumbnail, failOn: "none" }).toFormat(formatKey, {
           progressive: true,
+
           quality: 80,
         });
 
@@ -142,7 +142,12 @@ export class ImageController {
    * Finds the ideal mime type for the image based on the "Accept" header the browser sends
    * @example the browser doesn't support webp, but does support avif, this will return "avif"
    */
-  private async detectBestMimeType(query: ImageProxyQuery, file: ProxyableImage, req: FastifyRequest) {
+  private detectBestMimeType(
+    query: ImageProxyQuery,
+    file: ProxyableImage,
+    req: FastifyRequest,
+    isProcessing: boolean,
+  ) {
     if (!file.mimeType) throw new BadRequestException("File is not an image");
     if (query.format) {
       return {
@@ -154,7 +159,6 @@ export class ImageController {
     const acceptedMediaTypes = Accept.mediaTypes(req.headers.accept);
     const doesAcceptAll = acceptedMediaTypes.includes("*/*");
 
-    const willBeForcedToProcess = file.size && file.size > ImageController.FORCE_PROCESS_SIZE;
     const preferredFormats = IMAGE_MIMES_BY_PRIORITY.filter((mime) => {
       // if the soruce is animated, we can only send it as an animated format
       if (file.isAnimated && !ANIMATED_FORMATS.has(mime)) {
@@ -169,14 +173,14 @@ export class ImageController {
       // gifs are a bad format, they are only included so we don't always convert gifs to webp
       // if the image isnt animated, we ignore the gif format
       // if the image will be processed, we ignore the gif format
-      if (mime === "image/gif" && (!file.isAnimated || willBeForcedToProcess)) {
+      if (mime === "image/gif" && (!file.isAnimated || isProcessing)) {
         return false;
       }
 
       return true;
     });
 
-    if (!willBeForcedToProcess && preferredFormats.includes(file.mimeType)) {
+    if (!isProcessing && preferredFormats.includes(file.mimeType)) {
       // if possible, we'll send the image as the original format, which
       // saves on unnecessary processing time.
       return {
@@ -201,7 +205,7 @@ export class ImageController {
    * Also modifies the query object to remove params that are unnecessary or invalid
    * @example the height is larger than the image and the type is the same, we don't need to process it
    */
-  private shouldProcess(resolvedMimeType: string, query: ImageProxyQuery, file: ProxyableImage) {
+  private shouldProcess(query: ImageProxyQuery, file: ProxyableImage) {
     if (file.size && file.size > ImageController.FORCE_PROCESS_SIZE) {
       // always force processing on large files, because they're probably just
       // unoptimized garbage and we don't want to waste bandwidth.
@@ -209,11 +213,6 @@ export class ImageController {
     }
 
     if (query.thumbnail && file.isAnimated) {
-      return true;
-    }
-
-    if (resolvedMimeType !== file.mimeType) {
-      // if the type is different, we have to process
       return true;
     }
 

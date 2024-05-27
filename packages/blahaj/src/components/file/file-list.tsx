@@ -53,7 +53,7 @@ export const FileList = memo<FileListProps>(({ files: filesFrag, targetWidth = 2
 
   return (
     <div
-      className="flex flex-wrap gap-2"
+      className="flex flex-wrap gap-[0.35rem] max-w-[85vw]"
       ref={containerRef}
       style={{
         height: unloadWithHeight || undefined,

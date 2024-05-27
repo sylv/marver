@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { memo, useMemo, type CSSProperties } from "react";
 import { graphql, unmask, type FragmentType } from "../@generated";
 import { cn } from "../helpers/cn";
 
@@ -30,8 +30,6 @@ interface ImageProps {
  * - It looks simple but is not. It's working around multiple browser limitations.
  * - DO NOT ADD FADE-IN ANIMATIONS. For the love of all that is holy. It will break, lag the browser, have a dozen edge cases and will make your mum cry.
  * - DO NOT WRAP THE <img /> IN ANYTHING. A plain <img /> element is expected because parent comps might use special classes or wrappers that need a plain <img />.
- * - Using a background image for the preview and not changing the source bloats the HTML because of the sourcesets and
- * causes issues with object-fit/dynamic images.
  */
 export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(Frag, fileFrag);
@@ -56,35 +54,46 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
     return `data:image/webp;base64,${file.thumbnailTiny}`;
   }, [file]);
 
-  // we start with the blurred source, then switch to the real source
-  // the browser wont clear the blurred preview while the real source loads, so this works well.
-  const [useSource, setUseSource] = useState(!blurredUrl);
-  useEffect(() => setUseSource(true), []);
-  const useBlurred = blurredUrl && !useSource;
-  const source = useBlurred ? blurredUrl : file.thumbnailUrl;
+  const canUsePreview = useMemo(() => {
+    // this causes the image to "pop" in when its loaded
+    // todo: this could be addressed if we can make the preview image the same height/width
+    // as the final image so it can hold the space properly, but doing that is hard.
+    if (className?.includes("-auto")) return false;
+    // causes the preview image to not align properly
+    if (
+      (className?.includes("w-full") && !className.includes("h-full")) ||
+      (className?.includes("h-full") && !className.includes("w-full"))
+    )
+      return false;
+    // this causes issues with the preview image not aligning with the final image properly
+    // we can use `backgroundSize: contain` to fix this, but for some images the edges
+    // don't align and it looks sloppy.
+    if (className?.includes("object-contain")) return false;
+    return true;
+  }, [className]);
 
-  if (className?.includes("-auto")) {
-    // todo: im not sure why this happens, but for some images the preview becomes smaller than
-    // the image so when its replaced it looks like ass.
-    // instead of throwing, just not using the preview might be a better option but i think that would
-    // mean a degraded experience when its forgotten about.
-    throw new Error(`"h-auto" or "w-auto" break the blurred image preview.`);
-  }
+  const styleWithPreview = !canUsePreview
+    ? style
+    : {
+        ...style,
+        backgroundImage: `url(${blurredUrl})`,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      };
 
   return (
     <img
-      // this has to be "eager" for blurred previews or else we'll swap out the URL before the
-      // preview is put into the image, causing the preview to never load.
-      loading={useBlurred ? "eager" : "lazy"}
-      decoding={useBlurred ? "sync" : "async"}
+      loading="lazy"
+      decoding="async"
       className={cn("text-transparent", className)}
       alt={file.name}
       draggable={draggable}
       height={file.info.height || undefined}
       width={file.info.width || undefined}
-      src={source || undefined}
-      srcSet={useBlurred ? undefined : sourceSet}
-      style={style}
+      src={file.thumbnailUrl || undefined}
+      srcSet={sourceSet}
+      style={styleWithPreview}
     />
   );
 });

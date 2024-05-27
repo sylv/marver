@@ -29,7 +29,7 @@ export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) =>
   return (
     <a
       href={href}
-      className="transition relative overflow-hidden rounded-lg group"
+      className="transition relative overflow-hidden group"
       style={style}
       onClick={(event) => {
         if (window.location.pathname.startsWith("/file")) return;
@@ -52,12 +52,12 @@ export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) =>
         )}
       </div>
       {file.thumbnailUrl && (
-        <div className="h-full w-full overflow-hidden rounded">
+        <div className="h-full w-full overflow-hidden">
           <Image isThumbnail draggable={false} file={file} className="w-full h-full object-cover" />
         </div>
       )}
       {!file.thumbnailUrl && (
-        <div className="flex items-center justify-center flex-col gap-2 h-full w-full overflow-hidden rounded bg-zinc-900 text-zinc-600 text-center text-sm break-all">
+        <div className="flex items-center justify-center flex-col gap-2 h-full w-full bg-zinc-900 text-zinc-600 text-center text-sm break-all">
           {file.name}
         </div>
       )}

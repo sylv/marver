@@ -60,7 +60,7 @@ export class ImageTasks {
     },
   })
   async extractMetadata(file: FileEntity) {
-    const image = sharp(file.path);
+    const image = sharp(file.path, { failOn: "none" });
     const metadata = await image.metadata();
 
     const thumbnailTiny = await generatePreview(file.path);

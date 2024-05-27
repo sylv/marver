@@ -19,12 +19,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@atlasbot/configs": "^10.5.12",
+    "@atlasbot/configs": "^10.6.2",
     "@types/node": "20",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "execa": "^8.0.1"
+    "execa": "^9.1.0"
   }
 }

@@ -54,9 +54,7 @@ export const FileQuerySegment = memo<FileQuerySegmentProps>(
 
     return (
       <div className={cn("relative mb-2", isLastPage && "mb-20")}>
-        <div className="flex flex-wrap gap-2">
           <FileList files={data?.files.edges} targetWidth={targetWidth} rowHeight={rowHeight} />
-        </div>
         {isLastPage && (
           <div
             ref={loaderRef}

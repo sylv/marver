@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "homepage": "https://github.com/sylv/marver",
   "devDependencies": {
-    "@atlasbot/configs": "^10.6.1",
+    "@atlasbot/configs": "^10.6.2",
     "@biomejs/biome": "^1.7.3",
     "tsup": "^8.0.2",
     "turbo": "^1.13.3",
     "typescript": "^5.4.5",
-    "unplugin-macros": "^0.9.2"
+    "unplugin-macros": "^0.13.0"
   }
 }

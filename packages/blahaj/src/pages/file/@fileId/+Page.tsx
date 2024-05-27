@@ -41,7 +41,7 @@ export const Page: FC<PageProps> = ({ routeParams }) => {
             <h1>{data.file.name}</h1>
           </Card>
           <Card className="bg-black overflow-hidden h-min">
-            <FileContent file={data.file} className="w-full" imageClassName="object-contain" />
+            <FileContent file={data.file} className="w-full" />
           </Card>
         </div>
         <FileSidebar file={data.file} />
