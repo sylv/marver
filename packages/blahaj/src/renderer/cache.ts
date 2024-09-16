@@ -1,5 +1,4 @@
-import type { CacheExchangeOpts } from '@urql/exchange-graphcache';
-import { retryExchange as retry } from '@urql/exchange-retry';
+import type { CacheExchangeOpts } from "@urql/exchange-graphcache";
 
 export const cacheOptions: Partial<CacheExchangeOpts> = {
   keys: {
@@ -8,10 +7,3 @@ export const cacheOptions: Partial<CacheExchangeOpts> = {
     FileExifData: () => null,
   },
 };
-
-export const retryExchange = retry({
-  initialDelayMs: 1000,
-  maxDelayMs: 15000,
-  randomDelay: true,
-  maxNumberAttempts: 2,
-});

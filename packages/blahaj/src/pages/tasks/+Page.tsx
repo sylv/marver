@@ -1,10 +1,10 @@
-import { FiChevronDown } from 'react-icons/fi';
-import { useMutation } from 'urql';
-import { graphql } from '../../@generated';
-import { Spinner, SpinnerCenter, SpinnerSize } from '../../components/spinner';
-import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
-import { usePolledQuery } from '../../hooks/usePolledQuery';
+import { FiChevronDown } from "react-icons/fi";
+import { useMutation } from "urql";
+import { Spinner, SpinnerCenter, SpinnerSize } from "../../components/spinner";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { usePolledQuery } from "../../hooks/usePolledQuery";
+import { graphql } from "../../graphql";
 
 const TasksQuery = graphql(`
   query Tasks {
@@ -66,7 +66,10 @@ export function Page() {
                 </Button>
               </div>
             </div>
-            <button type="button" className="px-4 py-2 bg-muted text-xs text-muted-foreground hover:text-primary transition w-full flex items-center justify-center gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 bg-muted text-xs text-muted-foreground hover:text-primary transition w-full flex items-center justify-center gap-2"
+            >
               Show Logs
               <FiChevronDown />
             </button>

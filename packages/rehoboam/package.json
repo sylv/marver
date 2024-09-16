@@ -41,8 +41,8 @@
     "esmify": "esbuild index.js --outfile=index.mjs --format=esm"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.3",
-    "@types/node": "^20.12.12",
-    "esbuild": "^0.21.3"
+    "@napi-rs/cli": "^2.18.4",
+    "@types/node": "^22.5.5",
+    "esbuild": "^0.23.1"
   }
 }

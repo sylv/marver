@@ -1,23 +1,28 @@
-import { memo, useCallback, useRef, useState, type MouseEvent } from "react";
+import { memo, useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { LuArrowLeft } from "react-icons/lu";
 import { useQuery } from "urql";
-import { graphql } from "../../../@generated";
 import { useDisableScroll } from "../../../hooks/useDisableScroll";
 import { useOnClickOutside } from "../../../hooks/useOnClickOutside";
 import { SpinnerCenter, SpinnerSize } from "../../spinner";
-import { FileContent } from "../file-content";
-import { FileSidebar } from "../file-sidebar";
+import { FileContent, FileContentFragment } from "../file-content";
+import { FileSidebar, FileSidebarFragment } from "../file-sidebar";
 import { setFileOverlay, useFileOverlayStore } from "./store";
+import { Accordion } from "../../accordion";
+import { usePageContext } from "../../../renderer/usePageContext";
+import { graphql } from "../../../graphql";
 
-const FileOverlayQuery = graphql(`
+const FileOverlayQuery = graphql(
+  `
   query FileOverlay($fileId: String!) {
     file(id: $fileId) {
-      name
-      ...FileSidebarProps
-      ...FileContentProps
+      displayName
+      ...FileSidebar
+      ...FileContent
     }
   }
-`);
+`,
+  [FileSidebarFragment, FileContentFragment],
+);
 
 export const FileOverlay = memo(() => {
   const fileId = useFileOverlayStore((state) => state.fileId);
@@ -36,6 +41,13 @@ export const FileOverlay = memo(() => {
   useOnClickOutside(container, () => {
     setFileOverlay(null);
   });
+
+  const pageContext = usePageContext();
+  useEffect(() => {
+    if (pageContext.routeParams?.fileId) {
+      setFileOverlay(pageContext.routeParams.fileId);
+    }
+  }, [pageContext.routeParams]);
 
   const cancel = useCallback((event: MouseEvent) => {
     event.stopPropagation();
@@ -57,18 +69,28 @@ export const FileOverlay = memo(() => {
       onClick={() => setFileOverlay(null)}
     >
       <div className="flex h-[100dvh]">
-        <div className="flex items-center justify-center flex-grow p-12" onClick={cancel}>
+        <div className="flex items-center justify-center flex-grow p-12 relative" onClick={cancel}>
           <div className="absolute top-3 left-3 right-3 justify-between">
             <button type="button" className="p-3 pr-12" onClick={() => setFileOverlay(null)}>
               <LuArrowLeft className="h-5 w-5" />
             </button>
           </div>
           <div id="file-container">
-            <FileContent file={data.file} className="max-w-[70dvw] max-h-[80dvh] min-w-[30em] rounded-md w-full" />
+            <FileContent
+              file={data.file}
+              className="max-w-[70dvw] max-h-[80dvh] min-w-[30em] rounded-md w-full"
+            />
           </div>
         </div>
-        <div className="bg-background border-l border-zinc-900 p-6 flex-shrink-0 w-[25em]" onClick={cancel}>
-          <h1 className="mb-2 font-semibold break-all">{data.file.name}</h1>
+        <div
+          className="bg-background border-l border-zinc-900 p-6 flex-shrink-0 w-[25em] space-y-2"
+          onClick={cancel}
+        >
+          <Accordion id="file_info" name="File Info">
+            <input type="text" className="w-full bg-zinc-900 p-2 rounded-md" value={data.file.displayName} />
+            <textarea className="w-full bg-zinc-900 p-2 rounded-md" rows={3} />
+          </Accordion>
+
           <FileSidebar file={data.file} />
         </div>
       </div>

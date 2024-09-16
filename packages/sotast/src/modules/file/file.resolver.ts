@@ -179,7 +179,7 @@ export class FileResolver {
 
             for (const field of populate) {
               // todo: should be handled properly, not a special case
-              if (field === "thumbnailTiny") qb.addSelect("thumbnailTiny");
+              if (field === "preview") qb.addSelect("preview");
               else qb.leftJoinAndSelect(field, field);
             }
 
@@ -194,7 +194,7 @@ export class FileResolver {
             break;
           }
           case FileSort.Name: {
-            orderBy.name = filter.direction;
+            orderBy.displayName = filter.direction;
             break;
           }
           case FileSort.Path: {
@@ -259,7 +259,7 @@ export class FileResolver {
 
         for (const field of populate) {
           // todo: should be handled properly, not a special case
-          if (field === "thumbnailTiny") queryBuilder.addSelect("thumbnailTiny");
+          if (field === "preview") queryBuilder.addSelect("preview");
           else queryBuilder.leftJoinAndSelect(field, field);
         }
 
@@ -328,10 +328,10 @@ export class FileResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  @AutoPopulate(["thumbnailTiny"])
-  thumbnailTiny(@Parent() file: FileEntity) {
-    if (!file.thumbnailTiny) return null;
-    return file.thumbnailTiny.unwrap()?.toString("base64");
+  @AutoPopulate(["preview"])
+  preview(@Parent() file: FileEntity) {
+    if (!file.preview) return null;
+    return file.preview.unwrap()?.toString("base64");
   }
 
   @ResolveField(() => FileType, { nullable: true })

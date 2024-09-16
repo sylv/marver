@@ -16,6 +16,3 @@ declare global {
 export type PageProps = {
   routeParams: Record<string, string | undefined>;
 };
-
-// Tell TypeScript this file isn't an ambient module
-export {};

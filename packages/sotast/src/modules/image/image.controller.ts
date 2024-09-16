@@ -9,6 +9,7 @@ import sharp, { type FitEnum, type FormatEnum } from "sharp";
 import { CacheService } from "../cache/cache.service.js";
 import { StorageService } from "../storage/storage.service.js";
 import { ImageService, type ProxyableImage } from "./image.service.js";
+import { basename } from "path";
 
 const FIT = ["cover", "contain", "fill", "inside", "outside"] as (keyof FitEnum)[];
 // Image formats that can be animated by sharp
@@ -77,7 +78,9 @@ export class ImageController {
     const image = this.imageService.parseImageProxyPayload(data);
     const shouldProcess = this.shouldProcess(query, image);
     const { formatMime, formatKey } = this.detectBestMimeType(query, image, req, shouldProcess);
-    const cleanFileName = encodeURIComponent(image.fileName);
+
+    const fileName = basename(image.path);
+    const cleanFileName = encodeURIComponent(fileName);
 
     let contentDisposition: string | undefined;
     let stream: sharp.Sharp | ReadStream;

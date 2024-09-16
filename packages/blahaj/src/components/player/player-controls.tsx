@@ -1,11 +1,10 @@
-import { memo, useEffect, useState, type RefObject } from "react";
-import isEqual from "react-fast-compare";
+import { useEffect, useState, type FC, type RefObject } from "react";
 
 interface PlayerControlsProps {
   videoRef: RefObject<HTMLVideoElement>;
 }
 
-export const PlayerControls = memo<PlayerControlsProps>(({ videoRef }) => {
+export const PlayerControls: FC<PlayerControlsProps> = ({ videoRef }) => {
   const [, setPosition] = useState(0);
 
   useEffect(() => {
@@ -23,4 +22,4 @@ export const PlayerControls = memo<PlayerControlsProps>(({ videoRef }) => {
 
   if (!videoRef.current) return null;
   return <div className="absolute bottom-1 left-1 right-1" />;
-}, isEqual);
+};

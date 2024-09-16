@@ -65,8 +65,8 @@ export class FileInfoEmbeddable {
   @Field({ nullable: true })
   isAnimated?: boolean;
 
-  @Field(() => String, { nullable: true, name: "durationFormatted" })
-  getDurationFormatted() {
+  @Field(() => String, { nullable: true })
+  get durationFormatted() {
     if (!this.durationSeconds) return null;
     if (this.durationSeconds < 1) return "1s";
     return ms(Math.round(this.durationSeconds * 1000));

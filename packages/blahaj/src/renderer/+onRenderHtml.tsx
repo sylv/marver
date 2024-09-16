@@ -1,18 +1,17 @@
-import { cacheExchange } from '@urql/exchange-graphcache';
-import { renderToString } from 'react-dom/server';
-import type { HelmetServerState } from 'react-helmet-async';
-import { HelmetProvider } from 'react-helmet-async';
-import prepass from 'react-ssr-prepass';
-import { Provider as UrqlProvider, createClient, fetchExchange, ssrExchange } from 'urql';
-import { dangerouslySkipEscape, escapeInject } from 'vike/server';
-import type { OnRenderHtmlAsync } from 'vike/types';
-import { App } from '../app';
-import { cacheOptions } from './cache';
-import type { PageProps } from './types';
-import { PageContextProvider } from './usePageContext';
+import { cacheExchange } from "@urql/exchange-graphcache";
+import type { HelmetServerState } from "react-helmet-async";
+import { HelmetProvider } from "react-helmet-async";
+import { Provider as UrqlProvider, createClient, fetchExchange, ssrExchange } from "urql";
+import { dangerouslySkipEscape, escapeInject } from "vike/server";
+import type { OnRenderHtmlAsync } from "vike/types";
+import { App } from "../app";
+import { cacheOptions } from "./cache";
+import type { PageProps } from "./types";
+import { PageContextProvider } from "./usePageContext";
+import { renderToStream } from "react-streaming/server";
 
 const GRAPHQL_URL =
-  (import.meta.env.PUBLIC_ENV__FRONTEND_API_URL || import.meta.env.FRONTEND_API_URL) + '/graphql';
+  (import.meta.env.PUBLIC_ENV__FRONTEND_API_URL || import.meta.env.FRONTEND_API_URL) + "/graphql";
 
 export const onRenderHtml: OnRenderHtmlAsync = async (pageContext): ReturnType<OnRenderHtmlAsync> => {
   const { Page } = pageContext;
@@ -38,8 +37,13 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext): ReturnType<O
     </PageContextProvider>
   );
 
-  await prepass(tree);
-  const stream = renderToString(tree);
+  const stream = await renderToStream(tree, {
+    // todo: this is necessary for react helmet, otherwise we'd reply with the head before we
+    // have rendered the component that configures it.
+    disable: true,
+    userAgent: pageContext.userAgent,
+  });
+
   const helmet = helmetContext.helmet!;
   const documentHtml = escapeInject`<!DOCTYPE html>
     <html lang="en">
@@ -67,7 +71,7 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext): ReturnType<O
         </script>
       </head>
       <body>
-        <div id="root">${dangerouslySkipEscape(stream)}</div>
+        <div id="root">${stream}</div>
       </body>
     </html>`;
 

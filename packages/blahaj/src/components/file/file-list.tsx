@@ -1,29 +1,32 @@
-import { memo, useEffect, useRef, useState } from "react";
-import { graphql, unmask, type FragmentType } from "../../@generated";
-import { FilePreview } from "./file-preview";
+import { useEffect, useRef, useState, type FC } from "react";
+import { FilePreview, FilePreviewFragment } from "./file-preview";
+import { graphql, unmask, type FragmentOf } from "../../graphql";
 
-const Frag = graphql(`
-    fragment FileListProps on FileEdge {
+export const FileListFragment = graphql(
+  `
+    fragment FileList on FileEdge {
         node {
             id
             info {
                 height
                 width
             }
-            ...FilePreviewProps
+            ...FilePreview
         }
     }
-`);
+`,
+  [FilePreviewFragment],
+);
 
 export interface FileListProps {
   targetWidth?: number;
   rowHeight?: number;
-  files?: FragmentType<typeof Frag>[];
+  files?: FragmentOf<typeof FileListFragment>[];
 }
 
-export const FileList = memo<FileListProps>(({ files: filesFrag, targetWidth = 250, rowHeight = 200 }) => {
+export const FileList: FC<FileListProps> = ({ files: filesFrag, targetWidth = 250, rowHeight = 200 }) => {
   const [unloadWithHeight, setUnloadWithHeight] = useState<number | null>(null);
-  const files = unmask(Frag, filesFrag);
+  const files = filesFrag ? unmask(FileListFragment, filesFrag) : undefined;
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,4 +80,4 @@ export const FileList = memo<FileListProps>(({ files: filesFrag, targetWidth = 2
         })}
     </div>
   );
-});
+};

@@ -6,10 +6,12 @@
 > marver is not ready, there is very little UI and there are no guarantees it won't photoshop all your family photos with clown hats on your uncle. 
 > Check back in a few months.
 
-marver scours your files and makes them all pretty and viewable, pulling as much information as possible to make finding a needle in a haystack easier.
+marver indexes your files and makes them easy to search.
 
 ### ideas
 
+- Split up videos into chapters and extract faces, then searching for eg "john and mary" will search for pictures and video chapters with both of them.
+  - This lets us do "AND" searches for faces in videos even when the faces only appear in different frames.
 - Search
   - If someone searches for `pink clouds` and a `clouds` tag exists, add the `clouds` tag to the file filter.
   - If someone searches `pink clouds #australia` then `australia` should be added as a tag filter, and `pink clouds` should be used as the semantic search term.
@@ -70,6 +72,12 @@ marver scours your files and makes them all pretty and viewable, pulling as much
   - `Ctrl + T` to quickly add tags to an image
   - `Ctrl + D` to show debug layers of images (for example, outlines of detected faces, OCR outlines, etc)
 - It would be cool to run face detection, then run age detection on the detected faces, then show photos of a person on a timeline of their life.
+- Support originals and edited versions
+  - Sometimes you want to store the raw, unedited version of an image, but it is near unviewable. So you create an edited version which you can show people. But when you want to add metadata, you don't want to add it to the edited version.
+  - So, we should support having an original and edited version of a file. The edited version is shown by default but the original is where metadata is written to and pulled from primarily.
+  - It would be good to have warnings if the edited version has more metadata than the original - ideally we should treat the edited version as disposable.
+  - It would make sense to support multiple child versions that are called something else for files where eg, you might have a 4k version and a 1080p version.
+  - This needs more thought.
 
 ### todo
 
@@ -95,3 +103,7 @@ marver scours your files and makes them all pretty and viewable, pulling as much
 - `rehoboam` hub downloads lock up node process
 - Caching should be partially based on the time to compute the value, for example computing a preview for a 100mb image takes 10s and computing one for a 2kb jpeg takes a couple milliseconds. The 100mb image should be cached for longer.
 - A few places combine embeddings into one by adding the values together. This might result in poor results, there should be a better way.
+- On other pages, it should prefill the search bar with filtering for things in that page.
+  - On collection pages, the search bar should automatically include `collection:<name>` in the search
+  - On person pages, the search bar should automatically include `person:<name>` in the search
+  - This will help users become familiar with search and how operators can be used.

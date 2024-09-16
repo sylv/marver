@@ -1,12 +1,16 @@
 import { useMemo, type FC } from "react";
 import type { PageProps } from "../../../renderer/types";
-import { graphql } from "../../../@generated";
 import { useQuery } from "urql";
 import { SpinnerCenter } from "../../../components/spinner";
-import { CollectionPreview } from "../../../components/collection/collection-preview";
+import {
+  CollectionPreview,
+  CollectionPreviewFragment,
+} from "../../../components/collection/collection-preview";
 import { FileQuery } from "../../../components/file/file-query";
+import { graphql } from "../../../graphql";
 
-const CollectionQuery = graphql(`
+const CollectionQuery = graphql(
+  `
   query CollectionQuery($collectionId: String!) {
     collection(id: $collectionId) {
       id
@@ -19,11 +23,13 @@ const CollectionQuery = graphql(`
       }
       children {
         id
-        ...CollectionPreviewProps
+        ...CollectionPreview
       }
     }
   }
-`);
+`,
+  [CollectionPreviewFragment],
+);
 
 export const Page: FC<PageProps> = ({ routeParams }) => {
   const collectionId = routeParams.collectionId!;

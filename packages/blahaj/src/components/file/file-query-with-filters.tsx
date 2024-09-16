@@ -1,4 +1,4 @@
-import { memo } from "react";
+import type { FC } from "react";
 import { type FilePageProps, FileQuery } from "./file-query";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 import { useQueryState } from "../../hooks/useQueryState";
 import { useDebounced } from "../../hooks/useDebounced";
 
-export const FileQueryWithFilters = memo<FilePageProps>(({ variables }) => {
+export const FileQueryWithFilters: FC<FilePageProps> = ({ variables }) => {
   const [tab, setTab] = useQueryState<string>("tab", "all");
   const [search, setSearch] = useQueryState<string>("search", "");
   const debouncedSearch = useDebounced(search, 500);
@@ -32,4 +32,4 @@ export const FileQueryWithFilters = memo<FilePageProps>(({ variables }) => {
       </Tabs>
     </div>
   );
-});
+};

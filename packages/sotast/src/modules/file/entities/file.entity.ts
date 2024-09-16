@@ -24,6 +24,7 @@ import { FileEmbeddingEntity } from "./file-embedding.entity.js";
 import { FileExifDataEntity } from "./file-exif.entity.js";
 import { FileInfoEmbeddable } from "./file-info.entity.js";
 import { FileAssetEntity } from "./file-asset.entity.js";
+import { basename } from "path";
 
 @Entity({ tableName: "files" })
 @ObjectType("File")
@@ -34,7 +35,7 @@ export class FileEntity {
 
   @Property()
   @Field()
-  name: string;
+  displayName: string;
 
   @Property()
   @Field()
@@ -89,7 +90,7 @@ export class FileEntity {
   thumbnail?: Ref<FileAssetEntity>;
 
   @Property({ type: "blob", ref: true, lazy: true, nullable: true })
-  thumbnailTiny?: Ref<Buffer>;
+  preview?: Ref<Buffer>;
 
   @AutoPopulate()
   @Field(() => FileExifDataEntity, { nullable: true })
@@ -122,11 +123,16 @@ export class FileEntity {
   )
   embeddings = new Collection<FileEmbeddingEntity>(this);
 
-  @Field(() => String, { nullable: true, name: "mimeType" })
-  getMimeType() {
-    if (!this.path) return;
+  @Field(() => String, { nullable: true })
+  get mimeType() {
+    if (!this.path) return undefined;
     if (this.path.endsWith("jfif")) return "image/jpeg";
     return mime.lookup(this.path) || undefined;
+  }
+
+  @Field(() => String)
+  get fileName() {
+    return basename(this.path);
   }
 
   tryGetRelativePath() {
@@ -138,7 +144,7 @@ export class FileEntity {
     return this.path;
   }
 
-  [OptionalProps]: "corrupted" | "unavailable" | "checkedAt" | "indexedAt";
+  [OptionalProps]: "corrupted" | "unavailable" | "checkedAt" | "indexedAt" | "fileName" | "mimeType";
 }
 
 @ObjectType()

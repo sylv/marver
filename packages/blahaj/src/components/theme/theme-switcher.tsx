@@ -1,15 +1,15 @@
-import { Button } from '#root/components/ui/button';
+import { Button } from "#root/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#root/components/ui/dropdown-menu';
-import { Moon, Sun } from 'lucide-react';
-import { setTheme } from './theme';
-import { memo } from 'react';
+} from "#root/components/ui/dropdown-menu";
+import { Moon, Sun } from "lucide-react";
+import { setTheme } from "./theme";
+import type { FC } from "react";
 
-export const ModeToggle = memo(() => {
+export const ModeToggle: FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -20,10 +20,10 @@ export const ModeToggle = memo(() => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme('light')}>Light</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')}>Dark</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')}>System</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-});
+};

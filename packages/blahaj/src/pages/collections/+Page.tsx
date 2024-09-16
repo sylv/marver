@@ -1,18 +1,21 @@
-import type { FC } from 'react';
-import { useQuery } from 'urql';
-import { graphql } from '../../@generated';
-import { CollectionPreview } from '../../components/collection/collection-preview';
-import { SpinnerCenter } from '../../components/spinner';
-import type { PageProps } from '../../renderer/types';
+import type { FC } from "react";
+import { useQuery } from "urql";
+import { CollectionPreview, CollectionPreviewFragment } from "../../components/collection/collection-preview";
+import { SpinnerCenter } from "../../components/spinner";
+import type { PageProps } from "../../renderer/types";
+import { graphql } from "../../graphql";
 
-const CollectionsQuery = graphql(`
+const CollectionsQuery = graphql(
+  `
   query CollectionsQuery {
     collections {
       id
-      ...CollectionPreviewProps
+      ...CollectionPreview
     }
   }
-`);
+`,
+  [CollectionPreviewFragment],
+);
 
 export const Page: FC<PageProps> = () => {
   const [{ data, error }] = useQuery({

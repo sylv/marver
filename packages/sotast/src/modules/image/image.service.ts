@@ -9,7 +9,6 @@ import { type FileEntity } from "../file/entities/file.entity.js";
 import { parseExifDate } from "@ryanke/parsers/exif-date";
 
 export interface ProxyableImage {
-  fileName: string;
   path: string;
   height?: number;
   width?: number;
@@ -22,7 +21,6 @@ const proxyableImageSchema = avro.Type.forSchema({
   type: "record",
   name: "ProxyableImage",
   fields: [
-    { name: "fileName", type: "string" },
     { name: "path", type: "string" },
     { name: "height", type: ["null", "int"] },
     { name: "width", type: ["null", "int"] },
@@ -59,20 +57,18 @@ export class ImageService {
     if (file.unavailable) return null;
     if (file.extension && IMAGE_EXTENSIONS.has(file.extension)) {
       return this.createImageProxyUrl(file.id, {
-        fileName: file.name,
-        mimeType: file.getMimeType(),
+        mimeType: file.mimeType,
         path: file.path,
         size: file.size,
         height: file.info.height,
         width: file.info.width,
-        isAnimated: file.info.isAnimated || file.getMimeType() === "image/gif",
+        isAnimated: file.info.isAnimated || file.mimeType === "image/gif",
       });
     }
 
     if (file.thumbnail) {
       const thumbnail = file.thumbnail.getEntity();
       return this.createImageProxyUrl(file.id, {
-        fileName: `${file.name}_thumbnail`,
         path: thumbnail?.getPath(),
         size: null,
         height: thumbnail?.height,

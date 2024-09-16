@@ -1,4 +1,4 @@
-import { type FC, Fragment } from "react";
+import { type FC, StrictMode } from "react";
 import { Helmet } from "react-helmet-async";
 import { Sidebar } from "./components/sidebar";
 import "./globals.css";
@@ -8,7 +8,7 @@ interface AppProps {
 }
 
 export const App: FC<AppProps> = ({ children }) => (
-  <Fragment>
+  <StrictMode>
     <Helmet>
       <link rel="apple-touch-icon" sizes="180x180" href="/icon/apple-touch-icon.png" />
       <link rel="icon" type="image/png" sizes="32x32" href="/icon/favicon-32x32.png" />
@@ -39,5 +39,5 @@ export const App: FC<AppProps> = ({ children }) => (
       <Sidebar />
       {children}
     </div>
-  </Fragment>
+  </StrictMode>
 );

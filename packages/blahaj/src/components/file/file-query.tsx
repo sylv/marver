@@ -1,13 +1,15 @@
-import { memo, useEffect, useRef, useState } from "react";
-import type { FilesQueryVariables } from "../../@generated/graphql";
-import { FileQuerySegment } from "./file-query-segment";
+import { useEffect, useRef, useState, type FC } from "react";
+import { FileQuerySegment, type FilesQuery } from "./file-query-segment";
 import { FileOverlay } from "./overlay/file-overlay";
+import type { VariablesOf } from "gql.tada";
+
+type FilesQueryVariables = VariablesOf<typeof FilesQuery>;
 
 export interface FilePageProps {
   variables?: FilesQueryVariables;
 }
 
-export const FileQuery = memo<FilePageProps>(({ variables }) => {
+export const FileQuery: FC<FilePageProps> = ({ variables }) => {
   const currentVariables = useRef(variables);
   const [pageVariables, setPageVariables] = useState<FilesQueryVariables[]>([
     {
@@ -52,4 +54,4 @@ export const FileQuery = memo<FilePageProps>(({ variables }) => {
       ))}
     </div>
   );
-});
+};

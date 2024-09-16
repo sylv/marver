@@ -1,6 +1,6 @@
-import { memo, useMemo } from "react";
+import { graphql, unmask, type FragmentOf } from "../../../../graphql";
+import { useMemo, type FC } from "react";
 import type { IconType } from "react-icons/lib";
-import { graphql, unmask, type FragmentType } from "../../../../@generated";
 import { pascalToLabel } from "../../../../helpers/pascalToLabel";
 import { FileCard } from "../../parts/file-card";
 import { FileLabel } from "../../parts/file-label";
@@ -9,8 +9,8 @@ import { EXIF_ICONS } from "./icons";
 
 const IGNORE_VALUES = new Set(["0", "0/0", "0/0/0", "0/0/0/0", "unknown", "none"]);
 
-const Fragment = graphql(`
-  fragment FileExifProps on File {
+export const FileExifFragment = graphql(`
+  fragment FileExif on File {
     exifData {
       cameraMake
       cameraModel
@@ -26,8 +26,8 @@ const Fragment = graphql(`
   }
 `);
 
-export const FileExif = memo<{ file: FragmentType<typeof Fragment> }>(({ file: fileFrag }) => {
-  const file = unmask(Fragment, fileFrag);
+export const FileExif: FC<{ file: FragmentOf<typeof FileExifFragment> }> = ({ file: fileFrag }) => {
+  const file = unmask(FileExifFragment, fileFrag);
   const props = useMemo(() => {
     if (!file.exifData) return null;
     const props = [];
@@ -60,4 +60,4 @@ export const FileExif = memo<{ file: FragmentType<typeof Fragment> }>(({ file: f
       ))}
     </FileCard>
   );
-});
+};

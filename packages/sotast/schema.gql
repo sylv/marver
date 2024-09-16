@@ -24,21 +24,22 @@ type File {
   corrupted: Boolean!
   createdAt: DateTime!
   directory: String!
+  displayName: String!
   exifData: FileExifData
   extension: String
+  fileName: String!
   id: ID!
   indexedAt: DateTime!
   info: FileInfo!
   jobStates: [JobState!]!
   mimeType: String
   modifiedAt: DateTime!
-  name: String!
   path: String!
   similar(after: String, before: String, first: Float, last: Float, offset: Float, type: SimilarityType): FileConnection!
   size: Float!
   sizeFormatted: String!
   thumbnail: FileAsset!
-  thumbnailTiny: String
+  preview: String
   thumbnailUrl: String
   type: FileType
   unavailable: Boolean!

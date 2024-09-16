@@ -203,8 +203,8 @@ export class VideoQueues {
 
       file.thumbnail = ref(thumbnail);
 
-      const thumbnailTiny = await generatePreview(largestFrame.path);
-      file.thumbnailTiny = ref(Buffer.from(thumbnailTiny));
+      const preview = await generatePreview(largestFrame.path);
+      file.preview = ref(Buffer.from(preview));
 
       this.em.persist([thumbnail, file]);
       await this.em.flush();

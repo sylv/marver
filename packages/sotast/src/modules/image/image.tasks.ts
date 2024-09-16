@@ -63,8 +63,8 @@ export class ImageTasks {
     const image = sharp(file.path, { failOn: "none" });
     const metadata = await image.metadata();
 
-    const thumbnailTiny = await generatePreview(file.path);
-    file.thumbnailTiny = ref(Buffer.from(thumbnailTiny));
+    const preview = await generatePreview(file.path);
+    file.preview = ref(Buffer.from(preview));
 
     file.info.height = metadata.height;
     file.info.width = metadata.width;

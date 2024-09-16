@@ -1,9 +1,10 @@
+import type { ResultOf } from "gql.tada";
 import type { IconType } from "react-icons/lib";
 import { LuAperture, LuCamera, LuClock, LuFocus, LuSliders, LuSun, LuZap, LuZoomIn } from "react-icons/lu";
-import type { FileExifPropsFragment } from "../../../../@generated/graphql";
+import type { FileExifFragment } from "./file-exif";
 
 export const EXIF_ICONS: Omit<
-  Record<keyof FileExifPropsFragment["exifData"], IconType>,
+  Record<keyof ResultOf<typeof FileExifFragment>["exifData"], IconType>,
   "__typename" | "longitude" | "latitude"
 > = {
   cameraMake: LuCamera,

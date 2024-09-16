@@ -1,5 +1,8 @@
 {
+  // gql.tada probably requires these
   "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
   "npm.scriptExplorerExclude": ["^((?!watch|generate:watch).)*$"],
   "typescript.preferences.importModuleSpecifier": "relative",
   "graphql-config.load.rootDir": "packages/blahaj/",

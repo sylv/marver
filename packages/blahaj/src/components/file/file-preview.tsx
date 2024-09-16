@@ -1,29 +1,33 @@
-import { memo, type CSSProperties } from "react";
-import { graphql, unmask, type FragmentType } from "../../@generated";
-import { Image } from "../image";
+import type { CSSProperties, FC } from "react";
+import { Image, ImageFragment } from "../image";
 import { setFileOverlay } from "./overlay/store";
+import type { FragmentOf } from "gql.tada";
+import { graphql, unmask } from "../../graphql";
 
-const Fragment = graphql(`
-  fragment FilePreviewProps on File {
+export const FilePreviewFragment = graphql(
+  `
+  fragment FilePreview on File {
     id
-    name
+    displayName
     extension
     thumbnailUrl
     info {
       durationFormatted
       isAnimated
     }
-    ...ImageProps
+    ...Image
   }
-`);
+`,
+  [ImageFragment],
+);
 
 interface FilePreviewProps {
-  file: FragmentType<typeof Fragment>;
+  file: FragmentOf<typeof FilePreviewFragment>;
   style?: CSSProperties;
 }
 
-export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) => {
-  const file = unmask(Fragment, fileFrag);
+export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style }) => {
+  const file = unmask(FilePreviewFragment, fileFrag);
   const href = `/file/${file.id}`;
 
   return (
@@ -32,7 +36,6 @@ export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) =>
       className="transition relative overflow-hidden group"
       style={style}
       onClick={(event) => {
-        if (window.location.pathname.startsWith("/file")) return;
         event.preventDefault();
         event.stopPropagation();
         setFileOverlay(file.id);
@@ -40,7 +43,7 @@ export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) =>
     >
       <div className="transition opacity-0 pointer-events-none absolute inset-0 z-10 group-hover:opacity-100 bg-gradient-to-t from-black/90 via-transparent to-transparent">
         <div className="p-3 flex justify-end items-start h-full flex-col">
-          <h3 className="max-w-full truncate">{file.name}</h3>
+          <h3 className="max-w-full truncate">{file.displayName}</h3>
         </div>
       </div>
       <div className="absolute top-1 left-1 flex items-center gap-1 flex-wrap">
@@ -52,15 +55,15 @@ export const FilePreview = memo<FilePreviewProps>(({ file: fileFrag, style }) =>
         )}
       </div>
       {file.thumbnailUrl && (
-        <div className="h-full w-full overflow-hidden">
+        <div className="h-full w-full overflow-hidden rounded">
           <Image isThumbnail draggable={false} file={file} className="w-full h-full object-cover" />
         </div>
       )}
       {!file.thumbnailUrl && (
         <div className="flex items-center justify-center flex-col gap-2 h-full w-full bg-zinc-900 text-zinc-600 text-center text-sm break-all">
-          {file.name}
+          {file.displayName}
         </div>
       )}
     </a>
   );
-});
+};

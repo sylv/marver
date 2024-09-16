@@ -1,6 +1,8 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["@atlasbot/configs/biome"],
+  "extends": [
+    "@atlasbot/configs/biome"
+  ],
   "linter": {
     "rules": {
       "suspicious": {
@@ -8,6 +10,9 @@
       },
       "a11y": {
         "useAltText": "off"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
       }
     }
   }

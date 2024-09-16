@@ -1,14 +1,14 @@
-import { memo, useMemo, type CSSProperties } from "react";
-import { graphql, unmask, type FragmentType } from "../@generated";
+import { useMemo, type CSSProperties, type FC } from "react";
+import { graphql, unmask, type FragmentOf } from "../graphql";
 import { cn } from "../helpers/cn";
 
 const SOURCE_SET_SIZES = [800, 1600, 3200];
 
-const Frag = graphql(`
-  fragment ImageProps on File {
-    name
+export const ImageFragment = graphql(`
+  fragment Image on File {
+    displayName
     thumbnailUrl
-    thumbnailTiny
+    preview
     info {
       height
       width
@@ -18,7 +18,7 @@ const Frag = graphql(`
 
 interface ImageProps {
   isThumbnail?: boolean;
-  file: FragmentType<typeof Frag>;
+  file: FragmentOf<typeof ImageFragment>;
   style?: CSSProperties;
   draggable?: boolean;
   className?: string;
@@ -31,8 +31,8 @@ interface ImageProps {
  * - DO NOT ADD FADE-IN ANIMATIONS. For the love of all that is holy. It will break, lag the browser, have a dozen edge cases and will make your mum cry.
  * - DO NOT WRAP THE <img /> IN ANYTHING. A plain <img /> element is expected because parent comps might use special classes or wrappers that need a plain <img />.
  */
-export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, style, isThumbnail }) => {
-  const file = unmask(Frag, fileFrag);
+export const Image: FC<ImageProps> = ({ file: fileFrag, className, draggable, style, isThumbnail }) => {
+  const file = unmask(ImageFragment, fileFrag);
   const sourceSet = useMemo(() => {
     if (!file.thumbnailUrl || !file.info.width) return;
     const parts = [];
@@ -50,8 +50,8 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
   }, [file]);
 
   const blurredUrl = useMemo(() => {
-    if (!file.thumbnailTiny) return null;
-    return `data:image/webp;base64,${file.thumbnailTiny}`;
+    if (!file.preview) return null;
+    return `data:image/webp;base64,${file.preview}`;
   }, [file]);
 
   const canUsePreview = useMemo(() => {
@@ -87,7 +87,7 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
       loading="lazy"
       decoding="async"
       className={cn("text-transparent", className)}
-      alt={file.name}
+      alt={file.displayName}
       draggable={draggable}
       height={file.info.height || undefined}
       width={file.info.width || undefined}
@@ -96,4 +96,4 @@ export const Image = memo<ImageProps>(({ file: fileFrag, className, draggable, s
       style={styleWithPreview}
     />
   );
-});
+};

@@ -13,6 +13,7 @@ import { CollectionEntity } from "../collection/collection.entity.js";
 import { PublicCron } from "../task/public-cron.decorator.js";
 import { FileEntity } from "./entities/file.entity.js";
 import { SUPPORTED_EXTENSIONS } from "../../constants.js";
+import { filePathToDisplayName } from "../../helpers/filePathToDisplayName.js";
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()
@@ -177,7 +178,7 @@ export class FileScanService implements OnApplicationBootstrap {
       path: path,
       extension: ext,
       directory: dirname(path),
-      name: basename(path),
+      displayName: filePathToDisplayName(path),
       size: info.size,
       modifiedAt: info.mtime,
       createdAt: birthtime,

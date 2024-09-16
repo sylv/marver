@@ -1,12 +1,12 @@
-import { share } from 'shared-zustand';
-import create from 'zustand';
+import { share } from "shared-zustand";
+import { create } from "zustand";
 
 const usePlayerState = create(() => ({
   volume: 100,
   loop: true,
   muted: false,
   autoplay: true,
-  preferredQuality: 'auto',
+  preferredQuality: "auto",
 }));
 
 export const setVolume = (volume: number) => {
@@ -18,8 +18,8 @@ export const setVolume = (volume: number) => {
   usePlayerState.setState({ muted: false, volume });
 };
 
-if ('BroadcastChannel' in globalThis && typeof window !== 'undefined') {
-  share('loop', usePlayerState);
-  share('volume', usePlayerState);
-  console.debug('Shared player state');
+if ("BroadcastChannel" in globalThis && typeof window !== "undefined") {
+  share("loop", usePlayerState);
+  share("volume", usePlayerState);
+  console.debug("Shared player state");
 }

@@ -1,73 +1,62 @@
 import { loadConfig } from "@ryanke/venera";
 import bytes from "bytes";
 import { resolve } from "node:path";
-import z from "zod";
+import z, { array, boolean, number, object, string } from "zod";
 import ms from "ms";
+import { parseBits } from "@ryanke/parsers/bits";
 
-const BITS_REGEX = /(?<value>[\d.]+) ?(?<unit>mbps|kbps)/i;
-const parseBits = (input: string) => {
-  const match = input.match(BITS_REGEX);
-  if (!match) {
-    throw new Error(`Invalid bitrate: ${input}`);
-  }
-
-  const { value, unit } = match.groups!;
-  const multiplier = unit.toLowerCase() === "mbps" ? 1000000 : 1000;
-  return Number(value) * multiplier;
-};
-
-const schema = z.object({
-  metadata_dir: z.string().transform((dir) => resolve(dir)),
-  source_dirs: z.array(z.string()).transform((dirs) => dirs.map((dir) => resolve(dir))),
-  max_hashable_size: z.string().default("100MB").transform(bytes),
-  secret: z.string().transform((secret) => new TextEncoder().encode(secret)),
-  disable_tasks: z.boolean().default(false),
-  orm_debug: z.boolean().default(false),
-  use_quantized: z.boolean().default(true),
+const schema = object({
+  metadata_dir: string().transform((dir) => resolve(dir)),
+  source_dirs: array(string()).transform((dirs) => dirs.map((dir) => resolve(dir))),
+  max_hashable_size: string().default("100MB").transform(bytes),
+  secret: string().transform((secret) => new TextEncoder().encode(secret)),
+  disable_tasks: boolean().default(false),
+  orm_debug: boolean().default(false),
+  use_quantized: boolean().default(true),
   startup_timeout: z
     .string()
     .default("30s")
     .transform((value) => ms(value)),
-  is_development: z.boolean().default(process.env.NODE_ENV !== "production"),
-  is_production: z.boolean().default(process.env.NODE_ENV === "production"),
+  is_development: boolean().default(process.env.NODE_ENV !== "production"),
+  is_production: boolean().default(process.env.NODE_ENV === "production"),
   ocr: z
     .object({
-      enabled: z.boolean().default(true),
-      min_word_score: z.number().default(0.2),
+      enabled: boolean().default(true),
+      min_word_score: number().default(0.2),
     })
     .default({}),
   face_detection: z
     .object({
-      enabled: z.boolean().default(true),
+      enabled: boolean().default(true),
       // the score required to match a face to a person
       // score is lower because most instances will only have a dozen or so people,
       // so false positives are unlikely
-      min_person_score: z.number().default(0.5),
+      min_person_score: number().default(0.5),
       // the score required to match a face. this is based on the confidence score
       // returned by insightface. the score is higher to discard low quality matches,
       // which could dilute the results.
-      min_face_score: z.number().default(0.7),
+      min_face_score: number().default(0.7),
     })
     .default({}),
   virtual_tags: z
     .array(
-      z.object({
-        match: z.string(),
-        require_tags: z.array(z.string()).optional(),
-        exclude_tags: z.array(z.string()).optional(),
-        add_tags: z.array(z.string()).optional(),
+      object({
+        match: string(),
+        require_tags: array(string()).optional(),
+        exclude_tags: array(string()).optional(),
+        add_tags: array(string()).optional(),
       }),
     )
     .default([]),
-  transcode: z.object({
-    video_profiles: z.array(
-      z.object({
-        name: z.string(),
-        description: z.string().optional(),
-        max_height: z.number().optional(),
-        max_width: z.number().optional(),
-        bitrate: z.string().transform(parseBits).optional(),
-        segment_duration: z.number().default(4),
+  transcode: object({
+    video_profiles: array(
+      object({
+        name: string(),
+        description: string().optional(),
+        max_height: number().optional(),
+        max_width: number().optional(),
+        bitrate: string().transform(parseBits).optional(),
+        segment_duration: number().default(4),
       }),
     ),
   }),

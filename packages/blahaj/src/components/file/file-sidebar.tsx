@@ -1,29 +1,32 @@
-import { memo } from "react";
-import { graphql, unmask, type FragmentType } from "../../@generated";
-import { FileList } from "./file-list";
-import { FileExif } from "./sidebar/exif/file-exif";
-import { FileLocation } from "./sidebar/file-location";
-import { FileTasks } from "./sidebar/file-tasks";
+import type { FC } from "react";
+import { FileList, FileListFragment } from "./file-list";
+import { FileExif, FileExifFragment } from "./sidebar/exif/file-exif";
+import { FileLocation, FileLocationFragment } from "./sidebar/file-location";
+import { FileTasks, FileTasksFragment } from "./sidebar/file-tasks";
+import { graphql, unmask, type FragmentOf } from "../../graphql";
 
-const Frag = graphql(`
-    fragment FileSidebarProps on File {
-      ...FileLocationProps
-      ...FileTasksProps
-      ...FileExifProps
+export const FileSidebarFragment = graphql(
+  `
+    fragment FileSidebar on File {
+      ...FileLocation
+      ...FileTasks
+      ...FileExif
       similar(type: Related) {
         edges {
-          ...FileListProps
+          ...FileList
         }
       }
     }
-`);
+`,
+  [FileLocationFragment, FileTasksFragment, FileExifFragment, FileListFragment],
+);
 
 interface FileSidebarProps {
-  file: FragmentType<typeof Frag>;
+  file: FragmentOf<typeof FileSidebarFragment>;
 }
 
-export const FileSidebar = memo<FileSidebarProps>(({ file: fileFrag }) => {
-  const file = unmask(Frag, fileFrag);
+export const FileSidebar: FC<FileSidebarProps> = ({ file: fileFrag }) => {
+  const file = unmask(FileSidebarFragment, fileFrag);
 
   return (
     <div id="file-sidebar" className="space-y-3 h-min">
@@ -35,4 +38,4 @@ export const FileSidebar = memo<FileSidebarProps>(({ file: fileFrag }) => {
       </div>
     </div>
   );
-});
+};

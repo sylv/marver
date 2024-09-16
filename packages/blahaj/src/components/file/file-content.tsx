@@ -1,14 +1,13 @@
-import { memo } from "react";
-import { graphql, unmask, type FragmentType } from "../../@generated";
-import { FileType } from "../../@generated/graphql";
-import { Image } from "../image";
+import type { FC } from "react";
+import { Image, ImageFragment } from "../image";
 import { Player } from "../player/player";
 import clsx from "clsx";
+import { graphql, unmask, type FragmentOf } from "../../graphql";
 
-const Frag = graphql(`
-    fragment FileContentProps on File {
+export const FileContentFragment = graphql(
+  `
+    fragment FileContent on File {
       id
-      name
       type
       thumbnailUrl
       info {
@@ -16,47 +15,52 @@ const Frag = graphql(`
         width
         durationSeconds
       }
-      ...ImageProps
+      ...Image
     }
-`);
+  `,
+  [ImageFragment],
+);
 
 interface FileContentProps {
-  file: FragmentType<typeof Frag>;
+  file: FragmentOf<typeof FileContentFragment>;
   className?: string;
   videoClassName?: string;
   imageClassName?: string;
   onClick?: () => void;
 }
 
-export const FileContent = memo<FileContentProps>(
-  ({ file: fileFrag, className, videoClassName, imageClassName }) => {
-    const file = unmask(Frag, fileFrag);
-    if (file.type === FileType.Video) {
-      return (
-        <Player
-          src={`/api/files/${file.id}/raw`}
-          hlsSrc={`/api/files/${file.id}/vidproxy/index.m3u8`}
-          height={file?.info.height || undefined}
-          width={file?.info.width || undefined}
-          durationSeconds={file.info.durationSeconds || undefined}
-          className={clsx(className, videoClassName)}
-        />
-      );
-    }
-
-    if (file.type === FileType.Image && file.thumbnailUrl) {
-      return <Image file={file} className={clsx(className, imageClassName)} />;
-    }
-
+export const FileContent: FC<FileContentProps> = ({
+  file: fileFrag,
+  className,
+  videoClassName,
+  imageClassName,
+}) => {
+  const file = unmask(FileContentFragment, fileFrag);
+  if (file.type === "Video") {
     return (
-      <div
-        className={clsx(
-          "bg-zinc-900 flex items-center justify-center text-sm text-zinc-700 min-h-[20em] min-w-[40em] select-none",
-          className,
-        )}
-      >
-        <div>Could not preview file</div>
-      </div>
+      <Player
+        src={`/api/files/${file.id}/raw`}
+        hlsSrc={`/api/files/${file.id}/vidproxy/index.m3u8`}
+        height={file?.info.height || undefined}
+        width={file?.info.width || undefined}
+        durationSeconds={file.info.durationSeconds || undefined}
+        className={clsx(className, videoClassName)}
+      />
     );
-  },
-);
+  }
+
+  if (file.type === "Image" && file.thumbnailUrl) {
+    return <Image file={file} className={clsx(className, imageClassName)} />;
+  }
+
+  return (
+    <div
+      className={clsx(
+        "bg-zinc-900 flex items-center justify-center text-sm text-zinc-700 min-h-[20em] min-w-[40em] select-none",
+        className,
+      )}
+    >
+      <div>Could not preview file</div>
+    </div>
+  );
+};

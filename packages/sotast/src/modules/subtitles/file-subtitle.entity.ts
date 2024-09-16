@@ -36,22 +36,22 @@ export class FileSubtitleEntity {
   file: Ref<FileEntity>;
 
   @Property({ persist: false, type: "string" })
-  @Field(() => String, { name: "languageNameNative" })
-  getLanguageNameNative() {
+  @Field(() => String)
+  get languageNameNative() {
     return ISO6391.getNativeName(this.languageIso639_1);
   }
 
   @Property({ persist: false, type: "string" })
-  @Field(() => String, { name: "languageNameEnglish" })
-  getLanguageNameEnglish() {
+  @Field(() => String)
+  get languageNameEnglish() {
     return ISO6391.getName(this.languageIso639_1);
   }
 
   @Property({ persist: false, type: "string" })
-  @Field(() => String, { name: "displayName" })
-  getDisplayName() {
-    const nameNative = this.getLanguageNameNative();
-    const nameEnglish = this.getLanguageNameEnglish();
+  @Field(() => String)
+  get displayName() {
+    const nameNative = this.languageNameNative;
+    const nameEnglish = this.languageNameEnglish;
     const parts = [nameNative];
     if (nameNative !== nameEnglish) {
       parts.push(`(${nameEnglish})`);
