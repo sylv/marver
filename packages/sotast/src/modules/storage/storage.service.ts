@@ -1,7 +1,7 @@
 import { once } from "events";
 import { type ReadStream, createReadStream } from "fs";
 import { readFile } from "fs/promises";
-import { EntityManager } from "@mikro-orm/better-sqlite";
+import { EntityManager } from "@mikro-orm/libsql";
 import { type EntityRepository } from "@mikro-orm/core";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { BadRequestException, Injectable } from "@nestjs/common";

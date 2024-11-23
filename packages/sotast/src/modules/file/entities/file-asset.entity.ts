@@ -1,4 +1,4 @@
-import { Entity, Enum, ManyToOne, PrimaryKey, Property, type Ref } from "@mikro-orm/better-sqlite";
+import { Entity, Enum, ManyToOne, PrimaryKey, Property, type Ref } from "@mikro-orm/libsql";
 import { Field, ID, ObjectType, registerEnumType } from "@nestjs/graphql";
 import mime from "mime-types";
 import { join } from "path";

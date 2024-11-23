@@ -1,53 +1,31 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { SigLip } from "@ryanke/rehoboam";
-import ms from "ms";
-import type { Embedding } from "../../helpers/embedding";
 import { config } from "../../config";
 
 @Injectable()
 export class CLIPService {
   private log = new Logger(CLIPService.name);
   private clip = new SigLip(config.use_quantized);
-  private _textUnloader?: NodeJS.Timeout;
-  private _visualUnloader?: NodeJS.Timeout;
 
-  async encodeText(text: string, cacheResult: boolean): Promise<Embedding> {
+  async encodeText(text: string, cacheResult: boolean): Promise<number[]> {
     const result = await this.encodeTextBatch([text], cacheResult);
     return result[0];
   }
 
-  async encodeImage(imagePath: string): Promise<Embedding> {
+  async encodeImage(imagePath: string): Promise<number[]> {
     const result = await this.encodeImageBatch([imagePath]);
     return result[0];
   }
 
-  async encodeTextBatch(texts: string[], cacheResult: boolean): Promise<Embedding[]> {
-    clearTimeout(this._textUnloader);
-
+  async encodeTextBatch(texts: string[], cacheResult: boolean): Promise<number[][]> {
     this.log.debug(`Encoding ${texts.length} texts with CLIP textual`);
     const result = await this.clip.batchEncodeTexts(texts, cacheResult);
-
-    clearTimeout(this._textUnloader);
-    this._textUnloader = setTimeout(() => {
-      this.log.log("Unloading CLIP textual model");
-      this.clip.unloadTextualSession();
-    }, ms("5m"));
-
     return result;
   }
 
-  async encodeImageBatch(imagePaths: string[]): Promise<Embedding[]> {
-    clearTimeout(this._visualUnloader);
-
+  async encodeImageBatch(imagePaths: string[]): Promise<number[][]> {
     this.log.debug(`Encoding ${imagePaths.length} images with CLIP vision`);
     const result = await this.clip.batchEncodeImages(imagePaths);
-
-    clearTimeout(this._visualUnloader);
-    this._visualUnloader = setTimeout(() => {
-      this.log.log("Unloading CLIP visual model");
-      this.clip.unloadVisualSession();
-    }, ms("5m"));
-
     return result;
   }
 }

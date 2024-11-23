@@ -1,5 +1,5 @@
 import { dirname } from "path";
-import { EntityManager, EntityRepository } from "@mikro-orm/better-sqlite";
+import { EntityManager, EntityRepository } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable, Logger } from "@nestjs/common";
 import { mkdir, readFile } from "fs/promises";

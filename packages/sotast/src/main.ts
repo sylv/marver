@@ -1,4 +1,4 @@
-import { type MikroORM as BetterMikroORM } from "@mikro-orm/better-sqlite";
+import { type MikroORM as BetterMikroORM } from "@mikro-orm/libsql";
 import { MikroORM } from "@mikro-orm/core";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";

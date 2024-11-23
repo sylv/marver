@@ -1,12 +1,12 @@
-import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { Interval } from '@nestjs/schedule';
-import { once } from 'node:events';
-import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, opendir, stat, unlink } from 'node:fs/promises';
-import ms from 'ms';
-import { join } from 'node:path';
-import { config } from '../../config';
-import { CACHE_OPTIONS_KEY, type CacheOptions } from './cache-options.interface';
+import { Inject, Injectable, Logger, type OnModuleInit } from "@nestjs/common";
+import { Interval } from "@nestjs/schedule";
+import { once } from "node:events";
+import { createReadStream, createWriteStream } from "node:fs";
+import { mkdir, opendir, stat, unlink } from "node:fs/promises";
+import ms from "ms";
+import { join } from "node:path";
+import { config } from "../../config";
+import { CACHE_OPTIONS_KEY, type CacheOptions } from "./cache-options.interface";
 
 interface CachedFile {
   size: number;
@@ -23,7 +23,7 @@ export class CacheService implements OnModuleInit {
   private scheduleTimeout?: NodeJS.Timeout;
 
   async onModuleInit() {
-    this.rootDir = join(config.metadata_dir, 'cache', this.options.name);
+    this.rootDir = join(config.cache_dir, this.options.name);
     await mkdir(this.rootDir, { recursive: true });
     await this.loadFiles();
   }
@@ -45,7 +45,7 @@ export class CacheService implements OnModuleInit {
   }
 
   public createWriteStream(name: string) {
-    if (name.length !== 64) throw new Error('Expected cache key to be a 64-character hex string');
+    if (name.length !== 64) throw new Error("Expected cache key to be a 64-character hex string");
     const existing = this.files.get(name);
     if (existing) {
       this.files.delete(name);
@@ -53,8 +53,8 @@ export class CacheService implements OnModuleInit {
     }
 
     const filePath = join(this.rootDir, name);
-    const stream = createWriteStream(filePath, { flags: 'w' });
-    stream.on('finish', () => {
+    const stream = createWriteStream(filePath, { flags: "w" });
+    stream.on("finish", () => {
       this.totalSize += stream.bytesWritten;
       this.files.set(name, {
         size: stream.bytesWritten,
@@ -74,11 +74,11 @@ export class CacheService implements OnModuleInit {
     try {
       const filePath = join(this.rootDir, name);
       const stream = createReadStream(filePath);
-      await once(stream, 'open');
+      await once(stream, "open");
       this.files.set(name, Object.assign(info, { lastAccessedAt: Date.now() }));
       return stream;
     } catch (error: any) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         this.files.delete(name);
         this.totalSize -= info.size;
         return null;
@@ -91,7 +91,7 @@ export class CacheService implements OnModuleInit {
   /**
    * Sweep the cache, with some debounce to prevent rapid sweeping.
    */
-  @Interval(ms('5min'))
+  @Interval(ms("5min"))
   private sweep() {
     if (this.scheduleTimeout) clearTimeout(this.scheduleTimeout);
     if (this.totalSize <= this.options.maxSize && this.files.size <= this.options.maxItems) {

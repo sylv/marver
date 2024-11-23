@@ -89,5 +89,5 @@ export const inferPopulate = (entity: AnyEntity, entityPath: string, info: Graph
   }
   previousField!.selections!.push(...nestedFields);
 
-  return resolveSelections(fieldTree, info as any) as any[];
+  return [...new Set(resolveSelections(fieldTree, info as any) as any[])];
 };

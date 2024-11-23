@@ -16,8 +16,8 @@ interface FileQuerySegmentProps {
 
 export const FilesQuery = graphql(
   `
-  query Files($search: String, $after: String, $first: Float, $collectionId: ID) {
-    files(search: $search, after: $after, first: $first, collectionId: $collectionId) {
+  query Files($search: String, $after: String, $first: Float) {
+    files(search: $search, after: $after, first: $first) {
       pageInfo {
         endCursor
         hasNextPage

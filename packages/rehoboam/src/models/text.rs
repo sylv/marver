@@ -1,7 +1,7 @@
 use anyhow::Result;
 use lazy_static::lazy_static;
 use ndarray::Array2;
-use ort::{inputs, Session};
+use ort::{inputs, session::Session};
 use tokenizers::{PaddingParams, Tokenizer, TruncationParams};
 
 // https://huggingface.co/Xenova/siglip-base-patch16-224/blob/main/tokenizer_config.json

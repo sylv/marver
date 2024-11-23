@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/better-sqlite";
+import { Entity, ManyToOne, OptionalProps, PrimaryKey, Property, type Ref } from "@mikro-orm/libsql";
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 import ISO6391 from "iso-639-1";
 import { FileEntity } from "../file/entities/file.entity.js";

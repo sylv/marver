@@ -2,17 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Collection {
-  aggregateFileCount: Float!
-  children: [Collection!]!
-  description: String
-  directFileCount: Float!
-  id: ID!
-  name: String!
-  parent: Collection
-  previewFiles: [File!]!
-}
-
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -20,7 +9,6 @@ scalar DateTime
 
 type File {
   checkedAt: DateTime!
-  collections: [Collection!]!
   corrupted: Boolean!
   createdAt: DateTime!
   directory: String!
@@ -35,11 +23,10 @@ type File {
   mimeType: String
   modifiedAt: DateTime!
   path: String!
-  similar(after: String, before: String, first: Float, last: Float, offset: Float, type: SimilarityType): FileConnection!
+  preview: String
   size: Float!
   sizeFormatted: String!
   thumbnail: FileAsset!
-  preview: String
   thumbnailUrl: String
   type: FileType
   unavailable: Boolean!
@@ -154,10 +141,8 @@ type PageInfo {
 }
 
 type Query {
-  collection(id: String!): Collection!
-  collections: [Collection!]!
   file(id: String!): File!
-  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, collectionId: ID, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
+  files(after: String, afterDate: DateTime, before: String, beforeDate: DateTime, direction: FileSortDirection = DESC, first: Float, last: Float, offset: Float, search: String, sort: FileSort): FileConnection!
   serverInfo: ServerInfo!
   tasks: [Task!]!
 }
@@ -167,15 +152,6 @@ type ServerInfo {
   buildDate: DateTime!
   commit: String!
   version: String!
-}
-
-enum SimilarityType {
-  Images
-  Related
-  SameFolder
-  SameType
-  Similar
-  Videos
 }
 
 enum State {

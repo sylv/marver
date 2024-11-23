@@ -1,9 +1,8 @@
 import type { FC } from "react";
-import { FileList, FileListFragment } from "./file-list";
+import { type FragmentOf, graphql, unmask } from "../../graphql";
 import { FileExif, FileExifFragment } from "./sidebar/exif/file-exif";
 import { FileLocation, FileLocationFragment } from "./sidebar/file-location";
 import { FileTasks, FileTasksFragment } from "./sidebar/file-tasks";
-import { graphql, unmask, type FragmentOf } from "../../graphql";
 
 export const FileSidebarFragment = graphql(
   `
@@ -11,14 +10,9 @@ export const FileSidebarFragment = graphql(
       ...FileLocation
       ...FileTasks
       ...FileExif
-      similar(type: Related) {
-        edges {
-          ...FileList
-        }
-      }
     }
 `,
-  [FileLocationFragment, FileTasksFragment, FileExifFragment, FileListFragment],
+  [FileLocationFragment, FileTasksFragment, FileExifFragment],
 );
 
 interface FileSidebarProps {
@@ -33,9 +27,6 @@ export const FileSidebar: FC<FileSidebarProps> = ({ file: fileFrag }) => {
       <FileExif file={file} />
       <FileLocation file={file} />
       <FileTasks file={file} />
-      <div className="overflow-y-auto">
-        <FileList files={file.similar.edges} targetWidth={100} />
-      </div>
     </div>
   );
 };

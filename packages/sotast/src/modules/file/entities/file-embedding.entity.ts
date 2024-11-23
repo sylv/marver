@@ -1,5 +1,6 @@
 import { Entity, ManyToOne, PrimaryKey, Property, type Ref } from "@mikro-orm/core";
 import { FileEntity } from "./file.entity";
+import { VectorType } from "../../../vector.type";
 
 @Entity({ tableName: "file_embedding" })
 export class FileEmbeddingEntity {
@@ -12,6 +13,6 @@ export class FileEmbeddingEntity {
   @Property({ nullable: true })
   position?: number;
 
-  @Property({ type: "blob" })
-  data: Buffer;
+  @Property({ type: new VectorType("FB16_BLOB", 768), lazy: true })
+  data: number[];
 }

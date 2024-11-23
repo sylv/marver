@@ -1,4 +1,4 @@
-import { MikroORM } from "@mikro-orm/better-sqlite";
+import { MikroORM } from "@mikro-orm/libsql";
 import type { Options } from "@mikro-orm/core";
 import mikroOrmConfig, { ORM_LOGGER } from "./orm.config.js";
 

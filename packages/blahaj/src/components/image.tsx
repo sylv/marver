@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties, type FC } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type FC } from "react";
 import { graphql, unmask, type FragmentOf } from "../graphql";
 import { cn } from "../helpers/cn";
 
@@ -33,7 +33,24 @@ interface ImageProps {
  */
 export const Image: FC<ImageProps> = ({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(ImageFragment, fileFrag);
+
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const blurredUrl = useMemo(() => {
+    if (!file.preview) return null;
+    return `data:image/webp;base64,${file.preview}`;
+  }, [file]);
+
+  const source = useMemo(() => {
+    if (blurredUrl && !isClient) return blurredUrl;
+    return file.thumbnailUrl || undefined;
+  }, [isClient, blurredUrl, file.thumbnailUrl]);
+
   const sourceSet = useMemo(() => {
+    if (!isClient) return;
     if (!file.thumbnailUrl || !file.info.width) return;
     const parts = [];
     for (const size of SOURCE_SET_SIZES) {
@@ -47,53 +64,20 @@ export const Image: FC<ImageProps> = ({ file: fileFrag, className, draggable, st
 
     if (!parts[0]) return undefined;
     return parts.join(", ");
-  }, [file]);
-
-  const blurredUrl = useMemo(() => {
-    if (!file.preview) return null;
-    return `data:image/webp;base64,${file.preview}`;
-  }, [file]);
-
-  const canUsePreview = useMemo(() => {
-    // this causes the image to "pop" in when its loaded
-    // todo: this could be addressed if we can make the preview image the same height/width
-    // as the final image so it can hold the space properly, but doing that is hard.
-    if (className?.includes("-auto")) return false;
-    // causes the preview image to not align properly
-    if (
-      (className?.includes("w-full") && !className.includes("h-full")) ||
-      (className?.includes("h-full") && !className.includes("w-full"))
-    )
-      return false;
-    // this causes issues with the preview image not aligning with the final image properly
-    // we can use `backgroundSize: contain` to fix this, but for some images the edges
-    // don't align and it looks sloppy.
-    if (className?.includes("object-contain")) return false;
-    return true;
-  }, [className]);
-
-  const styleWithPreview = !canUsePreview
-    ? style
-    : {
-        ...style,
-        backgroundImage: `url(${blurredUrl})`,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      };
+  }, [isClient, file.thumbnailUrl, file.info.width, isThumbnail]);
 
   return (
     <img
       loading="lazy"
-      decoding="async"
+      // decoding="async" // causes the image to "flash" when it switches from the blurred image to the final image
       className={cn("text-transparent", className)}
       alt={file.displayName}
       draggable={draggable}
       height={file.info.height || undefined}
       width={file.info.width || undefined}
-      src={file.thumbnailUrl || undefined}
+      src={source}
       srcSet={sourceSet}
-      style={styleWithPreview}
+      // style={styleWithPreview}
     />
   );
 };

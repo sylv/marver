@@ -8,25 +8,27 @@ exclude = ["index.node"]
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1.0.82"
-image = "0.25.1"
-itertools = "0.12.1"
-lazy_static = "1.4.0"
-ndarray = "0.15.6"
-tokenizers = { version = "0.19.1", features = ["hf-hub", "http"] }
+anyhow = "1.0.93"
+image = "0.25.5"
+itertools = "0.13.0"
+lazy_static = "1.5.0"
+ndarray = "0.16.1"
+tokenizers = { version = "0.20.3", features = ["hf-hub", "http"] }
 napi = { version = "2", features = ["async", "anyhow", "tokio_rt"] }
 napi-derive = "2"
 hf-hub = "0.3.2"
-tokio = "1.37.0"
-serde_json = "1.0.116"
+tokio = "1.41.1"
+serde_json = "1.0.133"
 uluru = "3.1.0"
+data_downloader = "0.2.0"
+hex-literal = "0.4.1"
 
 [dependencies.ort]
-version = "2.0.0-rc.1"
-features = ["load-dynamic", "cuda", "tensorrt"]
+version = "2.0.0-rc.9"
+features = ["load-dynamic", "copy-dylibs", "cuda", "tensorrt"]
 
 [build-dependencies]
 napi-build = "2"
 
 [dev-dependencies]
-comfy-table = "7.1.1"
+comfy-table = "7.1.3"

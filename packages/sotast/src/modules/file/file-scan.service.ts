@@ -1,25 +1,22 @@
-import { CreateRequestContext, EntityManager, EntityRepository, type Loaded } from "@mikro-orm/better-sqlite";
 import { MikroORM } from "@mikro-orm/core";
+import { CreateRequestContext, EntityManager, EntityRepository, type Loaded } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable, Logger, type OnApplicationBootstrap } from "@nestjs/common";
 import { CronExpression } from "@nestjs/schedule";
 import { opendir, stat } from "fs/promises";
 import PQueue from "p-queue";
-import { basename, dirname, extname, join } from "path";
+import { dirname, extname, join } from "path";
 import { performance } from "perf_hooks";
 import { config } from "../../config.js";
-import { shouldCreateCollection } from "../../helpers/should-create-collection.js";
-import { CollectionEntity } from "../collection/collection.entity.js";
-import { PublicCron } from "../task/public-cron.decorator.js";
-import { FileEntity } from "./entities/file.entity.js";
 import { SUPPORTED_EXTENSIONS } from "../../constants.js";
 import { filePathToDisplayName } from "../../helpers/filePathToDisplayName.js";
+import { PublicCron } from "../task/public-cron.decorator.js";
+import { FileEntity } from "./entities/file.entity.js";
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()
 export class FileScanService implements OnApplicationBootstrap {
   @InjectRepository(FileEntity) private fileRepo: EntityRepository<FileEntity>;
-  @InjectRepository(CollectionEntity) private collectionRepo: EntityRepository<CollectionEntity>;
 
   private directoryQueue = new PQueue({ concurrency: 8 });
   private fileQueue = new PQueue({ concurrency: 16 });
@@ -33,6 +30,7 @@ export class FileScanService implements OnApplicationBootstrap {
     private em: EntityManager,
   ) {}
 
+  @CreateRequestContext()
   async onApplicationBootstrap() {
     const fileCount = await this.fileRepo.count();
     if (fileCount === 0) {
@@ -50,7 +48,7 @@ export class FileScanService implements OnApplicationBootstrap {
     const start = performance.now();
     const lastCheckedAt = new Date();
     for (const sourceDir of config.source_dirs) {
-      this.directoryQueue.add(() => this.scanDirectory(sourceDir, undefined, sourceDir));
+      this.directoryQueue.add(() => this.scanDirectory(sourceDir, sourceDir));
     }
 
     // flush any remaining files only if we're at the root directory
@@ -68,17 +66,6 @@ export class FileScanService implements OnApplicationBootstrap {
         checkedAt: { $lt: lastCheckedAt },
       });
 
-    // delete any generated collections with no files and no children
-    // todo: this is sloppy, we should instead only create collections if we know they have files.
-    await this.collectionRepo
-      .createQueryBuilder()
-      .delete()
-      .where({
-        generated: true,
-        children: { $none: {} },
-        files: { $none: {} },
-      });
-
     // todo: reset task cooldowns. when tasks have no files to process, they sleep for awhile.
     // if we reset them it'll feel more responsive when new files are added
     const duration = performance.now() - start;
@@ -94,11 +81,7 @@ export class FileScanService implements OnApplicationBootstrap {
    * @warning This will add children directories to the queue, so when it returns it may not be done scanning.
    * You should await this.queue.onIdle() to ensure all files have been scanned.
    */
-  private async scanDirectory(
-    sourceDir: string,
-    parentCollection: CollectionEntity | undefined,
-    dirPath: string,
-  ) {
+  private async scanDirectory(sourceDir: string, dirPath: string) {
     // todo: skip this directory and children directories if a .marverignore file exists
     const start = performance.now();
     const dir = await opendir(dirPath, { bufferSize: 1000 });
@@ -110,37 +93,15 @@ export class FileScanService implements OnApplicationBootstrap {
       },
     );
 
-    let collection: CollectionEntity | undefined;
-    const dirname = basename(dirPath);
-    if (shouldCreateCollection(dirname) && sourceDir !== dirPath) {
-      const existingCollection = await this.collectionRepo.findOne({
-        $or: [{ path: dirPath }, { name: dirPath }],
-      });
-
-      if (existingCollection) {
-        collection = existingCollection;
-      } else {
-        collection = this.collectionRepo.create(
-          {
-            name: dirname,
-            path: dirPath,
-            parent: parentCollection,
-            generated: true,
-          },
-          { persist: true },
-        );
-      }
-    }
-
     for await (const dirent of dir) {
       const path = join(dirPath ?? config.source_dirs, dirent.name);
 
       if (dirent.isDirectory()) {
         // scan directories by queuing them up
-        this.directoryQueue.add(() => this.scanDirectory(sourceDir, collection, path));
+        this.directoryQueue.add(() => this.scanDirectory(sourceDir, path));
       } else if (dirent.isFile()) {
         // scan files
-        this.fileQueue.add(() => this.scanFile(collection, path, existingFiles));
+        this.fileQueue.add(() => this.scanFile(path, existingFiles));
       }
     }
 
@@ -149,7 +110,6 @@ export class FileScanService implements OnApplicationBootstrap {
   }
 
   private async scanFile(
-    collection: CollectionEntity | undefined,
     path: string,
     existingFiles: Loaded<FileEntity, never, "id" | "path" | "info" | "unavailable" | "checkedAt">[],
   ) {
@@ -171,8 +131,15 @@ export class FileScanService implements OnApplicationBootstrap {
       return;
     }
 
+    const info = await stat(path).catch((error) => {
+      // if the file was deleted while we were scanning
+      // also works around some smb weirdness where it incorrectly uppercases the extension on a file which breaks case sensitive lookups
+      this.log.error(`Failed to stat file "${path}"`, error);
+      return null;
+    });
+
+    if (!info) return;
     // on WSL birthtime is always 0, so we use mtime instead
-    const info = await stat(path);
     const birthtime = info.birthtimeMs === 0 ? info.mtime : info.birthtime;
     const file = this.fileRepo.create({
       path: path,
@@ -184,10 +151,6 @@ export class FileScanService implements OnApplicationBootstrap {
       createdAt: birthtime,
       info: {},
     });
-
-    if (collection) {
-      collection.files.add(file);
-    }
 
     // there is no point in tracking files that we don't know how to handle
     if (!SUPPORTED_EXTENSIONS.has(ext)) {
@@ -215,6 +178,7 @@ export class FileScanService implements OnApplicationBootstrap {
     this.staged = 0;
     this.lastPersist = Date.now();
     await this.em.flush();
+    this.em.clear();
     this.log.debug(`Persisted ${count} files`);
   }
 }

@@ -10,104 +10,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "text"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "path": {
-          "name": "path",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "generated": {
-          "name": "generated",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        }
-      },
-      "name": "collections",
-      "indexes": [
-        {
-          "columnNames": [
-            "parent_id"
-          ],
-          "composite": false,
-          "keyName": "collections_parent_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "primary",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "collections_parent_id_foreign": {
-          "constraintName": "collections_parent_id_foreign",
-          "columnNames": [
-            "parent_id"
-          ],
-          "localTableName": "collections",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "collections",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "display_name": {
@@ -117,6 +20,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "directory": {
@@ -126,6 +30,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "extension": {
@@ -135,6 +40,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "path": {
@@ -144,6 +50,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "corrupted": {
@@ -153,6 +60,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "default": "false",
           "mappedType": "integer"
         },
@@ -163,6 +71,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "default": "false",
           "mappedType": "integer"
         },
@@ -173,6 +82,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "checked_at": {
@@ -182,7 +92,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 0,
+          "length": null,
           "mappedType": "datetime"
         },
         "indexed_at": {
@@ -192,7 +102,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 0,
+          "length": null,
           "mappedType": "datetime"
         },
         "modified_at": {
@@ -202,7 +112,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 0,
+          "length": null,
           "mappedType": "datetime"
         },
         "created_at": {
@@ -212,7 +122,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 0,
+          "length": null,
           "mappedType": "datetime"
         },
         "info_height": {
@@ -222,6 +132,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_width": {
@@ -231,6 +142,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_video_codec": {
@@ -240,6 +152,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "info_bitrate": {
@@ -249,6 +162,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_framerate": {
@@ -258,6 +172,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_duration_seconds": {
@@ -267,6 +182,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_audio_channels": {
@@ -276,6 +192,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_non_verbal": {
@@ -285,6 +202,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_has_text": {
@@ -294,6 +212,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_audio_codec": {
@@ -303,6 +222,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "info_has_embedded_subtitles": {
@@ -312,6 +232,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_has_faces": {
@@ -321,6 +242,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "info_is_animated": {
@@ -330,6 +252,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "thumbnail_id": {
@@ -339,15 +262,17 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
-        "thumbnail_tiny": {
-          "name": "thumbnail_tiny",
+        "preview": {
+          "name": "preview",
           "type": "blob",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "blob"
         }
       },
@@ -447,10 +372,11 @@
         "id": {
           "name": "id",
           "type": "integer",
-          "unsigned": true,
+          "unsigned": false,
           "autoincrement": true,
           "primary": true,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "file_id": {
@@ -460,6 +386,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "position": {
@@ -469,16 +396,18 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "data": {
           "name": "data",
-          "type": "blob",
+          "type": "FB16_BLOB(768)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "blob"
+          "length": 768,
+          "mappedType": "unknown"
         }
       },
       "name": "file_embedding",
@@ -530,6 +459,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "asset_type": {
@@ -539,6 +469,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "enum"
         },
         "mime_type": {
@@ -548,6 +479,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "generated": {
@@ -557,6 +489,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "position": {
@@ -566,6 +499,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "width": {
@@ -575,6 +509,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "height": {
@@ -584,6 +519,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "file_id": {
@@ -593,6 +529,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         }
       },
@@ -638,92 +575,6 @@
     },
     {
       "columns": {
-        "collection_entity_id": {
-          "name": "collection_entity_id",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "file_entity_id": {
-          "name": "file_entity_id",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        }
-      },
-      "name": "collections_files",
-      "indexes": [
-        {
-          "columnNames": [
-            "collection_entity_id"
-          ],
-          "composite": false,
-          "keyName": "collections_files_collection_entity_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "file_entity_id"
-          ],
-          "composite": false,
-          "keyName": "collections_files_file_entity_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "primary",
-          "columnNames": [
-            "collection_entity_id",
-            "file_entity_id"
-          ],
-          "composite": true,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "collections_files_collection_entity_id_foreign": {
-          "constraintName": "collections_files_collection_entity_id_foreign",
-          "columnNames": [
-            "collection_entity_id"
-          ],
-          "localTableName": "collections_files",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "collections",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
-        },
-        "collections_files_file_entity_id_foreign": {
-          "constraintName": "collections_files_file_entity_id_foreign",
-          "columnNames": [
-            "file_entity_id"
-          ],
-          "localTableName": "collections_files",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "files",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
         "file_id": {
           "name": "file_id",
           "type": "text",
@@ -731,6 +582,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "lens_make": {
@@ -740,6 +592,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "lens_model": {
@@ -749,6 +602,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "camera_make": {
@@ -758,6 +612,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "camera_model": {
@@ -767,6 +622,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "focal_length": {
@@ -776,6 +632,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "exposure_time": {
@@ -785,6 +642,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "f_number": {
@@ -794,6 +652,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "iso": {
@@ -803,6 +662,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "flash": {
@@ -812,6 +672,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "date_time": {
@@ -821,6 +682,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "date"
         },
         "longitude": {
@@ -830,6 +692,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "unknown"
         },
         "latitude": {
@@ -839,6 +702,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "unknown"
         }
       },
@@ -898,10 +762,11 @@
         "id": {
           "name": "id",
           "type": "integer",
-          "unsigned": true,
+          "unsigned": false,
           "autoincrement": true,
           "primary": true,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "language_iso639_1": {
@@ -911,6 +776,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "hearing_impaired": {
@@ -920,6 +786,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "name": {
@@ -929,6 +796,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "forced": {
@@ -938,6 +806,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "generated": {
@@ -947,6 +816,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "file_id": {
@@ -956,6 +826,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         }
       },
@@ -1008,6 +879,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "type": {
@@ -1017,6 +889,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "text"
         },
         "state": {
@@ -1026,6 +899,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "enum"
         },
         "result": {
@@ -1035,6 +909,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "json"
         },
         "error_message": {
@@ -1044,6 +919,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "text"
         },
         "retry_after": {
@@ -1053,6 +929,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "length": null,
           "mappedType": "integer"
         },
         "retries": {
@@ -1062,6 +939,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
           "mappedType": "integer"
         },
         "executed_at": {
@@ -1071,7 +949,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 0,
+          "length": null,
           "mappedType": "datetime"
         }
       },

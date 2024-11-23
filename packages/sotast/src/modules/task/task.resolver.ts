@@ -1,7 +1,7 @@
-import { NotFoundException } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { TaskModel } from './task.model.js';
-import { TaskService } from './task.service.js';
+import { NotFoundException } from "@nestjs/common";
+import { Args, ID, Mutation, Query, Resolver } from "@nestjs/graphql";
+import { TaskModel } from "./task.model.js";
+import { TaskService } from "./task.service.js";
 
 @Resolver(() => TaskModel)
 export class TaskResolver {
@@ -13,7 +13,7 @@ export class TaskResolver {
   }
 
   @Mutation(() => TaskModel)
-  runTask(@Args({ name: 'id', type: () => ID }) id: string): TaskModel {
+  runTask(@Args({ name: "id", type: () => ID }) id: string): TaskModel {
     const task = this.taskService.runTask(id);
     if (!task) throw new NotFoundException(`Task "${id}" not found`);
     return {

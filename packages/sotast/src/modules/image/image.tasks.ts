@@ -1,9 +1,8 @@
-import { EntityManager, EntityRepository, ref } from "@mikro-orm/better-sqlite";
+import { EntityManager, EntityRepository, ref } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable } from "@nestjs/common";
 import bytes from "bytes";
 import { IMAGE_EXTENSIONS } from "../../constants.js";
-import { embeddingToBuffer } from "../../helpers/embedding.js";
 import { CLIPService } from "../clip/clip.service.js";
 import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
 import { FileEntity } from "../file/entities/file.entity.js";
@@ -107,7 +106,7 @@ export class ImageTasks {
     for (const [i, element] of embedding.entries()) {
       const file = files[i];
       const embedding = this.embeddingRepo.create({
-        data: embeddingToBuffer(element),
+        data: element,
         file: file,
       });
 

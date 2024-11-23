@@ -1,11 +1,11 @@
 import { cva } from "class-variance-authority";
+import type { FragmentOf } from "gql.tada";
 import type { FC } from "react";
 import { FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { graphql, unmask } from "../../../graphql";
 import { snakeToLabel } from "../../../helpers/snakeToLabel";
 import { FileCardToggle } from "../parts/file-card";
 import { FileLabel } from "../parts/file-label";
-import type { FragmentOf } from "gql.tada";
-import { graphql, unmask } from "../../../graphql";
 
 const STRIP_PATTERN = /^(IMAGE|VIDEO)_/;
 const iconClasses = cva("h-4 w-4 flex-shrink-0", {
@@ -19,6 +19,7 @@ const iconClasses = cva("h-4 w-4 flex-shrink-0", {
 
 export const FileTasksFragment = graphql(`
   fragment FileTasks on File {
+    id
     jobStates {
       state
       type

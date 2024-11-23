@@ -1,2 +1,2 @@
 [workspace]
-members = ["packages/sqlite-cosim", "packages/rehoboam"]
+members = ["packages/rehoboam"]

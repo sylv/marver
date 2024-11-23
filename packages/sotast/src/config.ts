@@ -1,14 +1,15 @@
-import { loadConfig } from "@ryanke/venera";
-import bytes from "bytes";
-import { resolve } from "node:path";
-import z, { array, boolean, number, object, string } from "zod";
-import ms from "ms";
 import { parseBits } from "@ryanke/parsers/bits";
+import { loadConfig } from "@ryanke/venera";
+import ms from "ms";
+import { join, resolve } from "node:path";
+import z, { array, boolean, number, object, string } from "zod";
 
 const schema = object({
   metadata_dir: string().transform((dir) => resolve(dir)),
+  cache_dir: string()
+    .default("auto")
+    .transform((dir) => (dir === "auto" ? dir : resolve(dir))),
   source_dirs: array(string()).transform((dirs) => dirs.map((dir) => resolve(dir))),
-  max_hashable_size: string().default("100MB").transform(bytes),
   secret: string().transform((secret) => new TextEncoder().encode(secret)),
   disable_tasks: boolean().default(false),
   orm_debug: boolean().default(false),
@@ -64,6 +65,10 @@ const schema = object({
 
 const data = loadConfig("marver");
 const config = schema.parse(data);
+
+if (config.cache_dir === "auto") {
+  config.cache_dir = join(config.metadata_dir, "cache");
+}
 
 export { config };
 

@@ -1,11 +1,10 @@
-import { execa } from "execa";
+import { spawn } from "child_process";
 
 export interface IterateVideoOptions {
+  /** How often to take a frame from the video. */
   intervalSecs: number;
-  inputDurationSecs: number;
+  /** The maximum depth to go into the video */
   maxDepthSecs?: number;
-  /** webp is slower than jpeg (3.7s vs 2.8s) in my testing */
-  frameFormat?: "jpeg" | "webp";
 }
 
 export interface Frame {
@@ -13,43 +12,63 @@ export interface Frame {
   data: Buffer;
 }
 
-// todo: allow a `maxFrames` option to limit the number of frames
-// a 10 hour video probably doesn't need 36000 frames, so we can take the intervalSecs and
-// increase it until its under the frame limit, its unlikely the skipped frames are important anyway.
-// though keeping a fast interval towards the start of the video is a good idea.
+// note: originally this supported webp and jpeg, but webp was considerably slower.
+// the difference was around 32s for webp and 24s for jpeg over long videos,
+// and it caused other compatibility issues. sticking to jpeg seems simpler.
+const JPEG_HEADER = Buffer.from([0xff, 0xd8]);
+
+/**
+ * Iterate over frames from a video file.
+ * @param videoPath Path to the video file.
+ */
 export async function* iterateVideo(videoPath: string, options: IterateVideoOptions): AsyncGenerator<Frame> {
-  const frameFormat = options.frameFormat ?? "webp";
+  const args = [
+    "-skip_frame",
+    "nokey",
+    "-i",
+    videoPath,
+    "-vf",
+    `fps=1/${options.intervalSecs}`,
+    "-vsync",
+    "vfr",
+    "-f",
+    "image2pipe",
+    "-vcodec",
+    "mjpeg",
+    "pipe:1",
+  ];
+
+  const ffmpeg = spawn("ffmpeg", args, {
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+
   let currentPositionSecs = 0;
-  while (currentPositionSecs < options.inputDurationSecs) {
-    const args = [];
+  let leftover = Buffer.alloc(0);
 
-    args.push("-ss", currentPositionSecs.toString());
-    args.push("-i", videoPath);
-    args.push("-vframes", "1");
+  for await (const chunk of ffmpeg.stdout) {
+    let data = Buffer.concat([leftover, chunk]);
+    let frameStart = data.indexOf(JPEG_HEADER);
 
-    switch (frameFormat) {
-      case "jpeg":
-        args.push("-vcodec", "mjpeg");
-        break;
-      case "webp":
-        args.push("-vcodec", "libwebp");
-        break;
+    while (frameStart !== -1) {
+      const nextFrameStart = data.indexOf(JPEG_HEADER, frameStart + JPEG_HEADER.length);
+      if (nextFrameStart === -1) break;
+
+      const frameData = data.subarray(frameStart, nextFrameStart);
+      yield {
+        positionSecs: currentPositionSecs,
+        data: frameData,
+      };
+
+      currentPositionSecs += options.intervalSecs;
+      if (options.maxDepthSecs && currentPositionSecs >= options.maxDepthSecs) {
+        ffmpeg.kill();
+        return;
+      }
+
+      data = data.subarray(nextFrameStart);
+      frameStart = data.indexOf(JPEG_HEADER);
     }
 
-    args.push("-f", "image2pipe", "pipe:1");
-    const { stdout } = await execa("ffmpeg", args, {
-      encoding: "buffer",
-    });
-
-    // todo: if this frame is visually similar to the last, skip it (perceptual hash)
-    yield {
-      positionSecs: currentPositionSecs,
-      data: stdout,
-    };
-
-    currentPositionSecs += options.intervalSecs;
-    if (options.maxDepthSecs && currentPositionSecs >= options.maxDepthSecs) {
-      break;
-    }
+    leftover = data;
   }
 }

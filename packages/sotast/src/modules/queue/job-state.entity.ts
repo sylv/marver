@@ -1,4 +1,4 @@
-import { BeforeCreate, BeforeUpdate, Entity, Enum, Index, ManyToOne, OptionalProps, Property, type Ref } from "@mikro-orm/better-sqlite";
+import { BeforeCreate, BeforeUpdate, Entity, Enum, Index, ManyToOne, OptionalProps, Property, type Ref } from "@mikro-orm/libsql";
 import ms from "ms";
 import { FileEntity } from "../file/entities/file.entity.js";
 import { Field, ObjectType, registerEnumType } from "@nestjs/graphql";

@@ -8,7 +8,6 @@ declare global {
       Page: FC<PageProps>;
       state?: SSRData;
       pageHtml?: string;
-      userAgent?: string;
     }
   }
 }

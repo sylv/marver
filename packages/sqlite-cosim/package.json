@@ -1,6 +1,0 @@
-{
-  "name": "@ryanke/sqlite-cosim",
-  "scripts": {
-    "build": "cargo build --release"
-  }
-}

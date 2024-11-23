@@ -1,4 +1,4 @@
-import { Embeddable, Index, Property } from "@mikro-orm/better-sqlite";
+import { Embeddable, Index, Property } from "@mikro-orm/libsql";
 import { Field, ObjectType } from "@nestjs/graphql";
 import ms from "ms";
 

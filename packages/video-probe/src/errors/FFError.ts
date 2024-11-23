@@ -2,9 +2,9 @@ import { FFERRTAG } from "../helpers/fferrtag" assert { type: "macro" };
 
 export enum FFErrorCode {
   InvalidPath = 1, // No such file or directory
-  InvalidData, // Invalid data found when processing input
-  FileChanged, // Input changed between reads
-  HttpError, // Generic HTTP errors
+  InvalidData = 2, // Invalid data found when processing input
+  FileChanged = 3, // Input changed between reads
+  HttpError = 4, // Generic HTTP errors
 }
 
 export class FFError extends Error {

@@ -1,9 +1,9 @@
-import { Entity, Index, OneToOne, Property, type Ref } from '@mikro-orm/better-sqlite';
-import { Field, ObjectType } from '@nestjs/graphql';
-import { FileEntity } from './file.entity.js';
+import { Entity, Index, OneToOne, Property, type Ref } from "@mikro-orm/libsql";
+import { Field, ObjectType } from "@nestjs/graphql";
+import { FileEntity } from "./file.entity.js";
 
-@Entity({ tableName: 'file_exif_data' })
-@ObjectType('FileExifData')
+@Entity({ tableName: "file_exif_data" })
+@ObjectType("FileExifData")
 export class FileExifDataEntity {
   @OneToOne(() => FileEntity, { primary: true, ref: true })
   file: Ref<FileEntity>;
@@ -44,16 +44,16 @@ export class FileExifDataEntity {
   @Field({ nullable: true })
   flash?: string;
 
-  @Property({ type: 'date', nullable: true })
+  @Property({ type: "date", nullable: true })
   @Field(() => Date, { nullable: true })
   dateTime?: Date;
 
-  @Property({ type: 'float', nullable: true })
+  @Property({ type: "float", nullable: true })
   @Field({ nullable: true })
   @Index()
   longitude?: number;
 
-  @Property({ type: 'float', nullable: true })
+  @Property({ type: "float", nullable: true })
   @Field({ nullable: true })
   @Index()
   latitude?: number;

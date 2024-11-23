@@ -9,7 +9,7 @@ import { useDebounced } from "../../hooks/useDebounced";
 export const FileQueryWithFilters: FC<FilePageProps> = ({ variables }) => {
   const [tab, setTab] = useQueryState<string>("tab", "all");
   const [search, setSearch] = useQueryState<string>("search", "");
-  const debouncedSearch = useDebounced(search, 500);
+  const debouncedSearch = useDebounced(search, 300);
 
   return (
     <div>

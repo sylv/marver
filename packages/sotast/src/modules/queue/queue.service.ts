@@ -1,17 +1,17 @@
-import { Collection } from '@discordjs/collection';
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { EntityManager, EntityRepository, RequestContext, type ObjectQuery } from '@mikro-orm/better-sqlite';
-import { MikroORM } from '@mikro-orm/core';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
-import { randomInt } from 'crypto';
-import ms from 'ms';
-import PQueue from 'p-queue';
-import { setTimeout as sleep } from 'timers/promises';
-import { config } from '../../config.js';
-import { FileEntity } from '../file/entities/file.entity.js';
-import { State, JobStateEntity } from './job-state.entity.js';
-import { QUEUE_KEY, type QueueKeyValue, type QueueOptions } from './queue.decorator.js';
+import { DiscoveryService } from "@golevelup/nestjs-discovery";
+import { EntityManager, EntityRepository, RequestContext, type ObjectQuery } from "@mikro-orm/libsql";
+import { MikroORM } from "@mikro-orm/core";
+import { InjectRepository } from "@mikro-orm/nestjs";
+import { Injectable, Logger, type OnApplicationBootstrap } from "@nestjs/common";
+import { randomInt } from "crypto";
+import ms from "ms";
+import PQueue from "p-queue";
+import { setTimeout as sleep } from "timers/promises";
+import { config } from "../../config.js";
+import { FileEntity } from "../file/entities/file.entity.js";
+import { State, JobStateEntity } from "./job-state.entity.js";
+import { QUEUE_KEY, type QueueKeyValue, type QueueOptions } from "./queue.decorator.js";
+import { Collection } from "@discordjs/collection";
 
 // todo: cleanupMethod is never used
 interface LoadedQueue {
@@ -112,7 +112,7 @@ export class QueueService implements OnApplicationBootstrap {
             id: {
               $nin: this.jobStateRepo
                 .createQueryBuilder()
-                .select('file_id')
+                .select("file_id")
                 .where({
                   type: queue.meta.type,
                 })
@@ -137,7 +137,7 @@ export class QueueService implements OnApplicationBootstrap {
           id: {
             $in: this.jobStateRepo
               .createQueryBuilder()
-              .select('file_id')
+              .select("file_id")
               .where({
                 type: queue.parent.meta.type,
                 state: State.Completed,
@@ -149,8 +149,8 @@ export class QueueService implements OnApplicationBootstrap {
 
       const [files, filesTotal] = await this.fileRepo.findAndCount(query, {
         limit: fetchCount,
-        populate: ['jobStates', ...((queue.meta.populate ?? []) as any[])],
-        orderBy: { size: 'ASC' },
+        populate: ["jobStates", ...((queue.meta.populate ?? []) as any[])],
+        orderBy: { size: "ASC" },
         populateWhere: {
           // only load the job state for this queue type and the parent (so we can get the job data)
           jobStates: {
@@ -207,9 +207,9 @@ export class QueueService implements OnApplicationBootstrap {
 
   private async runJob(queueHandler: LoadedQueue, files: FileEntity[], parentOutput?: unknown) {
     const firstFile = files[0];
-    if (!firstFile) throw new Error('No files to process');
+    if (!firstFile) throw new Error("No files to process");
     if (!firstFile.path || !firstFile.id) {
-      throw new Error('File is not loaded correctly');
+      throw new Error("File is not loaded correctly");
     }
 
     const start = performance.now();

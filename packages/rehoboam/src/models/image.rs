@@ -1,7 +1,7 @@
 use anyhow::Result;
 use image::imageops::FilterType;
 use ndarray::{Array3, Array4};
-use ort::{inputs, Session};
+use ort::{inputs, session::Session};
 
 // https://huggingface.co/Xenova/siglip-base-patch16-224/blob/main/preprocessor_config.json
 static VISION_SIZE: usize = 224;
@@ -9,7 +9,7 @@ static IMAGE_STD: f32 = 0.5;
 static IMAGE_MEAN: f32 = 0.5;
 
 pub fn preprocess_image(image_path: String) -> Result<Array3<f32>> {
-    let image = image::io::Reader::open(image_path)?.decode()?;
+    let image = image::ImageReader::open(image_path)?.decode()?;
 
     let image = image.resize_exact(
         VISION_SIZE as u32,

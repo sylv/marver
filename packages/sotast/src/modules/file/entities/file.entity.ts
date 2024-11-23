@@ -3,22 +3,21 @@ import {
   Embedded,
   Entity,
   Index,
-  ManyToMany,
   OneToMany,
   OneToOne,
   OptionalProps,
   PrimaryKey,
   Property,
+  Uint8ArrayType,
   Unique,
   type Ref,
-} from "@mikro-orm/better-sqlite";
+} from "@mikro-orm/libsql";
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 import mime from "mime-types";
 import { Connection } from "nest-graphql-utils";
 import { ulid } from "ulid";
 import { config } from "../../../config.js";
 import { AutoPopulate } from "../../../helpers/autoloader.js";
-import { CollectionEntity } from "../../collection/collection.entity.js";
 import { JobStateEntity } from "../../queue/job-state.entity.js";
 import { FileEmbeddingEntity } from "./file-embedding.entity.js";
 import { FileExifDataEntity } from "./file-exif.entity.js";
@@ -89,8 +88,8 @@ export class FileEntity {
   @OneToOne(() => FileAssetEntity, { ref: true, nullable: true })
   thumbnail?: Ref<FileAssetEntity>;
 
-  @Property({ type: "blob", ref: true, lazy: true, nullable: true })
-  preview?: Ref<Buffer>;
+  @Property({ type: Uint8ArrayType, ref: true, lazy: true, nullable: true })
+  preview?: Ref<Uint8Array>;
 
   @AutoPopulate()
   @Field(() => FileExifDataEntity, { nullable: true })
@@ -100,14 +99,6 @@ export class FileEntity {
     { ref: true, nullable: true },
   )
   exifData?: Ref<FileExifDataEntity>;
-
-  @AutoPopulate()
-  @Field(() => [CollectionEntity])
-  @ManyToMany(
-    () => CollectionEntity,
-    (collection) => collection.files,
-  )
-  collections = new Collection<CollectionEntity>(this);
 
   @AutoPopulate()
   @Field(() => [JobStateEntity])

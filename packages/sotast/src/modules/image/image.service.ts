@@ -1,4 +1,4 @@
-import { EntityRepository } from "@mikro-orm/better-sqlite";
+import { EntityRepository } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import avro from "avsc";

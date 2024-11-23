@@ -41,7 +41,7 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext): ReturnType<O
     // todo: this is necessary for react helmet, otherwise we'd reply with the head before we
     // have rendered the component that configures it.
     disable: true,
-    userAgent: pageContext.userAgent,
+    userAgent: pageContext.headers?.["user-agent"],
   });
 
   const helmet = helmetContext.helmet!;

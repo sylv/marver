@@ -1,4 +1,4 @@
-import { EntityRepository } from "@mikro-orm/better-sqlite";
+import { EntityRepository } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Controller, Get, Param, Res } from "@nestjs/common";
 import { type FastifyReply } from "fastify";

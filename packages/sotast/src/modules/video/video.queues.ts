@@ -1,4 +1,4 @@
-import { EntityManager, EntityRepository, ref } from "@mikro-orm/better-sqlite";
+import { EntityManager, EntityRepository, ref } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable, Logger } from "@nestjs/common";
 import { probeFile } from "@ryanke/video-probe";
@@ -8,7 +8,6 @@ import { dirname, join } from "path";
 import sharp from "sharp";
 import { config } from "../../config.js";
 import { VIDEO_EXTENSIONS } from "../../constants.js";
-import { embeddingToBuffer } from "../../helpers/embedding.js";
 import { cosineSimilarity } from "../../helpers/similarity.js";
 import { CLIPService } from "../clip/clip.service.js";
 import { FileAssetEntity, FileAssetType } from "../file/entities/file-asset.entity.js";
@@ -92,17 +91,10 @@ export class VideoQueues {
     const screenshotDir = join(config.metadata_dir, "screenshots", file.id);
     await mkdir(screenshotDir, { recursive: true });
 
-    const frames = iterateVideo(file.path, {
-      // mergeFrames: true,
-      // hashSize: 16,
-      intervalSecs: 10,
-      inputDurationSecs: file.info.durationSeconds!,
-      frameFormat: "webp",
-    });
-
+    const frames = iterateVideo(file.path, { intervalSecs: 10 });
     const framesWithPaths: FrameWithPath[] = [];
     for await (const frame of frames) {
-      const framePath = join(screenshotDir, `${frame.positionSecs}.webp`);
+      const framePath = join(screenshotDir, `${frame.positionSecs}.jpeg`);
       await writeFile(framePath, frame.data);
       framesWithPaths.push({
         positionSecs: frame.positionSecs,
@@ -151,7 +143,7 @@ export class VideoQueues {
 
         previous = embedding;
         this.fileEmbeddingRepo.create({
-          data: embeddingToBuffer(embedding),
+          data: embedding,
           file: file,
           position: frameToPosition.get(framePath)! * 1000,
         });
@@ -191,7 +183,7 @@ export class VideoQueues {
         assetType: FileAssetType.Thumbnail,
         width: metadata.width,
         height: metadata.height,
-        mimeType: "image/webp",
+        mimeType: "image/jpeg",
         generated: true,
         position: largestFrame.positionSecs * 1000,
       });

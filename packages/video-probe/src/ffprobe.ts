@@ -1,6 +1,9 @@
-import { execa } from "execa";
+import { execFile, type ExecException } from "child_process";
+import { promisify } from "util";
 import { number, object, string, z } from "zod";
 import { FF_ERROR_MAP, FFError } from "./errors/FFError";
+
+const execFileAsync = promisify(execFile);
 
 export interface ProbeFileOptions<T extends z.ZodTypeAny = z.ZodTypeAny> {
   schema?: T;
@@ -22,18 +25,20 @@ export const ffprobe = async <T extends z.ZodTypeAny>(
   const ffprobePath = options?.ffprobePath || "ffprobe";
   try {
     const inputArgs = ["-v", "quiet", "-print_format", "json", "-show_error", ...args];
-    const result = await execa(ffprobePath, inputArgs);
+    const result = await execFileAsync(ffprobePath, inputArgs);
     const parsed = JSON.parse(result.stdout);
     if (options?.schema) {
       return options.schema.parse(parsed);
     }
 
     return parsed;
-  } catch (error: any) {
-    if (error.exitCode === 1) {
+  } catch (_error: any) {
+    const error = _error as ExecException;
+    const output = error.stdout || error.stderr;
+    if (error.code === 1 && output) {
       let json: unknown;
       try {
-        json = JSON.parse(error.stdout || error.stderr);
+        json = JSON.parse(output);
       } catch (error) {}
 
       if (json) {
