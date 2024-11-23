@@ -60,7 +60,7 @@ export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style }) => 
         </div>
       )}
       {!file.thumbnailUrl && (
-        <div className="flex items-center justify-center flex-col gap-2 h-full w-full bg-zinc-900 text-zinc-600 text-center text-sm break-all">
+        <div className="flex items-center justify-center flex-col gap-2 h-full w-full bg-zinc-900 text-zinc-600 text-center text-md font-mono break-all p-6">
           {file.displayName}
         </div>
       )}

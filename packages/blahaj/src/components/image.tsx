@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type FC } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FC } from "react";
 import { graphql, unmask, type FragmentOf } from "../graphql";
 import { cn } from "../helpers/cn";
 
@@ -31,26 +31,25 @@ interface ImageProps {
  * - DO NOT ADD FADE-IN ANIMATIONS. For the love of all that is holy. It will break, lag the browser, have a dozen edge cases and will make your mum cry.
  * - DO NOT WRAP THE <img /> IN ANYTHING. A plain <img /> element is expected because parent comps might use special classes or wrappers that need a plain <img />.
  */
-export const Image: FC<ImageProps> = ({ file: fileFrag, className, draggable, style, isThumbnail }) => {
+const ImageComponent: FC<ImageProps> = ({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(ImageFragment, fileFrag);
+  const [preloaded, setPreloaded] = useState(false);
+  const [preload, setPreload] = useState(false);
+  const ref = useRef<HTMLImageElement | null>(null);
 
-  const [isClient, setIsClient] = useState(false);
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { source, useSourceSet } = useMemo(() => {
+    if (!preloaded) {
+      if (file.preview) return { source: `data:image/webp;base64,${file.preview}`, useSourceSet: false };
+      return { source: undefined, useSourceSet: false };
+    }
 
-  const blurredUrl = useMemo(() => {
-    if (!file.preview) return null;
-    return `data:image/webp;base64,${file.preview}`;
-  }, [file]);
-
-  const source = useMemo(() => {
-    if (blurredUrl && !isClient) return blurredUrl;
-    return file.thumbnailUrl || undefined;
-  }, [isClient, blurredUrl, file.thumbnailUrl]);
+    return {
+      source: file.thumbnailUrl || undefined,
+      useSourceSet: true,
+    };
+  }, [file.preview, file.thumbnailUrl, preloaded]);
 
   const sourceSet = useMemo(() => {
-    if (!isClient) return;
     if (!file.thumbnailUrl || !file.info.width) return;
     const parts = [];
     for (const size of SOURCE_SET_SIZES) {
@@ -64,20 +63,58 @@ export const Image: FC<ImageProps> = ({ file: fileFrag, className, draggable, st
 
     if (!parts[0]) return undefined;
     return parts.join(", ");
-  }, [isClient, file.thumbnailUrl, file.info.width, isThumbnail]);
+  }, [file.thumbnailUrl, file.info.width, isThumbnail]);
+
+  useEffect(() => {
+    // preload the thumbnailUrl so we can swap it out
+    if (!file.thumbnailUrl || !preload) return;
+    const img = new Image();
+    img.src = file.thumbnailUrl;
+    if (sourceSet) img.srcset = sourceSet;
+    img.onload = () => {
+      setPreloaded(true);
+    };
+
+    // cached images don't trigger onload
+    if (img.complete) {
+      setPreloaded(true);
+    }
+
+    return () => {
+      img.onload = null;
+    };
+  }, [file.thumbnailUrl, sourceSet, preload]);
+
+  useEffect(() => {
+    if (preloaded) return;
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPreload(true);
+        }
+      },
+      { rootMargin: "50%" },
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
 
   return (
     <img
+      ref={ref}
       loading="lazy"
-      // decoding="async" // causes the image to "flash" when it switches from the blurred image to the final image
+      decoding={preloaded ? "sync" : "async"} // if its async when we swap the image, it flickers
       className={cn("text-transparent", className)}
       alt={file.displayName}
       draggable={draggable}
       height={file.info.height || undefined}
       width={file.info.width || undefined}
       src={source}
-      srcSet={sourceSet}
-      // style={styleWithPreview}
+      srcSet={useSourceSet ? sourceSet : undefined}
     />
   );
 };
+
+export { ImageComponent as Image };

@@ -125,6 +125,16 @@
           "length": null,
           "mappedType": "datetime"
         },
+        "bumped_at": {
+          "name": "bumped_at",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "datetime"
+        },
         "info_height": {
           "name": "info_height",
           "type": "integer",

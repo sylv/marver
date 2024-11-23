@@ -21,6 +21,7 @@ import { parseSearch } from "../../helpers/parse-search.js";
 import { CLIPService } from "../clip/clip.service.js";
 import { ImageService } from "../image/image.service.js";
 import { FileConnection, FileEntity } from "./entities/file.entity.js";
+import { EntityManager } from "@mikro-orm/core";
 
 enum FileType {
   Image = 0,
@@ -81,14 +82,20 @@ export class FileResolver {
   constructor(
     private clipService: CLIPService,
     private imageService: ImageService,
+    private em: EntityManager,
   ) {}
 
   @Query(() => FileEntity)
   async file(@Args("id") fileId: string, @Info() info: any) {
     const populate = inferPopulate(FileEntity, "file", info);
-    return this.fileRepo.findOneOrFail(fileId, {
+    const file = await this.fileRepo.findOneOrFail(fileId, {
       populate,
     });
+
+    file.bumpedAt = new Date();
+    await this.em.flush();
+
+    return file;
   }
 
   @Query(() => FileConnection)
@@ -184,7 +191,7 @@ export class FileResolver {
           }
         }
 
-        return this.fileRepo.findAndCount(
+        const files = await this.fileRepo.findAndCount(
           { $and: filters },
           {
             limit: args.limit,
@@ -192,6 +199,12 @@ export class FileResolver {
             populate: populate,
           },
         );
+
+        // on file view, bump the file so its tasks are run with priority
+        for (const file of files[0]) file.bumpedAt = new Date();
+        await this.em.flush();
+
+        return files;
       },
     });
   }

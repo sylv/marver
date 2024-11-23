@@ -150,7 +150,12 @@ export class QueueService implements OnApplicationBootstrap {
       const [files, filesTotal] = await this.fileRepo.findAndCount(query, {
         limit: fetchCount,
         populate: ["jobStates", ...((queue.meta.populate ?? []) as any[])],
-        orderBy: { size: "ASC" },
+        orderBy: {
+          // newer bump date = higher priority
+          bumpedAt: "DESC",
+          // older indexed date = higher priority
+          indexedAt: "ASC",
+        },
         populateWhere: {
           // only load the job state for this queue type and the parent (so we can get the job data)
           jobStates: {

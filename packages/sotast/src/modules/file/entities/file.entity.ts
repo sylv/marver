@@ -79,6 +79,10 @@ export class FileEntity {
   @Field()
   createdAt: Date;
 
+  @Property({ nullable: true })
+  @Field({ nullable: true })
+  bumpedAt?: Date;
+
   @Embedded(() => FileInfoEmbeddable)
   @Field(() => FileInfoEmbeddable)
   info: FileInfoEmbeddable;
