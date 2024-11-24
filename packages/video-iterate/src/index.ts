@@ -23,12 +23,19 @@ const JPEG_HEADER = Buffer.from([0xff, 0xd8]);
  */
 export async function* iterateVideo(videoPath: string, options: IterateVideoOptions): AsyncGenerator<Frame> {
   const args = [
+    // skip any frames that aren't keyframes
+    // we could omit this and have more accurate timestamps, but it is significantly slower (7.8s vs 19.2s)
+    // todo: this should be an option and we automatically disable it on videos with keyframes too far apart
     "-skip_frame",
     "nokey",
     "-i",
     videoPath,
     "-vf",
-    `fps=1/${options.intervalSecs}`,
+    // wait options.intervalSecs between keyframes
+    // always select the first keyframe
+    // showinfo is needed to get the pts_time for accurate timestamps
+    `select='eq(n\,0)+gte(t-prev_selected_t\,${options.intervalSecs})',showinfo`,
+    // vfr is needed to get accurate timestamps
     "-vsync",
     "vfr",
     "-f",
@@ -39,11 +46,24 @@ export async function* iterateVideo(videoPath: string, options: IterateVideoOpti
   ];
 
   const ffmpeg = spawn("ffmpeg", args, {
-    stdio: ["ignore", "pipe", "ignore"],
+    stdio: ["ignore", "pipe", "pipe"],
   });
 
-  let currentPositionSecs = 0;
   let leftover = Buffer.alloc(0);
+  let lastPtsTime = 0;
+
+  ffmpeg.stderr.on("data", (data) => {
+    const str = data.toString();
+    const match = str.match(/pts_time:([0-9.]+)/);
+    if (match) {
+      const ptsTime = +match[1];
+      if (ptsTime > lastPtsTime) {
+        lastPtsTime = Math.round(ptsTime);
+      } else {
+        throw new Error("pts_time went backwards");
+      }
+    }
+  });
 
   for await (const chunk of ffmpeg.stdout) {
     let data = Buffer.concat([leftover, chunk]);
@@ -55,12 +75,11 @@ export async function* iterateVideo(videoPath: string, options: IterateVideoOpti
 
       const frameData = data.subarray(frameStart, nextFrameStart);
       yield {
-        positionSecs: currentPositionSecs,
+        positionSecs: lastPtsTime,
         data: frameData,
       };
 
-      currentPositionSecs += options.intervalSecs;
-      if (options.maxDepthSecs && currentPositionSecs >= options.maxDepthSecs) {
+      if (options.maxDepthSecs && lastPtsTime >= options.maxDepthSecs) {
         ffmpeg.kill();
         return;
       }

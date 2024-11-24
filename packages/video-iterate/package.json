@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "@atlasbot/configs": "^10.6.3",
-    "@types/node": "^22.8.6",
+    "@types/node": "^22.9.3",
     "tsup": "^8.3.5",
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.2"
   }
 }
