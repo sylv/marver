@@ -1,0 +1,6 @@
+{
+    "name": "@ryanke/vss",
+    "scripts": {
+        "build": "cargo build --release"
+    }
+}

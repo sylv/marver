@@ -167,7 +167,8 @@ export class FileScanService implements OnApplicationBootstrap {
   }
 
   get shouldPersist() {
-    if (this.staged >= 1000) return true;
+    // this is low because it helps avoid sqlite busy errors
+    if (this.staged >= 100) return true;
     const lastPersistedAgo = Date.now() - this.lastPersist;
     if (lastPersistedAgo > 10000) return true;
     return false;

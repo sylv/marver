@@ -153,7 +153,7 @@ export class FileResolver {
             const count = await qb.getCount();
             const serialized = JSON.stringify(Array.from(embedding));
             qb.addSelect(
-              sql`MAX(-vector_distance_cos(vector32(${serialized}), embeddings.data)) as similarity`,
+              sql`AVG(cosine_similarity(vec_to_blob(${serialized}), embeddings.data)) as similarity`,
             )
               .orderBy({ [sql`similarity`]: filter.direction })
               .groupBy("id")

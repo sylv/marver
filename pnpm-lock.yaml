@@ -239,7 +239,7 @@ importers:
         version: 6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)
       '@mikro-orm/migrations':
         specifier: ^6.3.13
-        version: 6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.6)(better-sqlite3@11.3.0)(libsql@0.4.5)
+        version: 6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.6)(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)
       '@mikro-orm/nestjs':
         specifier: ^6.0.2
         version: 6.0.2(@mikro-orm/core@6.3.13)(@nestjs/common@10.4.6(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.6(@nestjs/common@10.4.6(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1))
@@ -363,7 +363,7 @@ importers:
         version: 10.6.3
       '@mikro-orm/cli':
         specifier: ^6.3.13
-        version: 6.3.13(better-sqlite3@11.3.0)(libsql@0.4.5)
+        version: 6.3.13(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)
       '@types/bytes':
         specifier: ^3.1.4
         version: 3.1.4
@@ -385,6 +385,9 @@ importers:
       glob:
         specifier: ^11.0.0
         version: 11.0.0
+      libsql:
+        specifier: 0.5.0-pre.2
+        version: 0.5.0-pre.2
       tsup:
         specifier: ^8.3.5
         version: 8.3.5(@swc/core@1.7.26)(jiti@1.21.6)(postcss@8.4.47)(typescript@5.6.3)(yaml@2.6.0)
@@ -440,6 +443,8 @@ importers:
       vitest:
         specifier: ^2.1.4
         version: 2.1.4(@types/node@22.8.6)
+
+  packages/vss: {}
 
 packages:
 
@@ -1367,8 +1372,18 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@libsql/darwin-arm64@0.5.0-pre.2':
+    resolution: {integrity: sha512-jLKZSKM+6f/3qH12MyUGaa/zq84myQWLqsRzGkEccpKX5+xY/mYP9t9LYwDF/V8ciPQ1SvfNikkdLNkqViYYAw==}
+    cpu: [arm64]
+    os: [darwin]
+
   '@libsql/darwin-x64@0.4.5':
     resolution: {integrity: sha512-rZsEWj0H7oCqd5Y2pe0RzKmuQXC2OB1RbnFy4CvjeAjT6MP6mFp+Vx9mTCAUuJMhuoSVMsFPUJRpAQznl9E3Tg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@libsql/darwin-x64@0.5.0-pre.2':
+    resolution: {integrity: sha512-//Iq6QSWNPN5jjTq4WvCZADW2J8p3UqSwo09qwNZGw81LheAbZYO9AVV7plxAk7wSDX4W1Ee5SgNbCYxY3HiiQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -1377,8 +1392,18 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@libsql/linux-arm64-gnu@0.5.0-pre.2':
+    resolution: {integrity: sha512-IGA/VvRfTs1K4fxu29jHb1432qju/WFUHyEkQP8jHKsrYkorLfI/L0rlFhnLrZ61OF790c9gNM0cTtqoYnt7KQ==}
+    cpu: [arm64]
+    os: [linux]
+
   '@libsql/linux-arm64-musl@0.4.5':
     resolution: {integrity: sha512-74hvD5ej4rBshhxFGNYU16a3m8B/NjIPvhlZ/flG1Oeydfo6AuUXSSNFi+H5+zi9/uWuzyz5TLVeQcraoUV10A==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@libsql/linux-arm64-musl@0.5.0-pre.2':
+    resolution: {integrity: sha512-ythJjzqpI+TEUDc8L0frn9kKrjo+wfaqTJTXw///Cyu7kwEI0wI0GlVR0Y03pLYs1RIuirVA1FVmV3nt7fkzuA==}
     cpu: [arm64]
     os: [linux]
 
@@ -1387,13 +1412,28 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@libsql/linux-x64-gnu@0.5.0-pre.2':
+    resolution: {integrity: sha512-KKIM7vI15/1P0U31/eL5kgkPktarXyoKRM9meP/vNDNixlU5GL+D8GLT5FCTMNhtM+BnDiUN7umakhl5XfOqzg==}
+    cpu: [x64]
+    os: [linux]
+
   '@libsql/linux-x64-musl@0.4.5':
     resolution: {integrity: sha512-JfyE6OVC5X4Nr4cFF77VhB1o+hBRxAqYT9YdeqnWdAQSYc/ASi5HnRALLAQEsGacFPZZ32pixfraQmPE3iJFfw==}
     cpu: [x64]
     os: [linux]
 
+  '@libsql/linux-x64-musl@0.5.0-pre.2':
+    resolution: {integrity: sha512-nO9zjq6q5NKU5Hx8Mm9+Y8edxDbO7XKxPq9C7GHytu7FPxVTYrMIVioN2xWcnPhaawWS/TlZZTaJuwLbY177NQ==}
+    cpu: [x64]
+    os: [linux]
+
   '@libsql/win32-x64-msvc@0.4.5':
     resolution: {integrity: sha512-57GGurNJhOhq3XIopLdGnCoQ4kQAcmbmzzFoC4tpvDE/KSbwZ/13zqJWhQA41nMGk/PKM1XKfKmbIybKx1+eqA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@libsql/win32-x64-msvc@0.5.0-pre.2':
+    resolution: {integrity: sha512-jaqSOTyi8r3ZgVuOzdMS1birMlj41/yFH+iW73HvWRjTAjJ5DNGpfL9r5KgnEEGxpRL8SkEUnfGJUgP9v8HQHw==}
     cpu: [x64]
     os: [win32]
 
@@ -3433,6 +3473,11 @@ packages:
 
   libsql@0.4.5:
     resolution: {integrity: sha512-sorTJV6PNt94Wap27Sai5gtVLIea4Otb2LUiAUyr3p6BPOScGMKGt5F1b5X/XgkNtcsDKeX5qfeBDj+PdShclQ==}
+    cpu: [x64, arm64, wasm32]
+    os: [darwin, linux, win32]
+
+  libsql@0.5.0-pre.2:
+    resolution: {integrity: sha512-6eobJ6s2jLKwkf0NrxuOr06lnEdaNOXx5lxwfPMOJm1b4mzBXPH5Mrx0TMSDYP5eAHw8LBWJGadaJtVQ72ab5g==}
     cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
@@ -5656,22 +5701,43 @@ snapshots:
   '@libsql/darwin-arm64@0.4.5':
     optional: true
 
+  '@libsql/darwin-arm64@0.5.0-pre.2':
+    optional: true
+
   '@libsql/darwin-x64@0.4.5':
+    optional: true
+
+  '@libsql/darwin-x64@0.5.0-pre.2':
     optional: true
 
   '@libsql/linux-arm64-gnu@0.4.5':
     optional: true
 
+  '@libsql/linux-arm64-gnu@0.5.0-pre.2':
+    optional: true
+
   '@libsql/linux-arm64-musl@0.4.5':
+    optional: true
+
+  '@libsql/linux-arm64-musl@0.5.0-pre.2':
     optional: true
 
   '@libsql/linux-x64-gnu@0.4.5':
     optional: true
 
+  '@libsql/linux-x64-gnu@0.5.0-pre.2':
+    optional: true
+
   '@libsql/linux-x64-musl@0.4.5':
     optional: true
 
+  '@libsql/linux-x64-musl@0.5.0-pre.2':
+    optional: true
+
   '@libsql/win32-x64-msvc@0.4.5':
+    optional: true
+
+  '@libsql/win32-x64-msvc@0.5.0-pre.2':
     optional: true
 
   '@lukeed/csprng@1.1.0': {}
@@ -5724,11 +5790,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@mikro-orm/cli@6.3.13(better-sqlite3@11.3.0)(libsql@0.4.5)':
+  '@mikro-orm/cli@6.3.13(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)':
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.3.13
-      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)(libsql@0.4.5)
+      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)
       fs-extra: 11.2.0
       tsconfig-paths: 4.2.0
       yargs: 17.7.2
@@ -5772,6 +5838,24 @@ snapshots:
       - supports-color
       - tedious
 
+  '@mikro-orm/knex@6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)':
+    dependencies:
+      '@mikro-orm/core': 6.3.13
+      fs-extra: 11.2.0
+      knex: 3.1.0(better-sqlite3@11.3.0)
+      sqlstring: 2.3.3
+    optionalDependencies:
+      better-sqlite3: 11.3.0
+      libsql: 0.5.0-pre.2
+    transitivePeerDependencies:
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
   '@mikro-orm/libsql@6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)':
     dependencies:
       '@mikro-orm/core': 6.3.13
@@ -5790,10 +5874,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.6)(better-sqlite3@11.3.0)(libsql@0.4.5)':
+  '@mikro-orm/migrations@6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.6)(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)':
     dependencies:
       '@mikro-orm/core': 6.3.13
-      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)(libsql@0.4.5)
+      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(better-sqlite3@11.3.0)(libsql@0.5.0-pre.2)
       fs-extra: 11.2.0
       umzug: 3.8.2(@types/node@22.8.6)
     transitivePeerDependencies:
@@ -7710,6 +7794,19 @@ snapshots:
       '@libsql/linux-x64-gnu': 0.4.5
       '@libsql/linux-x64-musl': 0.4.5
       '@libsql/win32-x64-msvc': 0.4.5
+
+  libsql@0.5.0-pre.2:
+    dependencies:
+      '@neon-rs/load': 0.0.4
+      detect-libc: 2.0.2
+    optionalDependencies:
+      '@libsql/darwin-arm64': 0.5.0-pre.2
+      '@libsql/darwin-x64': 0.5.0-pre.2
+      '@libsql/linux-arm64-gnu': 0.5.0-pre.2
+      '@libsql/linux-arm64-musl': 0.5.0-pre.2
+      '@libsql/linux-x64-gnu': 0.5.0-pre.2
+      '@libsql/linux-x64-musl': 0.5.0-pre.2
+      '@libsql/win32-x64-msvc': 0.5.0-pre.2
 
   light-my-request@5.14.0:
     dependencies:

@@ -19,13 +19,11 @@ export class CLIPService {
 
   async encodeTextBatch(texts: string[], cacheResult: boolean): Promise<number[][]> {
     this.log.debug(`Encoding ${texts.length} texts with CLIP textual`);
-    const result = await this.clip.batchEncodeTexts(texts, cacheResult);
-    return result;
+    return this.clip.batchEncodeTexts(texts, cacheResult);
   }
 
   async encodeImageBatch(imagePaths: string[]): Promise<number[][]> {
     this.log.debug(`Encoding ${imagePaths.length} images with CLIP vision`);
-    const result = await this.clip.batchEncodeImages(imagePaths);
-    return result;
+    return this.clip.batchEncodeImages(imagePaths);
   }
 }

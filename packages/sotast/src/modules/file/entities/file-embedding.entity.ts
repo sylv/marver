@@ -13,6 +13,6 @@ export class FileEmbeddingEntity {
   @Property({ nullable: true })
   position?: number;
 
-  @Property({ type: new VectorType("FB16_BLOB", 768), lazy: true })
+  @Property({ type: new VectorType(), lazy: true })
   data: number[];
 }

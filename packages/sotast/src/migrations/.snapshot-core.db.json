@@ -411,13 +411,13 @@
         },
         "data": {
           "name": "data",
-          "type": "FB16_BLOB(768)",
+          "type": "blob",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 768,
-          "mappedType": "unknown"
+          "length": null,
+          "mappedType": "blob"
         }
       },
       "name": "file_embedding",
