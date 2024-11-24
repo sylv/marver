@@ -6,17 +6,17 @@ import chunkify from "chunkify";
 import { link, mkdir, rm, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import sharp from "sharp";
-import { config } from "../../config.js";
-import { VIDEO_EXTENSIONS } from "../../constants.js";
-import { cosineSimilarity } from "../../helpers/similarity.js";
-import { CLIPService } from "../clip/clip.service.js";
-import { FileAssetEntity, FileAssetType } from "../file/entities/file-asset.entity.js";
-import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
-import { FileEntity } from "../file/entities/file.entity.js";
-import { JobError } from "../queue/job.error.js";
-import { Queue } from "../queue/queue.decorator.js";
+import { config } from "../config.js";
+import { VIDEO_EXTENSIONS } from "../constants.js";
+import { cosineSimilarity } from "../helpers/similarity.js";
+import { CLIPService } from "../modules/clip/clip.service.js";
+import { FileAssetEntity, FileAssetType } from "../modules/file/entities/file-asset.entity.js";
+import { FileEmbeddingEntity } from "../modules/file/entities/file-embedding.entity.js";
+import { FileEntity } from "../modules/file/entities/file.entity.js";
 import { iterateVideo, type Frame } from "@ryanke/video-iterate";
-import { generatePreview } from "../../helpers/generatePreview.js";
+import { generatePreview } from "../helpers/generatePreview.js";
+import { Queue } from "../modules/queue/queue.decorator.js";
+import { JobError } from "../modules/queue/job.error.js";
 
 type FrameWithPath = Omit<Frame, "data"> & { path: string; size: number };
 

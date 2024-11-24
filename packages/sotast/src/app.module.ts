@@ -10,16 +10,16 @@ import { CLIPModule } from "./modules/clip/clip.module.js";
 import { FfmpegModule } from "./modules/ffmpeg/ffmpeg.module.js";
 import { FileModule } from "./modules/file/file.module.js";
 import { ImageModule } from "./modules/image/image.module.js";
-import { QueueModule } from "./modules/queue/queue.module.js";
 import { SubtitlesModule } from "./modules/subtitles/subtitles.module.js";
 import { TaskModule } from "./modules/task/task.module.js";
 import { VideoModule } from "./modules/video/video.module.js";
 import ORM_CONFIG from "./orm.config.js";
+import { AppService } from "./app.service.js";
 
 const GQL_LOGGER = new Logger("GraphQL");
 
 @Module({
-  providers: [AppResolver],
+  providers: [AppResolver, AppService],
   imports: [
     MikroOrmModule.forRoot(ORM_CONFIG),
     GraphQLModule.forRoot<MercuriusDriverConfig>({
@@ -43,7 +43,6 @@ const GQL_LOGGER = new Logger("GraphQL");
     ScheduleModule.forRoot(),
     FileModule,
     ImageModule,
-    QueueModule,
     VideoModule,
     FfmpegModule,
     SubtitlesModule,

@@ -10,8 +10,8 @@ import { performance } from "perf_hooks";
 import { config } from "../../config.js";
 import { SUPPORTED_EXTENSIONS } from "../../constants.js";
 import { filePathToDisplayName } from "../../helpers/filePathToDisplayName.js";
-import { PublicCron } from "../task/public-cron.decorator.js";
 import { FileEntity } from "./entities/file.entity.js";
+import { PublicCron } from "../task/public-cron.decorator.js";
 
 // todo: increase directoryQueue/fileQueue concurrency for high latency mounts
 @Injectable()

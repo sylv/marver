@@ -6,12 +6,11 @@ import { FileInfoEmbeddable } from "../file/entities/file-info.entity.js";
 import { FileEntity } from "../file/entities/file.entity.js";
 import { ImageModule } from "../image/image.module.js";
 import { VideoController } from "./video.controller.js";
-import { VideoQueues } from "./video.queues.js";
 import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
 import { FileAssetEntity } from "../file/entities/file-asset.entity.js";
 
 @Module({
-  providers: [VideoQueues],
+  providers: [],
   controllers: [VideoController],
   imports: [
     FfmpegModule,

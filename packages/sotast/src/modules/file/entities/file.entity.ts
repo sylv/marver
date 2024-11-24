@@ -18,12 +18,12 @@ import { Connection } from "nest-graphql-utils";
 import { ulid } from "ulid";
 import { config } from "../../../config.js";
 import { AutoPopulate } from "../../../helpers/autoloader.js";
-import { JobStateEntity } from "../../queue/job-state.entity.js";
 import { FileEmbeddingEntity } from "./file-embedding.entity.js";
 import { FileExifDataEntity } from "./file-exif.entity.js";
 import { FileInfoEmbeddable } from "./file-info.entity.js";
 import { FileAssetEntity } from "./file-asset.entity.js";
 import { basename } from "path";
+import { JobStateEntity } from "../../queue/job-state.entity.js";
 
 @Entity({ tableName: "files" })
 @ObjectType("File")

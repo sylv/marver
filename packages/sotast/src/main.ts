@@ -10,6 +10,7 @@ import { performance } from "perf_hooks";
 import { AppModule } from "./app.module.js";
 import { config } from "./config.js";
 import { configureOrm, migrate } from "./migrate.js";
+import { AppService } from "./app.service.js";
 
 const start = performance.now();
 const startupTimer = setTimeout(() => {
@@ -59,3 +60,6 @@ await app.listen(PORT, HOST, (error, address) => {
   logger.log(`Listening at ${address}`);
   clearTimeout(startupTimer);
 });
+
+const service = app.get(AppService);
+service.runWorker();

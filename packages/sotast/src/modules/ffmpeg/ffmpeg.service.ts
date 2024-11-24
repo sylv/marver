@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import ffmpeg, { type FfprobeData } from "fluent-ffmpeg";
 import { LRUCache } from "lru-cache";
 import ms from "ms";
-import { JobError } from "../queue/job.error.js";
+import { JobError } from "../queue/job.error";
 
 @Injectable()
 export class FfmpegService {

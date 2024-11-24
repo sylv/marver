@@ -160,7 +160,6 @@ export class FileResolver {
               .limit(args.limit)
               .offset(args.offset);
 
-            console.log({ populate });
             for (const field of populate) {
               // todo: should be handled properly, not a special case
               if (field === "preview") qb.addSelect("preview");

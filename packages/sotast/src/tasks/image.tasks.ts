@@ -2,14 +2,14 @@ import { EntityManager, EntityRepository, ref } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable } from "@nestjs/common";
 import bytes from "bytes";
-import { IMAGE_EXTENSIONS } from "../../constants.js";
-import { CLIPService } from "../clip/clip.service.js";
-import { FileEmbeddingEntity } from "../file/entities/file-embedding.entity.js";
-import { FileEntity } from "../file/entities/file.entity.js";
-import { Queue } from "../queue/queue.decorator.js";
-import { ImageService } from "./image.service.js";
 import sharp from "sharp";
-import { generatePreview } from "../../helpers/generatePreview.js";
+import { CLIPService } from "../modules/clip/clip.service";
+import { ImageService } from "../modules/image/image.service";
+import { FileEmbeddingEntity } from "../modules/file/entities/file-embedding.entity";
+import type { FileEntity } from "../modules/file/entities/file.entity";
+import { IMAGE_EXTENSIONS } from "../constants";
+import { generatePreview } from "../helpers/generatePreview";
+import { Queue } from "../modules/queue/queue.decorator";
 
 @Injectable()
 export class ImageTasks {

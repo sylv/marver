@@ -61,5 +61,3 @@ if (import.meta.vitest) {
     expect(parseExifDateOrThrow("2024")).toMatchInlineSnapshot(`2024-01-01T12:00:00.000Z`);
   });
 }
-
-console.log(parseExifDateOrThrow("14.05.2024 05:27:27"));

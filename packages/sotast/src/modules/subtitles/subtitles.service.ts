@@ -1,16 +1,14 @@
-import { dirname } from "path";
 import { EntityManager, EntityRepository } from "@mikro-orm/libsql";
 import { InjectRepository } from "@mikro-orm/nestjs";
 import { Injectable, Logger } from "@nestjs/common";
 import { mkdir, readFile } from "fs/promises";
 import ISO6391 from "iso-639-1";
 import LanguageDetect from "languagedetect";
+import { dirname } from "path";
 import { stripHtml } from "string-strip-html";
 import { type Node, parseSync } from "subtitle";
-import { VIDEO_EXTENSIONS } from "../../constants.js";
 import { FfmpegService } from "../ffmpeg/ffmpeg.service.js";
 import { FileEntity } from "../file/entities/file.entity.js";
-import { Queue } from "../queue/queue.decorator.js";
 import { FileSubtitleEntity } from "./file-subtitle.entity.js";
 
 const SUBTITLE_STRIP_PATTERN =
@@ -26,30 +24,11 @@ export class SubtitlesService {
     private em: EntityManager,
   ) {}
 
-  @Queue("VIDEO_EXTRACT_OR_GENERATE_SUBTITLES", {
-    targetConcurrency: 1,
-    fileFilter: {
-      extension: { $in: [...VIDEO_EXTENSIONS] },
-      info: {
-        // require that ffprobe be run on the file first so we can determine
-        // whether to extract embedded or to generate new
-        hasEmbeddedSubtitles: { $ne: null },
-      },
-    },
-  })
-  async extractOrGenerateSubtitles(file: FileEntity) {
-    if (file.info.hasEmbeddedSubtitles) {
-      await this.extractEmbeddedSubtitles(file);
-    } else {
-      await this.generateSubtitles(file);
-    }
-  }
-
-  private async generateSubtitles(file: FileEntity) {
+  async generateSubtitles(file: FileEntity) {
     // TODO: implement
   }
 
-  private async extractEmbeddedSubtitles(file: FileEntity) {
+  async extractEmbeddedSubtitles(file: FileEntity) {
     const ffprobeResult = await this.ffmpegService.ffprobe(file.path);
     const subtitleStreams = ffprobeResult.streams.filter((stream) => stream.codec_type === "subtitle");
 
