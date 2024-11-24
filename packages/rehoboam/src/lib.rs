@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    path::PathBuf,
     sync::{Arc, Mutex, RwLock},
     time::Duration,
 };
@@ -8,10 +9,7 @@ use anyhow::Result;
 use hf_hub::api::sync::{Api, ApiRepo};
 use models::text::run_text_model;
 use napi_derive::napi;
-use ort::{
-    execution_providers::CUDAExecutionProvider,
-    session::{builder::GraphOptimizationLevel, Session},
-};
+use ort::{execution_providers::CUDAExecutionProvider, session::Session};
 use tokio::time::{sleep, Instant};
 use uluru::LRUCache;
 use util::handle_result;
@@ -125,13 +123,7 @@ impl SigLIP {
         };
 
         let model_path = self.repo.get(name)?;
-        let session = Arc::new(
-            Session::builder()?
-                .with_execution_providers([CUDAExecutionProvider::default().build()])?
-                .with_intra_threads(4)?
-                .commit_from_file(&model_path)?,
-        );
-
+        let session = Self::create_session(&model_path)?;
         *write = Some(session.clone());
 
         Ok(session)
@@ -164,8 +156,19 @@ impl SigLIP {
         };
 
         let model_path = self.repo.get(name)?;
-        let session = Arc::new(Session::builder()?.commit_from_file(&model_path)?);
+        let session = Self::create_session(&model_path)?;
         *write = Some(session.clone());
+
+        Ok(session)
+    }
+
+    fn create_session(model_path: &PathBuf) -> Result<Arc<Session>> {
+        let session = Arc::new(
+            Session::builder()?
+                .with_execution_providers([CUDAExecutionProvider::default().build()])?
+                .with_intra_threads(4)?
+                .commit_from_file(model_path)?,
+        );
 
         Ok(session)
     }

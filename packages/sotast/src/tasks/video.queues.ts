@@ -165,7 +165,6 @@ export class VideoQueues {
     // this approach should ignore things like intros/outros that are mostly black.
     let largestFrame: FrameWithPath | null = null;
     for (const frame of frames) {
-      if (!frame.path) continue;
       if (frame.positionSecs > 600) {
         // for long videos, we dont want to check too deep for perf and for potential spoilers.
         break;

@@ -1,5 +1,5 @@
-import { type MikroORM as BetterMikroORM } from "@mikro-orm/libsql";
 import { MikroORM } from "@mikro-orm/core";
+import { type MikroORM as BetterMikroORM } from "@mikro-orm/libsql";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
@@ -8,9 +8,9 @@ import { fastify } from "fastify";
 import ms from "ms";
 import { performance } from "perf_hooks";
 import { AppModule } from "./app.module.js";
+import { AppService } from "./app.service.js";
 import { config } from "./config.js";
 import { configureOrm, migrate } from "./migrate.js";
-import { AppService } from "./app.service.js";
 
 const start = performance.now();
 const startupTimer = setTimeout(() => {
