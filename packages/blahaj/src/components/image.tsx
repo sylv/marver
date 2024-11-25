@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type FC } fro
 import { graphql, unmask, type FragmentOf } from "../graphql";
 import { cn } from "../helpers/cn";
 
+// fewer sizes increases the chance of a cache hit
 const SOURCE_SET_SIZES = [800, 1600, 3200];
 
 export const ImageFragment = graphql(`
   fragment Image on File {
+    id
     displayName
     thumbnailUrl
     preview
@@ -33,23 +35,24 @@ interface ImageProps {
  */
 const ImageComponent: FC<ImageProps> = ({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(ImageFragment, fileFrag);
-  const [preloaded, setPreloaded] = useState(false);
-  const [preload, setPreload] = useState(false);
   const ref = useRef<HTMLImageElement | null>(null);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
 
-  const { source, useSourceSet } = useMemo(() => {
-    if (!preloaded) {
-      if (file.preview) return { source: `data:image/webp;base64,${file.preview}`, useSourceSet: false };
-      return { source: undefined, useSourceSet: false };
-    }
+  useEffect(() => {
+    // if the file changes, swap the image to the preview image
+    setPreviewLoaded(false);
+  }, [file.id]);
 
-    return {
-      source: file.thumbnailUrl || undefined,
-      useSourceSet: true,
-    };
-  }, [file.preview, file.thumbnailUrl, preloaded]);
+  useEffect(() => {
+    if (!ref.current) return;
+    if (ref.current.complete) setPreviewLoaded(true);
+  }, [ref]);
+
+  const usePreviewImage = file.preview && !previewLoaded;
+  const source = usePreviewImage ? `data:image/webp;base64,${file.preview}` : file.thumbnailUrl || undefined;
 
   const sourceSet = useMemo(() => {
+    if (usePreviewImage) return;
     if (!file.thumbnailUrl || !file.info.width) return;
     const parts = [];
     for (const size of SOURCE_SET_SIZES) {
@@ -63,56 +66,34 @@ const ImageComponent: FC<ImageProps> = ({ file: fileFrag, className, draggable, 
 
     if (!parts[0]) return undefined;
     return parts.join(", ");
-  }, [file.thumbnailUrl, file.info.width, isThumbnail]);
+  }, [file.thumbnailUrl, file.info.width, isThumbnail, usePreviewImage]);
 
-  useEffect(() => {
-    // preload the thumbnailUrl so we can swap it out
-    if (!file.thumbnailUrl || !preload) return;
-    const img = new Image();
-    img.src = file.thumbnailUrl;
-    if (sourceSet) img.srcset = sourceSet;
-    img.onload = () => {
-      setPreloaded(true);
-    };
-
-    // cached images don't trigger onload
-    if (img.complete) {
-      setPreloaded(true);
-    }
-
-    return () => {
-      img.onload = null;
-    };
-  }, [file.thumbnailUrl, sourceSet, preload]);
-
-  useEffect(() => {
-    if (preloaded) return;
-    if (!ref.current) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setPreload(true);
-        }
-      },
-      { rootMargin: "50%" },
-    );
-
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [ref]);
+  // if the parent decides height and width using classes, it conflicts with the way
+  // we define the height/width in styles to avoid layout shift. this works around that
+  const hasHeight = className?.includes(" h-");
+  const hasWidth = className?.includes(" w-");
+  // this avoids layout shift by setting the height/width of the image
+  // for some reason doing this other ways results in layout shift. using srcset also causes that
+  const baseStyle: CSSProperties = {};
+  if (!hasHeight && file.info.height) baseStyle.height = file.info.height;
+  if (!hasWidth && file.info.height) baseStyle.width = "100%";
+  if (file.info.width && file.info.height) baseStyle.aspectRatio = `${file.info.width}/${file.info.height}`;
 
   return (
     <img
       ref={ref}
-      loading="lazy"
-      decoding={preloaded ? "sync" : "async"} // if its async when we swap the image, it flickers
-      className={cn("text-transparent", className)}
+      loading="lazy" // otherwise images not in view never load the preview image
+      decoding={previewLoaded ? "sync" : "async"} // if its async when we swap the image, it flickers
+      className={cn("text-transparent bg-zinc-900", className)}
       alt={file.displayName}
       draggable={draggable}
-      height={file.info.height || undefined}
-      width={file.info.width || undefined}
       src={source}
-      srcSet={useSourceSet ? sourceSet : undefined}
+      srcSet={sourceSet}
+      onLoad={() => setPreviewLoaded(true)}
+      style={{
+        ...baseStyle,
+        ...style,
+      }}
     />
   );
 };
