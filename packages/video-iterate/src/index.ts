@@ -34,6 +34,7 @@ export async function* iterateVideo(videoPath: string, options: IterateVideoOpti
     // wait options.intervalSecs between keyframes
     // always select the first keyframe
     // showinfo is needed to get the pts_time for accurate timestamps
+    // todo: sometimes the keyframe isnt the first frame. we should handle that somehow
     `select='eq(n\,0)+gte(t-prev_selected_t\,${options.intervalSecs})',showinfo`,
     // vfr is needed to get accurate timestamps
     "-vsync",
@@ -57,11 +58,12 @@ export async function* iterateVideo(videoPath: string, options: IterateVideoOpti
     const match = str.match(/pts_time:([0-9.]+)/);
     if (match) {
       const ptsTime = +match[1];
-      if (ptsTime > lastPtsTime) {
-        lastPtsTime = Math.round(ptsTime);
-      } else {
-        throw new Error("pts_time went backwards");
+      if (ptsTime < lastPtsTime) {
+        console.log(data.toString());
+        console.warn("pts_time went backwards");
       }
+
+      lastPtsTime = Math.round(ptsTime);
     }
   });
 
