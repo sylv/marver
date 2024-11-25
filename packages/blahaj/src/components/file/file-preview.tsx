@@ -29,13 +29,17 @@ interface FilePreviewProps {
 
 export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style, onClick }) => {
   const file = unmask(FilePreviewFragment, fileFrag);
-  const ref = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   return (
-    <button
+    <div
       ref={ref}
-      type="button"
-      className="transition relative overflow-hidden group"
+      // biome-ignore lint/a11y/useSemanticElements: if this is a button element, it breaks the image preview
+      // as the preview only takes up half the width. i couldn't figure it out, changing the button to inline-block
+      // or similar didn't fix it.
+      role="button"
+      tabIndex={0}
+      className="transition relative overflow-hidden group box-border"
       style={style}
       onClick={(event) => {
         if (!ref.current || !onClick) return;
@@ -65,6 +69,6 @@ export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style, onCli
           {file.displayName}
         </motion.div>
       )}
-    </button>
+    </div>
   );
 };

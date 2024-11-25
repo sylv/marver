@@ -36,23 +36,30 @@ interface ImageProps {
 const ImageComponent: FC<ImageProps> = ({ file: fileFrag, className, draggable, style, isThumbnail }) => {
   const file = unmask(ImageFragment, fileFrag);
   const ref = useRef<HTMLImageElement | null>(null);
-  const [previewLoaded, setPreviewLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [hidePreview, setHidePreview] = useState(false);
 
   useEffect(() => {
     // if the file changes, swap the image to the preview image
-    setPreviewLoaded(false);
+    setImageLoaded(false);
+    setHidePreview(false);
   }, [file.id]);
 
   useEffect(() => {
     if (!ref.current) return;
-    if (ref.current.complete) setPreviewLoaded(true);
+    ref.current.decode().then(() => {
+      setImageLoaded(true);
+      setTimeout(() => setHidePreview(true), 200);
+    });
   }, [ref]);
 
-  const usePreviewImage = file.preview && !previewLoaded;
-  const source = usePreviewImage ? `data:image/webp;base64,${file.preview}` : file.thumbnailUrl || undefined;
+  // const usePreviewImage = file.preview && !previewLoaded;
+  // const usePreviewImage = false;
+  // const source = usePreviewImage ? `data:image/webp;base64,${file.preview}` : file.thumbnailUrl || undefined;
+  const source = file.thumbnailUrl || undefined;
+  const previewImage = file.preview ? `data:image/webp;base64,${file.preview}` : undefined;
 
   const sourceSet = useMemo(() => {
-    if (usePreviewImage) return;
     if (!file.thumbnailUrl || !file.info.width) return;
     const parts = [];
     for (const size of SOURCE_SET_SIZES) {
@@ -66,7 +73,7 @@ const ImageComponent: FC<ImageProps> = ({ file: fileFrag, className, draggable, 
 
     if (!parts[0]) return undefined;
     return parts.join(", ");
-  }, [file.thumbnailUrl, file.info.width, isThumbnail, usePreviewImage]);
+  }, [file.thumbnailUrl, file.info.width, isThumbnail]);
 
   // if the parent decides height and width using classes, it conflicts with the way
   // we define the height/width in styles to avoid layout shift. this works around that
@@ -79,22 +86,46 @@ const ImageComponent: FC<ImageProps> = ({ file: fileFrag, className, draggable, 
   if (!hasWidth && file.info.height) baseStyle.width = "100%";
   if (file.info.width && file.info.height) baseStyle.aspectRatio = `${file.info.width}/${file.info.height}`;
 
-  return (
+  const core = (
     <img
       ref={ref}
-      loading="lazy" // otherwise images not in view never load the preview image
-      decoding={previewLoaded ? "sync" : "async"} // if its async when we swap the image, it flickers
+      loading="lazy"
+      decoding="async"
       className={cn("text-transparent bg-zinc-900", className)}
       alt={file.displayName}
       draggable={draggable}
       src={source}
       srcSet={sourceSet}
-      onLoad={() => setPreviewLoaded(true)}
+      onLoad={() => setImageLoaded(true)}
       style={{
         ...baseStyle,
         ...style,
       }}
     />
+  );
+
+  if (!previewImage) return core;
+
+  return (
+    <span className="relative inline">
+      {!hidePreview && (
+        <img
+          src={previewImage}
+          className={cn(
+            "absolute pointer-events-none duration-200 max-w-full max-h-full",
+            "will-change-[opacity] scale-[1.3]", // will-change-opacity makes the image have fuzzy borders, scale hides them
+            imageLoaded ? "opacity-0" : "opacity-100",
+            className,
+          )}
+          alt={file.displayName}
+          style={{
+            ...baseStyle,
+            ...style,
+          }}
+        />
+      )}
+      {core}
+    </span>
   );
 };
 
