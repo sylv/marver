@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, type FC } from "react";
-import { FilePreview, FilePreviewFragment } from "./file-preview";
+import { AnimatePresence } from "framer-motion";
+import { Fragment, useEffect, useRef, useState, type FC } from "react";
 import { graphql, unmask, type FragmentOf } from "../../graphql";
+import { FileOverlay, FileOverlayFragment } from "./file-overlay";
+import { FilePreview, FilePreviewFragment } from "./file-preview";
 
 export const FileListFragment = graphql(
   `
@@ -12,10 +14,11 @@ export const FileListFragment = graphql(
                 width
             }
             ...FilePreview
+            ...FileOverlay
         }
     }
 `,
-  [FilePreviewFragment],
+  [FilePreviewFragment, FileOverlayFragment],
 );
 
 export interface FileListProps {
@@ -28,6 +31,9 @@ export const FileList: FC<FileListProps> = ({ files: filesFrag, targetWidth = 25
   const [unloadWithHeight, setUnloadWithHeight] = useState<number | null>(null);
   const files = filesFrag ? unmask(FileListFragment, filesFrag) : undefined;
   const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [selectedFileOffset, setSelectedFileOffset] = useState<number | null>(null);
+  const selectedFile = files?.find(({ node: file }) => file.id === selectedFileId);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -55,29 +61,46 @@ export const FileList: FC<FileListProps> = ({ files: filesFrag, targetWidth = 25
   }, [containerRef]);
 
   return (
-    <div
-      className="flex flex-wrap gap-[0.35rem] max-w-[85vw]"
-      ref={containerRef}
-      style={{
-        height: unloadWithHeight || undefined,
-      }}
-    >
-      {!unloadWithHeight &&
-        files?.map(({ node: file }) => {
-          const aspectRatio = file.info.width && file.info.height ? file.info.width / file.info.height : 1;
+    <Fragment>
+      <div
+        className="flex flex-wrap gap-[0.35rem] max-w-[85vw]"
+        ref={containerRef}
+        style={{
+          height: unloadWithHeight || undefined,
+        }}
+      >
+        {!unloadWithHeight &&
+          files?.map(({ node: file }) => {
+            const aspectRatio = file.info.width && file.info.height ? file.info.width / file.info.height : 1;
 
-          return (
-            <FilePreview
-              key={file.id}
-              file={file}
-              style={{
-                width: aspectRatio * targetWidth,
-                flexGrow: aspectRatio * targetWidth,
-                height: rowHeight,
-              }}
-            />
-          );
-        })}
-    </div>
+            return (
+              <FilePreview
+                key={file.id}
+                file={file}
+                style={{
+                  width: aspectRatio * targetWidth,
+                  flexGrow: aspectRatio * targetWidth,
+                  height: rowHeight,
+                }}
+                onClick={(offsetTop) => {
+                  setSelectedFileOffset(offsetTop + 4);
+                  setSelectedFileId(file.id);
+                }}
+              />
+            );
+          })}
+      </div>
+      <AnimatePresence>
+        {selectedFile && selectedFileOffset && (
+          <FileOverlay
+            key={selectedFileOffset} // only animate when it moves
+            file={selectedFile.node}
+            offsetTop={selectedFileOffset}
+            onClose={() => setSelectedFileId(null)}
+            height={(rowHeight + 4) * 3 + 4}
+          />
+        )}
+      </AnimatePresence>
+    </Fragment>
   );
 };

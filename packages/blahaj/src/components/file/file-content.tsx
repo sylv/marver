@@ -41,10 +41,14 @@ export const FileContent: FC<FileContentProps> = ({
       <Player
         src={`/api/files/${file.id}/raw`}
         hlsSrc={`/api/files/${file.id}/vidproxy/index.m3u8`}
-        height={file?.info.height || undefined}
-        width={file?.info.width || undefined}
         durationSeconds={file.info.durationSeconds || undefined}
-        className={clsx(className, videoClassName)}
+        className={clsx("max-w-full h-full", className, videoClassName)}
+        style={{
+          height: file.info.height || undefined,
+          width: "100%",
+          aspectRatio:
+            file.info.width && file.info.height ? `${file.info.width}/${file.info.height}` : undefined,
+        }}
       />
     );
   }

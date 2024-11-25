@@ -1,8 +1,8 @@
-import type { CSSProperties, FC } from "react";
-import { Image, ImageFragment } from "../image";
-import { setFileOverlay } from "./overlay/store";
 import type { FragmentOf } from "gql.tada";
+import { useRef, type CSSProperties, type FC } from "react";
 import { graphql, unmask } from "../../graphql";
+import { Image, ImageFragment } from "../image";
+import { motion } from "framer-motion";
 
 export const FilePreviewFragment = graphql(
   `
@@ -24,26 +24,27 @@ export const FilePreviewFragment = graphql(
 interface FilePreviewProps {
   file: FragmentOf<typeof FilePreviewFragment>;
   style?: CSSProperties;
+  onClick?: (offsetTop: number) => void;
 }
 
-export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style }) => {
+export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style, onClick }) => {
   const file = unmask(FilePreviewFragment, fileFrag);
-  const href = `/file/${file.id}`;
+  const ref = useRef<HTMLButtonElement>(null);
 
   return (
-    <a
-      href={href}
+    <button
+      ref={ref}
+      type="button"
       className="transition relative overflow-hidden group"
       style={style}
       onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setFileOverlay(file.id);
+        if (!ref.current || !onClick) return;
+        onClick(ref.current.offsetTop + ref.current.clientHeight);
       }}
     >
       <div className="transition opacity-0 pointer-events-none absolute inset-0 z-10 group-hover:opacity-100 bg-gradient-to-t from-black/90 via-transparent to-transparent">
         <div className="p-3 flex justify-end items-start h-full flex-col">
-          <h3 className="max-w-full truncate">{file.displayName}</h3>
+          <motion.h3 className="max-w-full truncate">{file.displayName}</motion.h3>
         </div>
       </div>
       <div className="absolute top-1 left-1 flex items-center gap-1 flex-wrap">
@@ -55,15 +56,15 @@ export const FilePreview: FC<FilePreviewProps> = ({ file: fileFrag, style }) => 
         )}
       </div>
       {file.thumbnailUrl && (
-        <div className="h-full w-full overflow-hidden rounded">
+        <motion.div className="h-full w-full overflow-hidden rounded">
           <Image isThumbnail draggable={false} file={file} className="w-full h-full object-cover" />
-        </div>
+        </motion.div>
       )}
       {!file.thumbnailUrl && (
-        <div className="flex items-center justify-center flex-col gap-2 h-full w-full bg-zinc-900 text-zinc-600 text-center text-md font-mono break-all p-6">
+        <motion.div className="flex items-center justify-center flex-col gap-2 h-full w-full bg-zinc-900 text-zinc-600 text-center text-md font-mono break-all p-6">
           {file.displayName}
-        </div>
+        </motion.div>
       )}
-    </a>
+    </button>
   );
 };

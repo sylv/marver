@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type FC, type ReactNode } from 'react';
-import { PlayerControls } from './player-controls';
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type FC, type ReactNode } from "react";
+import { PlayerControls } from "./player-controls";
 
 // https://github.com/video-dev/hls.js/issues/5146#issuecomment-1375070955
 // @ts-expect-error missing types
-import HlsMin from 'hls.js/dist/hls.min';
-import type HlsType from 'hls.js';
+import HlsMin from "hls.js/dist/hls.min";
+import type HlsType from "hls.js";
 
 const Hls = HlsMin as typeof HlsType;
 
-interface VideoProps extends ComponentProps<'video'> {
+interface VideoProps extends ComponentProps<"video"> {
   src: string;
   hlsSrc: string;
   hasAudio?: boolean;
@@ -39,7 +39,7 @@ export const Player: FC<VideoProps> = ({ src, children, hlsSrc, hasAudio, durati
   useEffect(() => {
     // re-determine HLS usage when the source changes
     if (useHLS) setUseHLS(false);
-      }, [src]);
+  }, [src]);
 
   const switchToHls = () => {
     if (useHLS) return;

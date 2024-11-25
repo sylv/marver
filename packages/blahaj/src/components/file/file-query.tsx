@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FC } from "react";
 import { FileQuerySegment, type FilesQuery } from "./file-query-segment";
-import { FileOverlay } from "./overlay/file-overlay";
 import type { VariablesOf } from "gql.tada";
 
 type FilesQueryVariables = VariablesOf<typeof FilesQuery>;
@@ -33,7 +32,6 @@ export const FileQuery: FC<FilePageProps> = ({ variables }) => {
 
   return (
     <div>
-      <FileOverlay />
       {pageVariables.map((variables, index) => (
         <FileQuerySegment
           key={"file-view-" + variables.after}

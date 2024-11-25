@@ -1,9 +1,14 @@
 import { useEffect } from "react";
 
-export function useOnClickOutside(ref: React.MutableRefObject<any>, handler: () => void) {
+interface UseOnClickOutsideOptions {
+  ref: React.MutableRefObject<any>;
+  mouseup?: boolean;
+}
+
+export function useOnClickOutside(opts: UseOnClickOutsideOptions, handler: () => void) {
   useEffect(() => {
     const onClick = (event: Event) => {
-      if (!ref.current || ref.current.contains(event.target)) return;
+      if (!opts.ref.current || opts.ref.current.contains(event.target)) return;
       handler();
     };
 
@@ -12,13 +17,15 @@ export function useOnClickOutside(ref: React.MutableRefObject<any>, handler: () 
       handler();
     };
 
-    document.addEventListener("mousedown", onClick);
+    if (opts.mouseup) document.addEventListener("mouseup", onClick);
+    else document.addEventListener("mousedown", onClick);
     document.addEventListener("touchstart", onClick);
     document.addEventListener("keydown", onKeyPress);
     return () => {
-      document.removeEventListener("mousedown", onClick);
+      if (opts.mouseup) document.removeEventListener("mouseup", onClick);
+      else document.removeEventListener("mousedown", onClick);
       document.removeEventListener("touchstart", onClick);
       document.removeEventListener("keydown", onKeyPress);
     };
-  }, [ref, handler]);
+  }, [opts.ref, opts.mouseup, handler]);
 }
